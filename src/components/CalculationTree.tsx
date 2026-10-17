@@ -47,9 +47,10 @@ export function EvidenceLink({
 }
 export default function CalculationTree({
   lineId,
+  displayLabel,
   path = [],
   ...props
-}: TreeProps & { lineId: string; path?: string[] }) {
+}: TreeProps & { lineId: string; displayLabel?: string; path?: string[] }) {
   const { graph, events, onAction, writable } = props;
   const [expanded, setExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -82,17 +83,14 @@ export default function CalculationTree({
         <button
           className="calculation-toggle"
           aria-expanded={expanded}
-          aria-label={`${expanded ? 'Collapse' : 'Expand'} ${line.label} (${lineId})`}
+          aria-label={`${expanded ? 'Collapse' : 'Expand'} ${displayLabel ?? line.label} (${lineId})`}
           onClick={() => {
             setMounted(true);
             setExpanded(!expanded);
           }}
         >
           <ChevronRight size={16} className={expanded ? 'rotated' : ''} />
-          <span>
-            {line.label}
-            <small>{line.key}</small>
-          </span>
+          <span>{displayLabel ?? line.label}</span>
           <strong>{money(line.value)}</strong>
         </button>
         {related.length > 0 && (
@@ -104,7 +102,15 @@ export default function CalculationTree({
       {mounted && (
         <div hidden={!expanded} className="calculation-body">
           <div className="calculation-context">
-            <span>{context.join(' › ')}</span>
+            <details className="calculation-details">
+              <summary>Calculation details</summary>
+              <p className="small">
+                {line.key} ·{' '}
+                {line.jurisdiction === 'federal' ? 'Federal' : 'California'}
+              </p>
+              <p>{packet.engine_reference.rules[line.rule] ?? line.rule}</p>
+              {line.note && <p>{line.note}</p>}
+            </details>
             {writable && (
               <details className="action-menu">
                 <summary aria-label={`Actions for ${lineId}`}>
@@ -132,10 +138,6 @@ export default function CalculationTree({
               Engine amount remains {money(line.value)}. {latestCorrection.note}
             </p>
           )}
-          <p className="calculation-rule">
-            {packet.engine_reference.rules[line.rule] ?? line.rule}
-          </p>
-          {line.note && <p className="muted small">{line.note}</p>}
           {line.inputs.length > 20 && (
             <label className="detail-search">
               {line.inputs.length} calculation inputs

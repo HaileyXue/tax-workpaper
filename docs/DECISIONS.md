@@ -43,3 +43,7 @@ The user explicitly requested fewer navigation destinations, inline collapsible 
 **Deliberate departure from the employer brief:** the original asks to record how every number was verified. The revised design does not require those records. Inspection is frictionless; exceptions and final review acknowledgment are recorded. Legacy verification events are preserved without creating new ones through the UI.
 
 The source document viewer remains simulated. Final sign-off certifies only the local review snapshot; it neither approves unresolved correction proposals nor claims an updated engine calculation. The app cannot reconcile a proposal into a newly computed engine result yet, so active proposals block sign-off until withdrawn; a future engine-import workflow must handle reconciliation.
+
+## Readability refinement
+
+Restored the left sidebar for Return, Documents, and History. The main canvas and sidebar are pure white, text is darker, and small labels are larger. Removed repeated form IDs from collapsed rows and placed rules, notes, and IDs in on-demand calculation details. Parent-child indentation and inline expansion still preserve context. Summary labels explicitly distinguish the federal balance due from the California refund. On narrow screens the sidebar becomes compact navigation above the content.

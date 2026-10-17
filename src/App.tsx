@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Download, Search, Sprout, X } from 'lucide-react';
+import {
+  Download,
+  Search,
+  Sprout,
+  X,
+  FileText,
+  History as HistoryIcon,
+  LayoutDashboard,
+} from 'lucide-react';
 import { createGraph, packet, resolveReference } from './domain/packet';
 import { findIssues } from './domain/findings';
 import {
@@ -149,7 +157,7 @@ export default function App() {
   const activeFlags = current.filter((e) => e.kind === 'flag');
   return (
     <>
-      <header className="app-header">
+      <aside className="app-sidebar" aria-label="Workspace sidebar">
         <a
           className="brand"
           href="#"
@@ -171,6 +179,13 @@ export default function App() {
                 setSearch('');
               }}
             >
+              {name === 'Return' ? (
+                <LayoutDashboard size={17} />
+              ) : name === 'Documents' ? (
+                <FileText size={17} />
+              ) : (
+                <HistoryIcon size={17} />
+              )}
               {name}
             </button>
           ))}
@@ -185,21 +200,19 @@ export default function App() {
             ))}
           </select>
         </label>
-      </header>
+      </aside>
       <div className={`workspace ${evidence ? 'with-evidence' : ''}`}>
         <main>
           <div className="page-heading">
             <div>
-              <span className="eyebrow">
-                2025 TAX RETURN · {packet.packet.client_id}
-              </span>
+              <span className="eyebrow">2025 TAX RETURN</span>
               <h1>Okafor–Lindqvist</h1>
               <p className="muted">
                 Married filing jointly <span>·</span> California → Texas
               </p>
             </div>
             <label>
-              Engine snapshot
+              Version
               <select
                 aria-label="Return version"
                 value={version}
@@ -255,8 +268,16 @@ export default function App() {
               className="return-summary"
               key={`summary-${version}`}
             >
-              <CalculationTree {...tree} lineId="F1040.37" />
-              <CalculationTree {...tree} lineId="F540NR.97" />
+              <CalculationTree
+                {...tree}
+                lineId="F1040.37"
+                displayLabel="Federal balance due"
+              />
+              <CalculationTree
+                {...tree}
+                lineId="F540NR.97"
+                displayLabel="California refund"
+              />
             </section>
             <details ref={issueRef} className="issues-section">
               <summary>

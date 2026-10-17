@@ -38,8 +38,8 @@ npm run format:check  # Repository formatting
 
 ## What works today
 
-- One white-background Return workspace with nested, collapsible calculations; Documents and History are secondary tools.
-- Inline calculation inputs, preserved expansion state, explicit parent paths, and direct source labels attached to individual inputs.
+- One white-background Return workspace with nested, collapsible calculations; Documents and History are secondary tools in the left sidebar.
+- Inline calculation inputs, preserved expansion state, visible parent hierarchy, on-demand calculation details, and direct source labels attached to individual inputs.
 - Evidence displayed beside the calculation on desktop and in a bottom panel on mobile; other document fields and reverse usage are collapsed by default.
 - Search across all 627 current-version lines; large input lists load in batches with filtering.
 - No routine verification forms: contextual flag, note, and correction actions open only on request. Existing verification records remain in history.
