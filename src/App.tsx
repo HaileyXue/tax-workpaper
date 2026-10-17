@@ -513,7 +513,6 @@ export default function App() {
                   <button
                     className="wide"
                     onClick={() => {
-                      setSection('Number explorer');
                       navigate('F1040.1a');
                     }}
                   >
@@ -859,7 +858,7 @@ export default function App() {
                 ← Back
               </button>
               <span>Evidence trail · {versionId}</span>
-              <button autoFocus aria-label="Close explorer" onClick={close}>
+              <button aria-label="Close explorer" onClick={close}>
                 <X size={20} />
               </button>
             </div>

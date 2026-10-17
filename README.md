@@ -4,6 +4,10 @@ An evidence-first review workspace for the fictional Okafor–Lindqvist househol
 
 This is an actively developed case-study prototype. It is not tax preparation software and does not recompute or file a return.
 
+![Workspace overview](docs/images/overview.png)
+
+The private GitHub repository is the source of truth. Hosted preview deployment is pending authorization; no live app URL is available yet.
+
 ## Run locally
 
 Requires Node.js 22.12+ (Node 24 recommended).
@@ -18,6 +22,9 @@ Open the localhost URL printed by Vite. For validation:
 ```sh
 npm run check  # TypeScript and domain tests
 npm run build  # Production bundle
+npx playwright install chromium
+npm run test:e2e  # Browser workflow and mobile checks
+npm run format:check  # Repository formatting
 ```
 
 ## Try the complete review loop

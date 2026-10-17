@@ -28,6 +28,10 @@ The user's priority was a clean, employer-reviewable repository and a working ta
 
 ## Validation approach
 
-Domain tests exercise real packet paths, version isolation, missing-reference behavior, cycle protection, independent checks, role restrictions, undo authorship, and estimate math. A production build checks browser compilation. Browser interaction checks should cover tracing, persistence, correction proposals, resolution, role changes, keyboard navigation, and responsive layout.
+Domain tests exercise real packet paths, version isolation, missing-reference behavior, cycle protection, independent checks, role restrictions, undo authorship, and estimate math. A production build checks browser compilation. Three Playwright browser tests pass for tracing, reload persistence, correction proposals, resolution and undo, read-only roles, Escape/focus restoration, and responsive layout at 390 px. Eleven domain tests and the production build pass. npm audit reports zero known vulnerabilities at validation time.
 
 The app intentionally imports the full packet for the prototype. The production bundle is correspondingly large; a production data API or lazy-loaded packet can reduce initial JavaScript parsing costs.
+
+## Preview deployment status
+
+A private Sites project was reserved, and its non-secret identity is in `.openai/hosting.json`. Source synchronization and deployment were blocked by automatic approval review because Sites is a separate destination from the user-authorized private GitHub repository. No app source, build, or packet was uploaded to Sites. Deployment remains pending explicit authorization; the local app and GitHub repository are usable.
