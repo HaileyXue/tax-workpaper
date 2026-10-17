@@ -27,47 +27,48 @@ npm run test:e2e  # Browser workflow and mobile checks
 npm run format:check  # Repository formatting
 ```
 
-## Try the complete review loop
+## Try the review loop
 
-1. Open **Overview → Trace wages to the W-2s**.
-2. Select `ev-0016`. Inspect D08, page 1, Box 1: the viewer highlights `104,600.00` in the packet's **printed content**, alongside the extracted value and its confidence.
-3. Record a verification with a method and evidence note. Refresh; the review remains saved.
-4. Open **Review queue → Same bank sweep interest counted twice**. Follow `ev-0492` and `ev-0538` to D28 and D29 and inspect their downstream tax lines.
-5. On `SchB.1.2`, propose a correction from $1,840 to $0 with category `interest` and a rationale. The app shows the supplied marginal-rate estimate; engine totals stay unchanged.
-6. Assign the finding and record a reviewer resolution. Inspect **Changes & filing** for the event history, version differences, and precomputed alternatives. Undo your own action with a compensating record.
-7. Export the review history as JSON for a portable record of the session.
+1. On **Return**, expand **Income → Total income → Total wages → Wages (Forms W-2, box 1)**. Parents stay visible and calculations expand in place.
+2. Select the **D08 · W-2 · p. 1 · Box 1** source label. The evidence panel highlights `104,600.00` in the packet's printed content while the calculation stays visible. No verification action is required.
+3. Expand **Issues to resolve → Same bank sweep interest counted twice** and inspect the two source records.
+4. Search return calculations for `SchB.1.2`, expand it, and choose **Actions → Propose correction**. Enter $0, category `interest`, and a rationale. Estimated tax effects appear; engine totals remain unchanged.
+5. Reload and open **History** to inspect the proposal, compare snapshots, view precomputed alternatives, or undo your own action. Export history for a portable record.
+6. Final review sign-off is available to a reviewer or partner only after blocking warnings, manual flags, and outstanding correction proposals are cleared. Subsequent review events reopen it. This is a local review acknowledgment, not an e-signature or filing approval.
 
 ## What works today
 
-- Five connected screens: overview, review queue, number explorer, evidence library, changes & filing.
-- Recursive tax-line lineage, reverse document usage, and explicit unresolved-reference states.
-- Simulated documents rendered from printed source content, with page selection, field locators, and exact unique-text highlights.
-- Engine diagnostics plus independent duplicate-interest, FX-year, and W-2 source checks.
-- Version-scoped verification, flags, proposed adjustments, assignment, resolution, and append-only undo history.
-- Browser-local persistence and JSON export, with storage errors surfaced instead of silent saves.
-- Staff role switcher with basic action permissions; all three snapshots and all five supplied alternatives.
+- One white-background Return workspace with nested, collapsible calculations; Documents and History are secondary tools.
+- Inline calculation inputs, preserved expansion state, explicit parent paths, and direct source labels attached to individual inputs.
+- Evidence displayed beside the calculation on desktop and in a bottom panel on mobile; other document fields and reverse usage are collapsed by default.
+- Search across all 627 current-version lines; large input lists load in batches with filtering.
+- No routine verification forms: contextual flag, note, and correction actions open only on request. Existing verification records remain in history.
+- Engine diagnostics plus independent duplicate-interest, FX-year, and W-2 source checks; assignment and documented resolution.
+- Final, version-scoped review sign-off with blocker checks and conservative invalidation after any subsequent review event (including notes, assignments, and undo).
+- Browser-local persistence, append-only history, undo, and JSON export with visible save errors.
+- All three engine snapshots and five precomputed alternatives remain available.
 
 ## Deliberate limits
 
 - **Local persistence:** reviews live in this browser's `localStorage`; there is no server, cross-device sync, or concurrent-user conflict handling. Export is available; import is not yet implemented.
 - **Role simulation:** client-side restrictions are UX behavior, not secure authorization. The complete fictional packet is bundled, including fictional identifiers. Do not load real client data.
 - **Review, not recalculation:** corrections are proposals. Estimates use manually selected packet rates and are not cumulative recomputed return totals. Currency, California sourcing, thresholds, credits, and QBI require review.
-- **Filing is not implemented:** approvals, signatures, filing freezes, amendments, notices, and production retention controls remain future work. Later timeline events are labeled scripted scenario data.
+- **Filing is not implemented:** the final review sign-off is a local acknowledgment only. Client authorization, e-signatures, filing freezes, amendments, notices, and production retention controls remain future work. Later timeline events are labeled scripted scenario data.
 - **Source fidelity:** the packet has no PDFs. Synthetic coordinates are not presented as real PDF coordinates. Ambiguous or absent text gets a field/page locator and a visible warning, not a fabricated highlight.
 - **Coverage:** automated checks are intentionally narrow; no claim that every planted error has been found. Large schedules are browsable as return lines; dedicated asset/basis workspaces remain future work.
 
 ## Repository guide
 
-| Path                                | Purpose                                                            |
-| ----------------------------------- | ------------------------------------------------------------------ |
-| `CASE_STUDY.md`                     | Original employer brief                                            |
-| `okafor_lindqvist_2025_packet.json` | Original, immutable fixture; schema guide is its `readme` property |
-| `src/domain/`                       | Packet types, lineage graph, independent checks, review rules      |
-| `src/components/`                   | Source viewer and review form                                      |
-| `src/App.tsx`                       | Workspace screens and local review orchestration                   |
-| `tests/`                            | Lineage, check, permission, undo, and estimate regression tests    |
-| `docs/`                             | Architecture, findings, implementation decisions, and roadmap      |
-| `.github/workflows/ci.yml`          | Reproducible test/build checks                                     |
+| Path                                | Purpose                                                                          |
+| ----------------------------------- | -------------------------------------------------------------------------------- |
+| `CASE_STUDY.md`                     | Original employer brief                                                          |
+| `okafor_lindqvist_2025_packet.json` | Original, immutable fixture; schema guide is its `readme` property               |
+| `src/domain/`                       | Packet types, lineage graph, independent checks, review rules                    |
+| `src/components/`                   | Calculation tree, evidence viewer, exception form, history, and issue components |
+| `src/App.tsx`                       | Workspace screens and local review orchestration                                 |
+| `tests/`                            | Lineage, check, permission, undo, and estimate regression tests                  |
+| `docs/`                             | Architecture, findings, implementation decisions, and roadmap                    |
+| `.github/workflows/ci.yml`          | Reproducible test/build checks                                                   |
 
 ## Submission notes
 

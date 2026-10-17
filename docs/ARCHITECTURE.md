@@ -6,7 +6,7 @@ The workspace separates three kinds of truth:
 
 1. **Source evidence:** the packet's document `printed_content`. Extracted values are separate assertions, with confidence and a page/field locator. Confidence is never verification.
 2. **Engine snapshots:** immutable v1/v2/v3 calculation graphs. Each line has an ID, value, rule, input lines, and evidence references. The graph follows these edges recursively and indexes them in reverse for impact exploration.
-3. **Human review:** version-scoped events containing actor, timestamp, action, target, reason, and optional verification method or adjustment. Corrections preserve the engine original. Undo adds a compensating event.
+3. **Human review:** version-scoped events containing actor, timestamp, action, target, reason, and optional adjustment. Legacy verification records are retained, but the UI requires no per-value verification. Corrections preserve the engine original. Undo adds a compensating event.
 
 ```mermaid
 flowchart LR
@@ -26,3 +26,11 @@ The source viewer renders the supplied page text, not a transcription of the ext
 The first implementation uses a static React/TypeScript app and localStorage to make the review loop easy to run and inspect. Domain logic is isolated from UI components. This is a prototype boundary: a production system would put role enforcement, event append operations, optimistic concurrency, encrypted evidence storage, access logging, and filing snapshots behind authenticated server APIs.
 
 Tax effects use the packet's per-dollar category rates and are labeled estimates. The five supplied alternatives show actual precomputed scenario deltas. Neither pathway claims to run a tax engine.
+
+## Interaction model
+
+The Return page renders a recursive `CalculationTree`. Each node owns its expansion state and mounts children only after first expansion; collapsing hides rather than discards the mounted subtree. This retains place without recursively rendering the full graph on initial load. Ancestor IDs prevent recursive cycles. Long input lists are paginated and searchable.
+
+Only direct source references appear beside a node's own inputs. The evidence panel receives both a reference ID and the originating calculation path, preserving context while the main tree stays interactive. Documents and History provide secondary access without a separate number-exploration screen.
+
+Exception forms mount on request. Final sign-off is one version-scoped event; unresolved warnings, manual flags, and active correction proposals block it. Any subsequent review event invalidates that version's signature, including an undo. This deliberately conservative policy is local review behavior, not server-enforced authorization or filing certification.
