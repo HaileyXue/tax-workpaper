@@ -246,7 +246,7 @@ export default function App() {
           )}
           <div hidden={tab !== 'Return'}>
             <div className="return-intro">
-              <p>Expand a number to see how it was built.</p>
+              <p>Open a breakdown or inspect its source.</p>
               <button
                 className="issue-count"
                 onClick={() => {

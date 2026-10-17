@@ -28,7 +28,7 @@ The user's priority was a clean, employer-reviewable repository and a working ta
 
 ## Validation approach
 
-Domain tests exercise real packet paths, version isolation, missing-reference behavior, cycle protection, independent checks, role restrictions, undo authorship, and estimate math. A production build checks browser compilation. Four Playwright browser tests pass for inline tracing and retained expansion, contextual evidence, correction persistence/undo, mobile layout and read-only roles, and final sign-off persistence/invalidation. Thirteen domain tests and the production build pass. The prior dependency audit reported zero known vulnerabilities; this revision adds no dependencies.
+Domain tests exercise real packet paths, version isolation, missing-reference behavior, cycle protection, independent checks, role restrictions, undo authorship, and estimate math. A production build checks browser compilation. Four Playwright browser tests pass for inline tracing and retained expansion, contextual evidence, correction persistence/undo, mobile layout and read-only roles, and final sign-off persistence/invalidation. Sixteen domain tests and the production build pass. The prior dependency audit reported zero known vulnerabilities; this revision adds no dependencies.
 
 The app intentionally imports the full packet for the prototype. The production bundle is correspondingly large; a production data API or lazy-loaded packet can reduce initial JavaScript parsing costs.
 
@@ -47,3 +47,7 @@ The source document viewer remains simulated. Final sign-off certifies only the 
 ## Readability refinement
 
 Restored the left sidebar for Return, Documents, and History. The main canvas and sidebar are pure white, text is darker, and small labels are larger. Removed repeated form IDs from collapsed rows and placed rules, notes, and IDs in on-demand calculation details. Parent-child indentation and inline expansion still preserve context. Summary labels explicitly distinguish the federal balance due from the California refund. On narrow screens the sidebar becomes compact navigation above the content.
+
+## Selective disclosure
+
+Simple amounts display as plain rows with immediate source links. Disclosure controls are reserved for meaningful calculation breakdowns and source lists longer than three items. Explicit unchanged carry/sum steps are presented together, retaining the original graph and all intermediate rules and notes in the details menu. This removes unnecessary navigation without hiding meaningful transformations merely because their numeric results match.

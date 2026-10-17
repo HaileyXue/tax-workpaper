@@ -29,8 +29,10 @@ Tax effects use the packet's per-dollar category rates and are labeled estimates
 
 ## Interaction model
 
-The Return page renders a recursive `CalculationTree`. Each node owns its expansion state and mounts children only after first expansion; collapsing hides rather than discards the mounted subtree. This retains place without recursively rendering the full graph on initial load. Ancestor IDs prevent recursive cycles. Long input lists are paginated and searchable.
+The Return page renders a recursive `CalculationTree`. Only nodes with calculation inputs or more than three direct references have a disclosure control. Plain values show their sources immediately. Expandable nodes own their expansion state and mount children only after first expansion; collapsing hides rather than discards the mounted subtree. This retains place without recursively rendering the full graph on initial load. Ancestor IDs prevent recursive cycles. Long input lists are paginated and searchable.
 
 Only direct source references appear beside a node's own inputs. The evidence panel receives both a reference ID and the originating calculation path, preserving context while the main tree stays interactive. Documents and History provide secondary access without a separate number-exploration screen.
 
 Exception forms mount on request. Final sign-off is one version-scoped event; unresolved warnings, manual flags, and active correction proposals block it. Any subsequent review event invalidates that version's signature, including an undo. This deliberately conservative policy is local review behavior, not server-enforced authorization or filing certification.
+
+`calculationPresentation` removes redundant single-input steps only for explicit `R-CARRY` and `R-SUM` rules when the input amount is unchanged and the wrapper has no direct sources. Equal amounts alone are insufficient. Every skipped line, rule, and note remains available in the details menu, and review events attached to any line in the chain remain visible.

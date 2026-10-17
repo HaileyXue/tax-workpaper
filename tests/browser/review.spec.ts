@@ -4,15 +4,10 @@ async function wages(page: Page) {
   await page
     .getByRole('button', { name: 'Expand Total income (F1040.9)', exact: true })
     .click();
-  await page
-    .getByRole('button', { name: 'Expand Total wages (F1040.1z)', exact: true })
-    .click();
-  await page
-    .getByRole('button', {
-      name: 'Expand Wages (Forms W-2, box 1) (F1040.1a)',
-      exact: true,
-    })
-    .click();
+  // Wages are a simple two-source amount. Both W-2s appear without nested toggles.
+  await expect(
+    page.getByRole('button', { name: /Expand (Total wages|Wages)/ }),
+  ).toHaveCount(0);
 }
 
 test('expands in place and shows contextual evidence without losing the calculation', async ({
@@ -42,10 +37,7 @@ test('expands in place and shows contextual evidence without losing the calculat
     .getByRole('button', { name: 'Expand Total income (F1040.9)', exact: true })
     .click();
   await expect(
-    page.getByRole('button', {
-      name: 'Collapse Wages (Forms W-2, box 1) (F1040.1a)',
-      exact: true,
-    }),
+    page.getByRole('button', { name: /D08 · W-2 · p. 1/ }),
   ).toBeVisible();
   await expect(evidence.locator('mark')).toBeVisible();
   expect(errors).toEqual([]);
@@ -58,8 +50,16 @@ test('records exceptions only on request and persists correction proposals', asy
   await page
     .getByRole('textbox', { name: 'Search return calculations' })
     .fill('SchB.1.2');
-  await page.getByRole('button', { name: /Expand Interest.*SchB.1.2/ }).click();
-  await page.getByLabel('Actions for SchB.1.2').click();
+  await expect(
+    page.getByRole('button', { name: /Expand Interest.*SchB.1.2/ }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: /D29 · 1099-INT/ }),
+  ).toBeVisible();
+  await page
+    .getByRole('region', { name: 'Search results' })
+    .getByLabel('Actions for SchB.1.2')
+    .click();
   await page
     .getByRole('button', { name: 'Propose correction', exact: true })
     .click();
@@ -76,7 +76,11 @@ test('records exceptions only on request and persists correction proposals', asy
   ).toBeVisible();
   await dialog.getByRole('button', { name: 'Save proposal' }).click();
   await expect(dialog).not.toBeVisible();
-  await expect(page.getByText(/Proposed value:/)).toBeVisible();
+  await expect(
+    page
+      .getByRole('region', { name: 'Search results' })
+      .getByText(/Proposed value:/),
+  ).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Sign off return', exact: true }),
   ).toBeDisabled();
@@ -125,14 +129,14 @@ test('final sign-off persists and reopens when a note changes the review snapsho
   await page.goto('/');
   await page.getByRole('button', { name: /open items/ }).click();
   for (const finding of await page.locator('.finding').all()) {
-    await finding.locator('summary').click();
+    await finding.locator(':scope > summary').click();
     await finding
       .getByRole('textbox', { name: 'Resolution evidence' })
       .fill('Test-only documented disposition after source inspection.');
     await finding
       .getByRole('button', { name: 'Resolve issue', exact: true })
       .click();
-    await finding.locator('summary').click();
+    await finding.locator(':scope > summary').click();
   }
   await page.getByRole('checkbox').check();
   await page
@@ -146,8 +150,8 @@ test('final sign-off persists and reopens when a note changes the review snapsho
     page.getByRole('button', { name: 'Signed off', exact: true }),
   ).toBeVisible();
   await wages(page);
-  const leaf = page.locator('[data-line="F1040.1a"]');
-  await leaf.getByLabel('Actions for F1040.1a').click();
+  const leaf = page.locator('.return-group [data-line="F1040.1z"]');
+  await leaf.getByLabel('Actions for F1040.1z').click();
   await leaf.getByRole('button', { name: 'Add note', exact: true }).click();
   await page
     .getByRole('dialog')

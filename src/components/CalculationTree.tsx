@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronRight, FileText, MoreHorizontal } from 'lucide-react';
 import { money, packet, type Graph } from '../domain/packet';
+import { calculationPresentation } from '../domain/presentation';
 import type { ReviewEvent } from '../domain/review';
 
 export interface EvidenceSelection {
@@ -65,8 +66,14 @@ export default function CalculationTree({
         Circular reference to {lineId}. Check the calculation graph.
       </p>
     );
-  const context = [...path, lineId];
-  const children = line.inputs.filter(
+  const {
+    chain,
+    detail: sourceLine,
+    expandable,
+  } = calculationPresentation(graph, lineId);
+  const detail = sourceLine!;
+  const context = [...path, ...chain.map((item) => item.key)];
+  const children = detail.inputs.filter(
     (id) =>
       !query ||
       `${id} ${graph.lines.get(id)?.label} ${graph.lines.get(id)?.value}`
@@ -74,73 +81,91 @@ export default function CalculationTree({
         .includes(query.toLowerCase()),
   );
   const related = events.filter(
-    (e) => e.target === lineId && ['flag', 'adjust', 'note'].includes(e.kind),
+    (e) =>
+      chain.some((item) => item.key === e.target) &&
+      ['flag', 'adjust', 'note'].includes(e.kind),
   );
   const latestCorrection = related.filter((e) => e.kind === 'adjust').at(-1);
   return (
-    <article className="calculation" data-line={lineId}>
+    <article
+      className={`calculation ${expandable ? 'calculation-group' : 'calculation-leaf'}`}
+      data-line={lineId}
+    >
       <div className="calculation-heading">
-        <button
-          className="calculation-toggle"
-          aria-expanded={expanded}
-          aria-label={`${expanded ? 'Collapse' : 'Expand'} ${displayLabel ?? line.label} (${lineId})`}
-          onClick={() => {
-            setMounted(true);
-            setExpanded(!expanded);
-          }}
-        >
-          <ChevronRight size={16} className={expanded ? 'rotated' : ''} />
-          <span>{displayLabel ?? line.label}</span>
-          <strong>{money(line.value)}</strong>
-        </button>
+        {expandable ? (
+          <button
+            className="calculation-toggle"
+            aria-expanded={expanded}
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${displayLabel ?? line.label} (${lineId})`}
+            onClick={() => {
+              setMounted(true);
+              setExpanded(!expanded);
+            }}
+          >
+            <ChevronRight size={16} className={expanded ? 'rotated' : ''} />
+            <span>{displayLabel ?? line.label}</span>
+            <strong>{money(line.value)}</strong>
+          </button>
+        ) : (
+          <div className="calculation-label">
+            <span>{displayLabel ?? line.label}</span>
+            <strong>{money(line.value)}</strong>
+          </div>
+        )}
         {related.length > 0 && (
           <span className="tag">
             {related.length} {related.length === 1 ? 'note' : 'notes'}
           </span>
         )}
-      </div>
-      {mounted && (
-        <div hidden={!expanded} className="calculation-body">
-          <div className="calculation-context">
-            <details className="calculation-details">
-              <summary>Calculation details</summary>
-              <p className="small">
-                {line.key} ·{' '}
-                {line.jurisdiction === 'federal' ? 'Federal' : 'California'}
-              </p>
-              <p>{packet.engine_reference.rules[line.rule] ?? line.rule}</p>
-              {line.note && <p>{line.note}</p>}
-            </details>
+        <details className="action-menu">
+          <summary
+            aria-label={`Actions for ${lineId}`}
+            title="Calculation details and actions"
+          >
+            <MoreHorizontal size={17} />
+          </summary>
+          <div>
+            {chain.map((item) => (
+              <div className="rule-reference" key={item.key}>
+                <strong>
+                  {item.key} · {item.label}
+                </strong>
+                <p>{packet.engine_reference.rules[item.rule] ?? item.rule}</p>
+                {item.note && <p>{item.note}</p>}
+              </div>
+            ))}
             {writable && (
-              <details className="action-menu">
-                <summary aria-label={`Actions for ${lineId}`}>
-                  <MoreHorizontal size={17} /> Actions
-                </summary>
-                <div>
-                  <button onClick={() => onAction(lineId, 'flag')}>
-                    Flag issue
+              <>
+                <button onClick={() => onAction(lineId, 'flag')}>
+                  Flag issue
+                </button>
+                {typeof line.value === 'number' && (
+                  <button onClick={() => onAction(lineId, 'adjust')}>
+                    Propose correction
                   </button>
-                  {typeof line.value === 'number' && (
-                    <button onClick={() => onAction(lineId, 'adjust')}>
-                      Propose correction
-                    </button>
-                  )}
-                  <button onClick={() => onAction(lineId, 'note')}>
-                    Add note
-                  </button>
-                </div>
-              </details>
+                )}
+                <button onClick={() => onAction(lineId, 'note')}>
+                  Add note
+                </button>
+              </>
             )}
           </div>
+        </details>
+      </div>
+      {(!expandable || mounted) && (
+        <div
+          hidden={expandable && !expanded}
+          className={expandable ? 'calculation-body' : 'leaf-evidence'}
+        >
           {latestCorrection && (
             <p className="callout">
               Proposed value: <strong>{money(latestCorrection.amount)}</strong>.
               Engine amount remains {money(line.value)}. {latestCorrection.note}
             </p>
           )}
-          {line.inputs.length > 20 && (
+          {detail.inputs.length > 20 && (
             <label className="detail-search">
-              {line.inputs.length} calculation inputs
+              {detail.inputs.length} calculation inputs
               <input
                 aria-label={`Search inputs for ${lineId}`}
                 placeholder="Find a transaction or input…"
@@ -165,21 +190,17 @@ export default function CalculationTree({
               Show 20 more inputs ({children.length - limit} remaining)
             </button>
           )}
-          {line.sources.length > 0 && (
+          {detail.sources.length > 0 && (
             <div className="direct-sources">
-              <span className="eyebrow">
-                {line.inputs.length
-                  ? 'Additional evidence for this calculation'
-                  : 'Source inputs'}
-              </span>
-              {line.sources.slice(0, limit).map((id) => {
+              {detail.sources.slice(0, limit).map((id) => {
                 const value = graph.values.get(id);
                 return (
                   <div className="source-input" key={id}>
                     <div>
-                      {value && (
+                      {value && detail.sources.length > 1 && (
                         <span className="source-value">
-                          {value.label}
+                          {graph.documents.get(value.document_id)?.issuer ??
+                            value.label}
                           <strong>
                             {value.value_type === 'money'
                               ? money(value.value)
@@ -192,14 +213,14 @@ export default function CalculationTree({
                   </div>
                 );
               })}
-              {line.sources.length > limit && (
+              {detail.sources.length > limit && (
                 <button onClick={() => setLimit(limit + 20)}>
                   Show more source inputs
                 </button>
               )}
             </div>
           )}
-          {!line.inputs.length && !line.sources.length && (
+          {!detail.inputs.length && !detail.sources.length && (
             <p className="muted small">
               No source reference supplied. Inspect the rule or flag an evidence
               gap.

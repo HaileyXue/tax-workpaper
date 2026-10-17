@@ -1,3 +1,4 @@
+import { calculationPresentation } from '../src/domain/presentation';
 import { describe, expect, it } from 'vitest';
 import { createGraph, packet, resolveReference } from '../src/domain/packet';
 import { findIssues } from '../src/domain/findings';
@@ -181,5 +182,36 @@ describe('final review sign-off', () => {
         0,
       ).valid,
     ).toBe(false);
+  });
+});
+
+describe('selective calculation disclosure', () => {
+  it('shows small direct-source amounts as plain rows and removes redundant carry layers', () => {
+    const wages = calculationPresentation(graph, 'F1040.1z');
+    expect(wages.chain.map((l) => l.key)).toEqual(['F1040.1z', 'F1040.1a']);
+    expect(wages.detail?.sources).toEqual(['ev-0016', 'ev-0035']);
+    expect(wages.expandable).toBe(false);
+    expect(calculationPresentation(graph, 'SchB.1.2').expandable).toBe(false);
+    expect(calculationPresentation(graph, 'F1040.9').expandable).toBe(true);
+  });
+  it('keeps substantive transformations even when their amounts happen to agree', () => {
+    const copy = structuredClone(packet);
+    copy.return_versions[2].lines.find((l) => l.key === 'F1040.1z')!.rule =
+      'R-SE';
+    expect(
+      calculationPresentation(createGraph(copy, 'v3'), 'F1040.1z').chain,
+    ).toHaveLength(1);
+  });
+  it('retains every skipped line and stops safely on cycles', () => {
+    const copy = structuredClone(packet);
+    const target = copy.return_versions[2].lines.find(
+      (l) => l.key === 'F1040.1a',
+    )!;
+    target.rule = 'R-SUM';
+    target.inputs = ['F1040.1z'];
+    target.sources = [];
+    expect(
+      calculationPresentation(createGraph(copy, 'v3'), 'F1040.1z').chain,
+    ).toHaveLength(2);
   });
 });
