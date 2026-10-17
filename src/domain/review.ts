@@ -5,7 +5,16 @@ export interface ReviewEvent {
   actor: string;
   role: string;
   version: string;
-  kind: 'verify' | 'flag' | 'adjust' | 'resolve' | 'reopen' | 'assign' | 'undo';
+  kind:
+    | 'verify'
+    | 'flag'
+    | 'adjust'
+    | 'resolve'
+    | 'reopen'
+    | 'assign'
+    | 'undo'
+    | 'note'
+    | 'signoff';
   target: string;
   note: string;
   method?: string;
@@ -51,6 +60,8 @@ export function validateEvent(
         'Only your own active actions in this version can be undone.',
       );
   }
+  if (event.kind === 'signoff' && !['reviewer', 'partner'].includes(staff.role))
+    throw new Error('Only a reviewer or partner can sign off the return.');
   if (event.kind === 'resolve' && staff.role === 'preparer')
     throw new Error('A reviewer or partner must resolve findings.');
 }
@@ -90,4 +101,56 @@ export function loadReviews(): { events: ReviewEvent[]; error?: string } {
         'Saved review data could not be read. It has not been overwritten. Export or clear the stored data before continuing.',
     };
   }
+}
+
+// Sign-off certifies this local review snapshot, not filing or engine recalculation.
+export function signoffState(
+  events: ReviewEvent[],
+  version: string,
+  openWarnings: number,
+) {
+  const relevant = events.filter((e) => e.version === version);
+  const active = activeEvents(relevant);
+  const latest = active.filter((e) => e.kind === 'signoff').at(-1);
+  const signatureIndex = latest
+    ? relevant.findIndex((e) => e.id === latest.id)
+    : -1;
+  const changed =
+    latest &&
+    relevant.slice(signatureIndex + 1).some((e) => e.kind !== 'signoff');
+  const flags = active.filter(
+    (e) =>
+      e.kind === 'flag' &&
+      active
+        .filter(
+          (a) => a.target === e.id && ['resolve', 'reopen'].includes(a.kind),
+        )
+        .at(-1)?.kind !== 'resolve',
+  ).length;
+  const proposals = active.filter((e) => e.kind === 'adjust').length;
+  const blockers = openWarnings + flags + proposals;
+  return {
+    latest,
+    valid: Boolean(latest && !changed && !blockers),
+    reopened: Boolean(latest && (changed || blockers)),
+    blockers,
+    flags,
+    proposals,
+  };
+}
+export function validateSignoff(
+  staff: Staff,
+  events: ReviewEvent[],
+  version: string,
+  openWarnings: number,
+) {
+  if (!['reviewer', 'partner'].includes(staff.role))
+    throw new Error('Only a reviewer or partner can sign off the return.');
+  const state = signoffState(events, version, openWarnings);
+  if (state.blockers)
+    throw new Error(
+      'Resolve blocking issues and withdraw or reconcile correction proposals before signing off.',
+    );
+  if (state.valid)
+    throw new Error('This review snapshot is already signed off.');
 }

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { createGraph, packet, resolveReference } from '../src/domain/packet';
 import { findIssues } from '../src/domain/findings';
 import {
+  signoffState,
+  validateSignoff,
   activeEvents,
   estimateImpact,
   validateEvent,
@@ -130,5 +132,54 @@ describe('review records and estimates', () => {
     );
     expect(graph.version.summary.federal.total_tax).toBe(before);
     expect(() => estimateImpact(graph.version, 'invented', 1)).toThrow();
+  });
+});
+
+// The new interaction model retains legacy verification records without requiring them.
+describe('final review sign-off', () => {
+  it('blocks warnings, flags and proposals without requiring per-value verification', () => {
+    expect(() => validateSignoff(reviewer, [], 'v3', 0)).not.toThrow();
+    expect(() => validateSignoff(reviewer, [], 'v3', 1)).toThrow('blocking');
+    expect(() =>
+      validateSignoff(reviewer, [{ ...event, kind: 'flag' }], 'v3', 0),
+    ).toThrow('blocking');
+    expect(() =>
+      validateSignoff(
+        reviewer,
+        [{ ...event, kind: 'adjust', amount: 0, original: 1840 }],
+        'v3',
+        0,
+      ),
+    ).toThrow('blocking');
+    expect(() => validateSignoff(packet.firm.staff[0], [], 'v3', 0)).toThrow(
+      'reviewer or partner',
+    );
+  });
+  it('invalidates after a later action, including undo, and isolates versions', () => {
+    const signature: ReviewEvent = {
+      ...event,
+      id: 'sign',
+      kind: 'signoff',
+      target: 'return',
+    };
+    expect(signoffState([signature], 'v3', 0).valid).toBe(true);
+    expect(
+      signoffState([signature, { ...event, id: 'note', kind: 'note' }], 'v3', 0)
+        .reopened,
+    ).toBe(true);
+    expect(
+      signoffState(
+        [signature, { ...event, id: 'note', kind: 'note', version: 'v2' }],
+        'v3',
+        0,
+      ).valid,
+    ).toBe(true);
+    expect(
+      signoffState(
+        [signature, { ...event, id: 'undo', kind: 'undo', reverses: 'sign' }],
+        'v3',
+        0,
+      ).valid,
+    ).toBe(false);
   });
 });

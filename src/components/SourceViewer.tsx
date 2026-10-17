@@ -90,50 +90,58 @@ export default function SourceViewer({
           claimed.
         </p>
       )}
-      <h4>
-        Extracted fields on this page{' '}
-        <span className="muted">{extracted.length}</span>
-      </h4>
-      <div className="field-list">
-        {extracted.map((v) => (
-          <button
-            className={`field-row ${v.id === value?.id ? 'selected' : ''}`}
-            key={v.id}
-            onClick={() => onReference(v.id)}
-          >
-            <span>
-              {v.label}
-              <small>
-                {v.id} · {Math.round(v.confidence * 100)}% confidence
-              </small>
-            </span>
-            <strong>
-              {v.value_type === 'money'
-                ? money(v.value)
-                : String(v.value ?? '—')}
-            </strong>
-          </button>
-        ))}
-      </div>
-      <h4>Where this document lands</h4>
-      <div className="chips">
-        {graph.documentUsage(documentId).map((key) => (
-          <button key={key} onClick={() => onReference(key)}>
-            {key}
-            <ArrowUpRight size={12} />
-          </button>
-        ))}
-      </div>
-      {!graph.documentUsage(documentId).length && (
-        <p className="muted">
-          No mapped tax-line consumers.{' '}
-          {graph.version.documents_superseded.includes(documentId)
-            ? 'Marked superseded by the engine.'
-            : graph.version.documents_used.includes(documentId)
-              ? 'Listed as used by the engine; purpose needs review.'
-              : 'Not listed as used in this version; disposition needs review.'}
-        </p>
-      )}
+      <details className="utility-section">
+        <summary>Other extracted fields on this page</summary>
+        <h4>
+          Extracted fields on this page{' '}
+          <span className="muted">{extracted.length}</span>
+        </h4>
+        <div className="field-list">
+          {extracted.map((v) => (
+            <button
+              className={`field-row ${v.id === value?.id ? 'selected' : ''}`}
+              key={v.id}
+              onClick={() => onReference(v.id)}
+            >
+              <span>
+                {v.label}
+                <small>
+                  {v.id} · {Math.round(v.confidence * 100)}% confidence
+                </small>
+              </span>
+              <strong>
+                {v.value_type === 'money'
+                  ? money(v.value)
+                  : String(v.value ?? '—')}
+              </strong>
+            </button>
+          ))}
+        </div>
+      </details>
+      <details className="utility-section">
+        <summary>
+          Where this document lands ({graph.documentUsage(documentId).length}{' '}
+          lines)
+        </summary>
+        <div className="chips">
+          {graph.documentUsage(documentId).map((key) => (
+            <button key={key} onClick={() => onReference(key)}>
+              {key}
+              <ArrowUpRight size={12} />
+            </button>
+          ))}
+        </div>
+        {!graph.documentUsage(documentId).length && (
+          <p className="muted">
+            No mapped tax-line consumers.{' '}
+            {graph.version.documents_superseded.includes(documentId)
+              ? 'Marked superseded by the engine.'
+              : graph.version.documents_used.includes(documentId)
+                ? 'Listed as used by the engine; purpose needs review.'
+                : 'Not listed as used in this version; disposition needs review.'}
+          </p>
+        )}
+      </details>
     </section>
   );
 }

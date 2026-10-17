@@ -1,103 +1,160 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-test('traces wages, verifies the printed field, and persists a review across reloads', async ({
+async function wages(page: Page) {
+  await page
+    .getByRole('button', { name: 'Expand Total income (F1040.9)', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Expand Total wages (F1040.1z)', exact: true })
+    .click();
+  await page
+    .getByRole('button', {
+      name: 'Expand Wages (Forms W-2, box 1) (F1040.1a)',
+      exact: true,
+    })
+    .click();
+}
+
+test('expands in place and shows contextual evidence without losing the calculation', async ({
   page,
 }) => {
   const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
-  await page.getByRole('button', { name: 'Trace wages to the W-2s' }).click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog.getByText('$212,400', { exact: true })).toBeVisible();
-  await dialog.getByRole('button', { name: 'ev-0016', exact: true }).click();
-  await expect(dialog.locator('mark')).toHaveText('104,600.00');
-  await expect(dialog.getByText('Page 1 · Field box1 · ev-0016')).toBeVisible();
-  await dialog
-    .getByLabel('Evidence and reason')
-    .fill('Agreed to D08 page 1 box 1 printed wages.');
-  await dialog.getByRole('button', { name: 'Save review record' }).click();
+  await expect(page.getByRole('navigation').getByRole('button')).toHaveCount(3);
   await expect(
-    dialog.getByText('Agreed to D08 page 1 box 1 printed wages.'),
+    page.getByText('Record your review', { exact: true }),
+  ).toHaveCount(0);
+  await wages(page);
+  const parent = page.getByRole('button', {
+    name: 'Collapse Total income (F1040.9)',
+    exact: true,
+  });
+  await page.getByRole('button', { name: /D08 · W-2 · p. 1/ }).click();
+  const evidence = page.getByRole('complementary', { name: 'Source evidence' });
+  await expect(evidence.locator('mark')).toHaveText('104,600.00');
+  await expect(
+    evidence.getByText('Page 1 · Field box1 · ev-0016'),
   ).toBeVisible();
-  await page.reload();
+  await expect(parent).toBeVisible();
+  await parent.click();
   await page
-    .getByRole('button', { name: 'Changes & filing', exact: true })
+    .getByRole('button', { name: 'Expand Total income (F1040.9)', exact: true })
     .click();
   await expect(
-    page.getByText('Agreed to D08 page 1 box 1 printed wages.'),
+    page.getByRole('button', {
+      name: 'Collapse Wages (Forms W-2, box 1) (F1040.1a)',
+      exact: true,
+    }),
   ).toBeVisible();
+  await expect(evidence.locator('mark')).toBeVisible();
   expect(errors).toEqual([]);
 });
 
-test('records a correction estimate, resolves the finding, and undoes the resolution', async ({
+test('records exceptions only on request and persists correction proposals', async ({
   page,
 }) => {
   await page.goto('/');
   await page
-    .getByRole('button', { name: 'Review queue', exact: false })
-    .first()
+    .getByRole('textbox', { name: 'Search return calculations' })
+    .fill('SchB.1.2');
+  await page.getByRole('button', { name: /Expand Interest.*SchB.1.2/ }).click();
+  await page.getByLabel('Actions for SchB.1.2').click();
+  await page
+    .getByRole('button', { name: 'Propose correction', exact: true })
     .click();
-  const finding = page
-    .locator('.finding')
-    .filter({ hasText: 'Same bank sweep interest counted twice' });
-  await finding.getByRole('button', { name: 'ev-0538', exact: true }).click();
   const dialog = page.getByRole('dialog');
-  await dialog
-    .getByRole('button', { name: 'SchB.1.2', exact: true })
-    .first()
-    .click();
-  await dialog
-    .getByRole('combobox', { name: 'Action', exact: true })
-    .selectOption('adjust');
   await dialog.getByLabel('Corrected value', { exact: false }).fill('0');
-  await dialog.getByLabel('Tax-effect category').selectOption('interest');
+  await dialog
+    .getByRole('combobox', { name: 'Tax-effect category' })
+    .selectOption('interest');
   await dialog
     .getByLabel('Evidence and reason')
-    .fill('Duplicate Northlake sweep confirmed against D28 and D29.');
+    .fill('Duplicate sweep confirmed using D28 and D29.');
   await expect(
     dialog.getByText('Estimated tax change', { exact: true }),
   ).toBeVisible();
-  await dialog.getByRole('button', { name: 'Save review record' }).click();
-  await dialog.getByRole('button', { name: 'Close explorer' }).click();
-  await finding
-    .getByRole('textbox')
-    .fill(
-      'Compared both statements; correction proposed for reviewer approval.',
-    );
-  await finding.getByRole('button', { name: 'Resolve', exact: true }).click();
-  await expect(finding.getByText('Resolved', { exact: true })).toBeVisible();
-  await page
-    .getByRole('button', { name: 'Changes & filing', exact: true })
-    .click();
-  await page
-    .getByRole('button', { name: 'Undo resolve duplicate-sweep' })
-    .click();
-  await page
-    .getByRole('button', { name: 'Review queue', exact: false })
-    .first()
-    .click();
+  await dialog.getByRole('button', { name: 'Save proposal' }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(page.getByText(/Proposed value:/)).toBeVisible();
   await expect(
-    finding.getByText('Needs review', { exact: true }),
+    page.getByRole('button', { name: 'Sign off return', exact: true }),
+  ).toBeDisabled();
+  await page.reload();
+  await page.getByRole('button', { name: 'History', exact: true }).click();
+  await expect(
+    page.getByText('Duplicate sweep confirmed using D28 and D29.', {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(
+    page.getByText('undo · SchB.1.2', { exact: true }),
   ).toBeVisible();
 });
 
-test('supports narrow screens and read-only staff roles', async ({ page }) => {
+test('supports mobile evidence inspection and read-only roles', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
+  await page.getByLabel('Viewing as').selectOption('st-05');
+  await wages(page);
+  await page.getByRole('button', { name: /D08 · W-2 · p. 1/ }).click();
+  await expect(
+    page.getByRole('complementary', { name: 'Source evidence' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Flag issue', exact: true }),
+  ).toHaveCount(0);
   expect(
     await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
+      () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await page.getByLabel('Viewing as').selectOption('st-05');
-  await page.getByRole('button', { name: 'Trace wages to the W-2s' }).click();
-  const dialog = page.getByRole('dialog');
+  await page.getByRole('button', { name: 'Close evidence' }).click();
   await expect(
-    dialog.getByRole('button', { name: 'Save review record' }),
-  ).toBeDisabled();
-  await page.keyboard.press('Escape');
-  await expect(dialog).not.toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Trace wages to the W-2s' }),
+    page.getByRole('button', { name: /D08 · W-2 · p. 1/ }),
   ).toBeFocused();
+});
+
+test('final sign-off persists and reopens when a note changes the review snapshot', async ({
+  page,
+}) => {
+  // Resolve the supplied warnings through the UI; no fabricated verification records.
+  await page.goto('/');
+  await page.getByRole('button', { name: /open items/ }).click();
+  for (const finding of await page.locator('.finding').all()) {
+    await finding.locator('summary').click();
+    await finding
+      .getByRole('textbox', { name: 'Resolution evidence' })
+      .fill('Test-only documented disposition after source inspection.');
+    await finding
+      .getByRole('button', { name: 'Resolve issue', exact: true })
+      .click();
+    await finding.locator('summary').click();
+  }
+  await page.getByRole('checkbox').check();
+  await page
+    .getByRole('button', { name: 'Sign off return', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Signed off', exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole('button', { name: 'Signed off', exact: true }),
+  ).toBeVisible();
+  await wages(page);
+  const leaf = page.locator('[data-line="F1040.1a"]');
+  await leaf.getByLabel('Actions for F1040.1a').click();
+  await leaf.getByRole('button', { name: 'Add note', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByLabel('Evidence and reason')
+    .fill('Additional source context recorded after approval.');
+  await page.getByRole('button', { name: 'Save note', exact: true }).click();
+  await expect(
+    page.getByText('Review reopened: records changed after sign-off.'),
+  ).toBeVisible();
 });

@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import { packet, money, type Graph, type Staff } from '../domain/packet';
+import { money, type Graph, type Staff } from '../domain/packet';
 import { canWrite, estimateImpact, type ReviewEvent } from '../domain/review';
 
-export default function ReviewForm({
+export default function ExceptionForm({
   target,
   graph,
   staff,
   onSave,
+  kind,
+  onCancel,
 }: {
+  kind: 'flag' | 'adjust' | 'note';
+  onCancel: () => void;
   target: string;
   graph: Graph;
   staff: Staff;
@@ -15,11 +19,7 @@ export default function ReviewForm({
     event: Omit<ReviewEvent, 'id' | 'at' | 'actor' | 'role' | 'version'>,
   ) => boolean;
 }) {
-  const [kind, setKind] = useState<'verify' | 'flag' | 'adjust'>('verify');
   const [note, setNote] = useState('');
-  const [method, setMethod] = useState(
-    packet.firm.starter_standards.verification_types[0],
-  );
   const original =
     graph.values.get(target)?.value ?? graph.lines.get(target)?.value;
   const [amount, setAmount] = useState('');
@@ -44,7 +44,6 @@ export default function ReviewForm({
             kind,
             target,
             note,
-            ...(kind === 'verify' ? { method } : {}),
             ...(kind === 'adjust' && numeric
               ? { amount: Number(amount), original, category }
               : {}),
@@ -55,34 +54,17 @@ export default function ReviewForm({
         }
       }}
     >
-      <h4>Record your review</h4>
+      <h3>
+        {kind === 'adjust'
+          ? 'Propose correction'
+          : kind === 'flag'
+            ? 'Flag issue'
+            : 'Add note'}
+      </h3>
       <p className="small muted">
         {target} · {graph.version.version} · {staff.name}
       </p>
       <fieldset disabled={!canWrite(staff)}>
-        <label>
-          Action
-          <select
-            value={kind}
-            onChange={(e) => setKind(e.target.value as typeof kind)}
-          >
-            <option value="verify">Verify evidence</option>
-            <option value="flag">Flag a concern</option>
-            {numeric && <option value="adjust">Propose correction</option>}
-          </select>
-        </label>
-        {kind === 'verify' && (
-          <label>
-            Verification method
-            <select value={method} onChange={(e) => setMethod(e.target.value)}>
-              {packet.firm.starter_standards.verification_types.map((m) => (
-                <option key={m} value={m}>
-                  {m.replaceAll('_', ' ')}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
         {kind === 'adjust' && (
           <>
             <label>
@@ -144,9 +126,13 @@ export default function ReviewForm({
           />
         </label>
         <button className="primary" type="submit">
-          Save review record
+          Save{' '}
+          {kind === 'adjust' ? 'proposal' : kind === 'flag' ? 'issue' : 'note'}
         </button>
       </fieldset>
+      <button type="button" onClick={onCancel}>
+        Cancel
+      </button>
       {!canWrite(staff) && (
         <p className="callout">
           This role has read-only access to review records.
