@@ -32,6 +32,6 @@ Domain tests exercise real packet paths, version isolation, missing-reference be
 
 The app intentionally imports the full packet for the prototype. The production bundle is correspondingly large; a production data API or lazy-loaded packet can reduce initial JavaScript parsing costs.
 
-## Preview deployment status
+## Local development and hosting decision
 
-A private Sites project was reserved, and its non-secret identity is in `.openai/hosting.json`. Source synchronization and deployment were blocked by automatic approval review because Sites is a separate destination from the user-authorized private GitHub repository. No app source, build, or packet was uploaded to Sites. Deployment remains pending explicit authorization; the local app and GitHub repository are usable.
+A private Sites project was reserved, and its non-secret identity is in `.openai/hosting.json`. Source synchronization and deployment were blocked by automatic approval review because Sites is a separate destination from the user-authorized private GitHub repository. No app source, build, or packet was uploaded to Sites. The user subsequently chose to build and test locally first and defer cloud hosting until the app is finalized. Continue committing and pushing milestones to the private GitHub repository; do not deploy during local development.

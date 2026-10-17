@@ -6,7 +6,7 @@ This is an actively developed case-study prototype. It is not tax preparation so
 
 ![Workspace overview](docs/images/overview.png)
 
-The private GitHub repository is the source of truth. Hosted preview deployment is pending authorization; no live app URL is available yet.
+The private GitHub repository is the source of truth. Development and testing happen locally; cloud hosting is deferred until the user considers the app finalized.
 
 ## Run locally
 
