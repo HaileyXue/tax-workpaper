@@ -1,0 +1,134 @@
+import { describe, expect, it } from 'vitest';
+import { createGraph, packet, resolveReference } from '../src/domain/packet';
+import { findIssues } from '../src/domain/findings';
+import {
+  activeEvents,
+  estimateImpact,
+  validateEvent,
+  type ReviewEvent,
+} from '../src/domain/review';
+const graph = createGraph(packet, 'v3');
+const reviewer = packet.firm.staff.find((s) => s.role === 'reviewer')!;
+const event: ReviewEvent = {
+  id: 'test',
+  at: '2026-10-17T00:00:00Z',
+  actor: reviewer.id,
+  role: reviewer.role,
+  version: 'v3',
+  kind: 'verify',
+  target: 'ev-0016',
+  note: 'Agreed to D08 box 1',
+  method: 'agreed_to_source_document',
+};
+
+describe('packet lineage', () => {
+  it('preserves the full delivered fixture', () => {
+    expect(packet.documents).toHaveLength(74);
+    expect(packet.extracted_values).toHaveLength(3012);
+    expect(graph.lines.size).toBe(627);
+  });
+  it('traces total wages through its calculation to both exact W-2 fields', () => {
+    expect(graph.evidence('F1040.1z')).toEqual(['ev-0016', 'ev-0035']);
+    expect(graph.values.get('ev-0016')).toMatchObject({
+      document_id: 'D08',
+      page: 1,
+      field: 'box1',
+      value: 104600,
+    });
+    expect(graph.documents.get('D08')?.pages[0].printed_content).toContain(
+      'Box 1 104,600.00',
+    );
+    expect(graph.downstream('ev-0016')).toContain('F1040.11');
+    expect(graph.documentUsage('D08')).toContain('F1040.1z');
+  });
+  it('does not conflate the duplicate W-2 with a second wage source', () => {
+    expect(graph.documentUsage('D10')).not.toContain('F1040.1a');
+  });
+  it('resolves prior-year pointers, FX parameters, page references, and messages', () => {
+    expect(resolveReference('ref:fx.SEK.2025_average', graph)).toBe(9.86);
+    expect(resolveReference('py:/return_2024/lines/F1040.1a', graph)).toBe(
+      156039,
+    );
+    expect(resolveReference('doc:D08#page1', graph)).toHaveProperty(
+      'printed_content',
+    );
+    expect(resolveReference('qa-14', graph)).toHaveProperty('answer');
+    expect(resolveReference('missing-ref', graph)).toBeUndefined();
+  });
+  it('terminates even when inputs contain a cycle', () => {
+    const copy = structuredClone(packet);
+    copy.return_versions[2].lines[0].inputs = ['F1040.1z'];
+    expect(createGraph(copy, 'v3').evidence('F1040.1a')).toContain('ev-0016');
+  });
+});
+
+describe('independent review checks', () => {
+  it('detects double-counted sweep income and wrong-year FX independently of engine diagnostics', () => {
+    const findings = findIssues(graph);
+    expect(findings.find((f) => f.id === 'duplicate-sweep')?.refs).toEqual([
+      'ev-0492',
+      'ev-0538',
+    ]);
+    expect(findings.find((f) => f.id === 'fx-year')?.origin).toBe(
+      'Independent year check',
+    );
+  });
+  it('detects a high-confidence W-2 mistake if one is introduced', () => {
+    const copy = structuredClone(packet);
+    copy.extracted_values.find((v) => v.id === 'ev-0016')!.value = 104800;
+    expect(
+      findIssues(createGraph(copy, 'v3')).find((f) => f.id === 'source-ev-0016')
+        ?.expected,
+    ).toBe(104600);
+  });
+});
+
+describe('review records and estimates', () => {
+  it('allows a documented verification and rejects undocumented changes', () => {
+    expect(() => validateEvent(event, reviewer, [])).not.toThrow();
+    expect(() => validateEvent({ ...event, note: ' ' }, reviewer, [])).toThrow(
+      'reason',
+    );
+  });
+  it('prevents administrator writes and preparer resolution', () => {
+    const admin = packet.firm.staff.find(
+      (s) => s.role === 'firm_administrator',
+    )!;
+    expect(() => validateEvent(event, admin, [])).toThrow();
+    const preparer = packet.firm.staff[0];
+    expect(() =>
+      validateEvent(
+        { ...event, actor: preparer.id, role: preparer.role, kind: 'resolve' },
+        preparer,
+        [],
+      ),
+    ).toThrow('reviewer or partner');
+  });
+  it('undo retains the original event and permits only its author', () => {
+    const undo: ReviewEvent = {
+      ...event,
+      id: 'undo',
+      kind: 'undo',
+      reverses: event.id,
+    };
+    expect(() => validateEvent(undo, reviewer, [event])).not.toThrow();
+    expect(activeEvents([event, undo])).toHaveLength(0);
+    const partner = packet.firm.staff.find((s) => s.role === 'partner')!;
+    expect(() =>
+      validateEvent(
+        { ...undo, actor: partner.id, role: partner.role },
+        partner,
+        [event],
+      ),
+    ).toThrow('own');
+  });
+  it('estimates a delta from supplied category rates without mutating the return', () => {
+    const before = graph.version.summary.federal.total_tax;
+    const estimate = estimateImpact(graph.version, 'interest', -1840);
+    expect(estimate.federal).toBeCloseTo(
+      -1840 * graph.version.tax_effect_rates.interest.federal_per_dollar,
+    );
+    expect(graph.version.summary.federal.total_tax).toBe(before);
+    expect(() => estimateImpact(graph.version, 'invented', 1)).toThrow();
+  });
+});
