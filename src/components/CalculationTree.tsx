@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronRight, FileText, MoreHorizontal } from 'lucide-react';
-import { money, packet, type Graph } from '../domain/packet';
+import { money, sourceAmount, packet, type Graph } from '../domain/packet';
 import { calculationPresentation } from '../domain/presentation';
 import type { ReviewEvent } from '../domain/review';
 
@@ -49,12 +49,18 @@ export function EvidenceLink({
 export default function CalculationTree({
   lineId,
   displayLabel,
+  initiallyExpanded = false,
   path = [],
   ...props
-}: TreeProps & { lineId: string; displayLabel?: string; path?: string[] }) {
+}: TreeProps & {
+  lineId: string;
+  displayLabel?: string;
+  initiallyExpanded?: boolean;
+  path?: string[];
+}) {
   const { graph, events, onAction, writable } = props;
-  const [expanded, setExpanded] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [expanded, setExpanded] = useState(initiallyExpanded);
+  const [mounted, setMounted] = useState(initiallyExpanded);
   const [limit, setLimit] = useState(20);
   const [query, setQuery] = useState('');
   const line = graph.lines.get(lineId);
@@ -201,11 +207,7 @@ export default function CalculationTree({
                         <span className="source-value">
                           {graph.documents.get(value.document_id)?.issuer ??
                             value.label}
-                          <strong>
-                            {value.value_type === 'money'
-                              ? money(value.value)
-                              : String(value.value ?? '—')}
-                          </strong>
+                          <strong>{sourceAmount(value)}</strong>
                         </span>
                       )}
                       <EvidenceLink id={id} path={context} {...props} />

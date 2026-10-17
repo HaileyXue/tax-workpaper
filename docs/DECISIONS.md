@@ -28,7 +28,7 @@ The user's priority was a clean, employer-reviewable repository and a working ta
 
 ## Validation approach
 
-Domain tests exercise real packet paths, version isolation, missing-reference behavior, cycle protection, independent checks, role restrictions, undo authorship, and estimate math. A production build checks browser compilation. Four Playwright browser tests pass for inline tracing and retained expansion, contextual evidence, correction persistence/undo, mobile layout and read-only roles, and final sign-off persistence/invalidation. Sixteen domain tests and the production build pass. The prior dependency audit reported zero known vulnerabilities; this revision adds no dependencies.
+Domain tests exercise real packet paths, version isolation, missing-reference behavior, cycle protection, independent checks, role restrictions, undo authorship, and estimate math. A production build checks browser compilation. Six Playwright browser tests pass for inline tracing and retained expansion, contextual evidence, correction persistence/undo, mobile layout and read-only roles, and final sign-off persistence/invalidation. Twenty domain tests and the production build pass. The prior dependency audit reported zero known vulnerabilities; this revision adds no dependencies.
 
 The app intentionally imports the full packet for the prototype. The production bundle is correspondingly large; a production data API or lazy-loaded packet can reduce initial JavaScript parsing costs.
 
@@ -51,3 +51,11 @@ Restored the left sidebar for Return, Documents, and History. The main canvas an
 ## Selective disclosure
 
 Simple amounts display as plain rows with immediate source links. Disclosure controls are reserved for meaningful calculation breakdowns and source lists longer than three items. Explicit unchanged carry/sum steps are presented together, retaining the original graph and all intermediate rules and notes in the details menu. This removes unnecessary navigation without hiding meaningful transformations merely because their numeric results match.
+
+## Reference screenshots: compact schedules
+
+The screenshots clarified useful interaction choices: group related amounts by payer, compare federal and state figures, place exceptions beside affected rows, and retain the schedule while inspecting source evidence. They do not establish a working recalculation engine, authentic source PDFs, secure roles, or completed CPA review. No sample figures, clients, or review statuses from the screenshots are imported.
+
+Summary, wages/interest, and dividend tables map to existing IDs in the selected packet version. All financial values resolve from that packet; missing mappings are shown as a dash, not zero. California total-income and allocation rows are distinguished explicitly. A calculation warning propagates forward to dependent amounts, not backward to every source it shares. No row is automatically marked reviewed or reconciled. The original packet remains unchanged; user-authored review events remain a separate local record.
+
+The full calculation tree is available under one secondary disclosure. Source documents remain clearly labeled simulations of packet content; this revision does not invent PDF layouts or replace the supplied computed totals.

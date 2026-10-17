@@ -1,6 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 async function wages(page: Page) {
+  await page.getByText('All calculations & schedules', { exact: true }).click();
   await page
     .getByRole('button', { name: 'Expand Total income (F1040.9)', exact: true })
     .click();
@@ -47,6 +48,7 @@ test('records exceptions only on request and persists correction proposals', asy
   page,
 }) => {
   await page.goto('/');
+  await page.getByText('All calculations & schedules', { exact: true }).click();
   await page
     .getByRole('textbox', { name: 'Search return calculations' })
     .fill('SchB.1.2');
@@ -160,5 +162,75 @@ test('final sign-off persists and reopens when a note changes the review snapsho
   await page.getByRole('button', { name: 'Save note', exact: true }).click();
   await expect(
     page.getByText('Review reopened: records changed after sign-off.'),
+  ).toBeVisible();
+});
+
+test('compares packet summary figures without filling unmapped cells', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const panel = page.getByRole('tabpanel');
+  const agi = panel.getByRole('row').filter({
+    has: page.getByRole('rowheader', { name: /^Adjusted gross income/ }),
+  });
+  await expect(
+    agi.getByRole('button', { name: 'Inspect Federal F1040.11' }),
+  ).toHaveText('$445,590');
+  await expect(
+    agi.getByRole('button', { name: 'Inspect California F540NR.17' }),
+  ).toHaveText('$481,096');
+  const caSource = panel.getByRole('row').filter({
+    has: page.getByRole('rowheader', {
+      name: 'California-source AGI',
+      exact: true,
+    }),
+  });
+  await expect(caSource.getByRole('cell').first()).toHaveText('—');
+  await agi.getByRole('button', { name: 'Inspect Federal F1040.11' }).click();
+  await expect(panel.locator('.schedule-breakdown')).toBeVisible();
+  await expect(agi).toBeVisible();
+});
+
+test('groups W-2 fields and attaches packet-linked warnings to affected interest rows', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page
+    .getByRole('tab', { name: 'Wages & interest', exact: true })
+    .click();
+  const panel = page.getByRole('tabpanel');
+  const employer = panel
+    .getByRole('row')
+    .filter({ has: page.getByRole('rowheader', { name: /Corvane Systems/ }) });
+  await expect(
+    employer.getByRole('button', { name: 'Inspect Wages ev-0016' }),
+  ).toHaveText('$104,600');
+  await expect(
+    employer.getByRole('button', {
+      name: 'Inspect Federal withholding ev-0017',
+    }),
+  ).toHaveText('$15,800');
+  await employer
+    .getByRole('button', { name: 'Inspect Federal withholding ev-0017' })
+    .click();
+  await expect(
+    page
+      .getByRole('complementary', { name: 'Source evidence' })
+      .locator('mark'),
+  ).toHaveText('15,800.00');
+  await expect(employer).toBeVisible();
+  await expect(panel.getByRole('button', { name: /D10/ })).toHaveCount(0);
+  const bank = panel.getByRole('row').filter({
+    has: page.getByRole('rowheader', { name: /^Northlake Bank, N.A./ }),
+  });
+  await bank.locator('.inline-findings > summary').click();
+  await expect(
+    bank.getByText('Same bank sweep interest counted twice', { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('tab', { name: 'Dividends', exact: true }).click();
+  await expect(
+    page
+      .getByRole('tabpanel')
+      .getByRole('button', { name: 'Inspect Qualified dividends ev-0490' }),
   ).toBeVisible();
 });

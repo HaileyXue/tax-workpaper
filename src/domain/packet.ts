@@ -14,6 +14,7 @@ export interface SourceValue {
   position: { x0: number; y0: number; x1: number; y1: number };
 }
 export interface SourceDocument {
+  tax_year: number;
   id: string;
   title: string;
   issuer: string;
@@ -218,4 +219,18 @@ export function resolveReference(ref: string, graph: Graph): unknown {
   return Object.values(packet.client)
     .flat()
     .find((item) => item.id === ref);
+}
+
+// Preserve explicitly supplied foreign-currency units in extracted fields.
+export function sourceAmount(value: SourceValue): string {
+  if (
+    value.value_type === 'money' &&
+    typeof value.value === 'number' &&
+    /sek/i.test(value.field)
+  ) {
+    return `${value.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SEK`;
+  }
+  return value.value_type === 'money'
+    ? money(value.value)
+    : String(value.value ?? '—');
 }

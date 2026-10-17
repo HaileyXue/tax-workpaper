@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { FileText, ArrowUpRight } from 'lucide-react';
-import { money, type Graph, type SourceValue } from '../domain/packet';
+import { sourceAmount, type Graph, type SourceValue } from '../domain/packet';
 
 export default function SourceViewer({
   graph,
@@ -66,7 +66,7 @@ export default function SourceViewer({
       <article className="paper">
         <div className="paper-heading">
           <strong>{doc.document_type}</strong>
-          <span>2025</span>
+          <span>{doc.tax_year}</span>
         </div>
         <div className="printed-text">
           {unique ? (
@@ -109,11 +109,7 @@ export default function SourceViewer({
                   {v.id} · {Math.round(v.confidence * 100)}% confidence
                 </small>
               </span>
-              <strong>
-                {v.value_type === 'money'
-                  ? money(v.value)
-                  : String(v.value ?? '—')}
-              </strong>
+              <strong>{sourceAmount(v)}</strong>
             </button>
           ))}
         </div>

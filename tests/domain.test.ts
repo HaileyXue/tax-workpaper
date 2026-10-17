@@ -1,3 +1,9 @@
+import {
+  wagesAndInterest,
+  dividends,
+  summaryRows,
+  relevantFindings,
+} from '../src/domain/schedules';
 import { calculationPresentation } from '../src/domain/presentation';
 import { describe, expect, it } from 'vitest';
 import { createGraph, packet, resolveReference } from '../src/domain/packet';
@@ -213,5 +219,60 @@ describe('selective calculation disclosure', () => {
     expect(
       calculationPresentation(createGraph(copy, 'v3'), 'F1040.1z').chain,
     ).toHaveLength(2);
+  });
+});
+
+describe('packet-only schedule mappings', () => {
+  it('uses the selected snapshot links and excludes duplicate W-2 images', () => {
+    const rows = wagesAndInterest(graph);
+    expect(rows.find((r) => r.id === 'D08')?.cells).toEqual({
+      wages: 'ev-0016',
+      withholding: 'ev-0017',
+      stateWithholding: 'ev-0031',
+    });
+    expect(rows.some((r) => r.id === 'D10')).toBe(false);
+    for (const version of packet.return_versions) {
+      const g = createGraph(packet, version.version);
+      for (const row of [...wagesAndInterest(g), ...dividends(g)]) {
+        for (const ref of Object.values(row.cells))
+          if (ref) expect(g.lines.has(ref) || g.values.has(ref)).toBe(true);
+      }
+    }
+  });
+  it('preserves missing cells and does not manufacture summary amounts', () => {
+    const row = summaryRows.find((r) => r.label === 'California-source AGI')!;
+    expect('federal' in row).toBe(false);
+    for (const row of summaryRows)
+      for (const name of ['federal', 'california'] as const) {
+        const ref =
+          name in row ? (row as Record<string, string>)[name] : undefined;
+        if (ref) expect(graph.lines.has(ref)).toBe(true);
+      }
+  });
+  it('does not propagate a calculation warning backward into its source rows', () => {
+    expect(
+      relevantFindings(graph, findIssues(graph), ['ev-0016']).some(
+        (f) => f.id === 'CA_AMT_NOT_COMPUTED',
+      ),
+    ).toBe(false);
+  });
+  it('does not substitute original dividends for corrected data and links warnings using references', () => {
+    expect(
+      dividends(graph).find((r) => r.id === 'SchB.5.2')?.cells.qualified,
+    ).toBe('ev-0699');
+    expect(
+      dividends(createGraph(packet, 'v1')).find((r) => r.id === 'SchB.5.2')
+        ?.cells.qualified,
+    ).toBe('ev-0540');
+    expect(
+      relevantFindings(graph, findIssues(graph), ['SchB.1.2']).some(
+        (f) => f.id === 'duplicate-sweep',
+      ),
+    ).toBe(true);
+    expect(
+      relevantFindings(graph, findIssues(graph), ['ev-0016']).some(
+        (f) => f.id === 'duplicate-sweep',
+      ),
+    ).toBe(false);
   });
 });

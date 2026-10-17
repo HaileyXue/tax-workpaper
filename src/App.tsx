@@ -25,6 +25,7 @@ import CalculationTree, {
   type ExceptionAction,
   type TreeProps,
 } from './components/CalculationTree';
+import ReturnSchedules from './components/ReturnSchedules';
 import SourceViewer from './components/SourceViewer';
 import ExceptionForm from './components/ExceptionForm';
 import Exceptions from './components/Exceptions';
@@ -263,22 +264,6 @@ export default function App() {
                 {approval.blockers === 1 ? 'item' : 'items'}
               </button>
             </div>
-            <section
-              aria-label="Return summary"
-              className="return-summary"
-              key={`summary-${version}`}
-            >
-              <CalculationTree
-                {...tree}
-                lineId="F1040.37"
-                displayLabel="Federal balance due"
-              />
-              <CalculationTree
-                {...tree}
-                lineId="F540NR.97"
-                displayLabel="California refund"
-              />
-            </section>
             <details ref={issueRef} className="issues-section">
               <summary>
                 Issues to resolve{' '}
@@ -351,80 +336,90 @@ export default function App() {
                 </p>
               )}
             </details>
-            <div className="section-heading">
-              <h2>Return calculations</h2>
-              <label className="search">
-                <Search size={15} />
-                <input
-                  aria-label="Search return calculations"
-                  placeholder="Find a number or schedule"
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setAllLines(30);
-                  }}
-                />
-              </label>
-            </div>
-            {spotlight && (
-              <section className="spotlight">
-                <div className="section-top">
-                  <h3>Linked calculation</h3>
-                  <button onClick={() => setSpotlight(null)}>Dismiss</button>
-                </div>
-                <CalculationTree
-                  key={`${version}-${spotlight}`}
-                  {...tree}
-                  lineId={spotlight}
-                />
-              </section>
-            )}
-            <div hidden={Boolean(search)} key={`groups-${version}`}>
-              {groups.map((group) => (
-                <section className="return-group" key={group.title}>
-                  <h3>{group.title}</h3>
-                  {group.keys.map((id) => (
-                    <CalculationTree key={id} {...tree} lineId={id} />
-                  ))}
-                </section>
-              ))}
-              <details className="utility-section">
-                <summary>
-                  All schedules & additional outputs · {graph.lines.size} lines
-                </summary>
-                <p className="muted small">
-                  Includes informational outputs and detailed schedules. These
-                  are not additional amounts to add to the return totals.
-                </p>
-                {graph.version.lines.slice(0, allLines).map((l) => (
-                  <CalculationTree key={l.key} {...tree} lineId={l.key} />
-                ))}
-                {allLines < graph.lines.size && (
-                  <button onClick={() => setAllLines(allLines + 30)}>
-                    Show 30 more lines
-                  </button>
-                )}
-              </details>
-            </div>
-            {search && (
-              <section aria-label="Search results">
-                <p className="small muted">
-                  {matchingLines.length} matching calculations
-                </p>
-                {matchingLines.slice(0, allLines).map((l) => (
-                  <CalculationTree
-                    key={`${version}-${l.key}`}
-                    {...tree}
-                    lineId={l.key}
+            <ReturnSchedules
+              key={version}
+              {...tree}
+              findings={findings}
+              resolved={resolved}
+            />
+            <details className="utility-section all-calculations">
+              <summary>All calculations & schedules</summary>
+              <div className="section-heading">
+                <h2>Return calculations</h2>
+                <label className="search">
+                  <Search size={15} />
+                  <input
+                    aria-label="Search return calculations"
+                    placeholder="Find a number or schedule"
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setAllLines(30);
+                    }}
                   />
+                </label>
+              </div>
+              {spotlight && (
+                <section className="spotlight">
+                  <div className="section-top">
+                    <h3>Linked calculation</h3>
+                    <button onClick={() => setSpotlight(null)}>Dismiss</button>
+                  </div>
+                  <CalculationTree
+                    key={`${version}-${spotlight}`}
+                    {...tree}
+                    lineId={spotlight}
+                  />
+                </section>
+              )}
+              <div hidden={Boolean(search)} key={`groups-${version}`}>
+                {groups.map((group) => (
+                  <section className="return-group" key={group.title}>
+                    <h3>{group.title}</h3>
+                    {group.keys.map((id) => (
+                      <CalculationTree key={id} {...tree} lineId={id} />
+                    ))}
+                  </section>
                 ))}
-                {matchingLines.length > allLines && (
-                  <button onClick={() => setAllLines(allLines + 30)}>
-                    Show 30 more results
-                  </button>
-                )}
-              </section>
-            )}
+                <details className="utility-section">
+                  <summary>
+                    All schedules & additional outputs · {graph.lines.size}{' '}
+                    lines
+                  </summary>
+                  <p className="muted small">
+                    Includes informational outputs and detailed schedules. These
+                    are not additional amounts to add to the return totals.
+                  </p>
+                  {graph.version.lines.slice(0, allLines).map((l) => (
+                    <CalculationTree key={l.key} {...tree} lineId={l.key} />
+                  ))}
+                  {allLines < graph.lines.size && (
+                    <button onClick={() => setAllLines(allLines + 30)}>
+                      Show 30 more lines
+                    </button>
+                  )}
+                </details>
+              </div>
+              {search && (
+                <section aria-label="Search results">
+                  <p className="small muted">
+                    {matchingLines.length} matching calculations
+                  </p>
+                  {matchingLines.slice(0, allLines).map((l) => (
+                    <CalculationTree
+                      key={`${version}-${l.key}`}
+                      {...tree}
+                      lineId={l.key}
+                    />
+                  ))}
+                  {matchingLines.length > allLines && (
+                    <button onClick={() => setAllLines(allLines + 30)}>
+                      Show 30 more results
+                    </button>
+                  )}
+                </section>
+              )}
+            </details>
             <section className="signoff">
               <h2>Final review sign-off</h2>
               <p>

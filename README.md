@@ -29,15 +29,16 @@ npm run format:check  # Repository formatting
 
 ## Try the review loop
 
-1. On **Return**, expand **Income → Total income**. Wages and both W-2 source links are immediately visible as plain rows; there are no redundant wage-expansion steps.
-2. Select the **D08 · W-2 · p. 1 · Box 1** source label. The evidence panel highlights `104,600.00` in the packet's printed content while the calculation stays visible. No verification action is required.
+1. On **Return**, compare the supplied federal and California figures in **Summary**, then select **Wages & interest** to see employer wages and withholding together. Select **Dividends** to compare ordinary and qualified amounts.
+2. Select the Corvane wages amount. The evidence panel highlights `104,600.00` in the packet's printed content while the calculation stays visible. No verification action is required.
 3. Expand **Issues to resolve → Same bank sweep interest counted twice** and inspect the two source records.
-4. Search return calculations for `SchB.1.2` and choose its **… → Propose correction** action. Enter $0, category `interest`, and a rationale. Estimated tax effects appear; engine totals remain unchanged.
+4. Open **All calculations & schedules**, search return calculations for `SchB.1.2` and choose its **… → Propose correction** action. Enter $0, category `interest`, and a rationale. Estimated tax effects appear; engine totals remain unchanged.
 5. Reload and open **History** to inspect the proposal, compare snapshots, view precomputed alternatives, or undo your own action. Export history for a portable record.
 6. Final review sign-off is available to a reviewer or partner only after blocking warnings, manual flags, and outstanding correction proposals are cleared. Subsequent review events reopen it. This is a local review acknowledgment, not an e-signature or filing approval.
 
 ## What works today
 
+- Compact packet-backed summary, wages/interest, and dividend schedules. Missing mappings display a dash, never an invented zero; warnings follow affected references.
 - One white-background Return workspace with selective calculation breakdowns; Documents and History are secondary tools in the left sidebar.
 - Plain rows for amounts with up to three direct references; expandable breakdowns for calculations and long source lists. Unchanged carry/sum links are flattened, with their full lineage retained in the details menu.
 - Evidence displayed beside the calculation on desktop and in a bottom panel on mobile; other document fields and reverse usage are collapsed by default.
