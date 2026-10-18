@@ -118,3 +118,16 @@ export function relevantFindings(
     ),
   );
 }
+
+export function amountIssue(graph: Graph, findings: Finding[], ref: string) {
+  const matches = relevantFindings(graph, findings, [ref]);
+  if (!matches.length) return undefined;
+  const directRefs = new Set([ref, ...(graph.lines.get(ref)?.sources ?? [])]);
+  const direct = matches.some((finding) =>
+    finding.refs.some((id) => directRefs.has(id)),
+  );
+  return {
+    kind: direct ? 'direct' : 'upstream',
+    description: `${direct ? 'Review issue' : 'Affected by upstream issue'}: ${matches.map((f) => f.title).join('; ')}`,
+  };
+}

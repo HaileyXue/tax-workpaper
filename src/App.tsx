@@ -1,8 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import {
   Download,
   Search,
-  Sprout,
   X,
   FileText,
   History as HistoryIcon,
@@ -27,6 +32,7 @@ import CalculationTree, {
 } from './components/CalculationTree';
 import ReturnSchedules from './components/ReturnSchedules';
 import SourceViewer from './components/SourceViewer';
+import EvidenceResizeHandle from './components/EvidenceResizeHandle';
 import ExceptionForm from './components/ExceptionForm';
 import Exceptions from './components/Exceptions';
 import History from './components/History';
@@ -47,6 +53,7 @@ const groups = [
 ];
 const initial = loadReviews();
 export default function App() {
+  const [evidenceWidth, setEvidenceWidth] = useState(440);
   const [tab, setTab] = useState('Return');
   const [version, setVersion] = useState('v3');
   const [staffId, setStaffId] = useState('st-02');
@@ -119,6 +126,19 @@ export default function App() {
   const tree: TreeProps = {
     graph,
     events: current,
+    issueFindings: [
+      ...findings.filter((f) => f.severity === 'warning' && !resolved(f.id)),
+      ...current
+        .filter((e) => e.kind === 'flag' && !resolved(e.id))
+        .map((e) => ({
+          id: e.id,
+          title: e.note,
+          detail: e.note,
+          refs: [e.target],
+          origin: 'Reviewer flag',
+          severity: 'warning' as const,
+        })),
+    ],
     writable: canWrite(staff),
     onEvidence: openEvidence,
     onAction: (target, kind) => setAction({ target, kind }),
@@ -142,7 +162,7 @@ export default function App() {
     );
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'miraflores-review-history.json';
+    a.download = 'tax-workpaper-review-history.json';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -167,8 +187,7 @@ export default function App() {
             setTab('Return');
           }}
         >
-          <Sprout size={24} />
-          miraflores
+          Tax workpaper
         </a>
         <nav aria-label="Workspace">
           {['Return', 'Documents', 'History'].map((name) => (
@@ -264,9 +283,12 @@ export default function App() {
                 {approval.blockers === 1 ? 'item' : 'items'}
               </button>
             </div>
-            <details ref={issueRef} className="issues-section">
+            <details
+              ref={issueRef}
+              className={`issues-section ${approval.blockers > 0 ? 'has-issues' : ''}`}
+            >
               <summary>
-                Issues to resolve{' '}
+                <strong>Issues to resolve</strong>{' '}
                 <span>
                   {warnings} warnings · {approval.flags} flags ·{' '}
                   {approval.proposals} proposals
@@ -556,11 +578,19 @@ export default function App() {
         {evidence && (
           <aside
             className="evidence-panel"
+            id="source-evidence"
+            style={
+              { '--evidence-width': `${evidenceWidth}px` } as CSSProperties
+            }
             aria-label="Source evidence"
             onKeyDown={(e) => {
               if (e.key === 'Escape') closeEvidence();
             }}
           >
+            <EvidenceResizeHandle
+              width={evidenceWidth}
+              onChange={setEvidenceWidth}
+            />
             <div className="evidence-heading">
               <div>
                 <span className="eyebrow">EVIDENCE FOR</span>

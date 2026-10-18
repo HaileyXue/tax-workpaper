@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { ChevronRight, FileText, MoreHorizontal } from 'lucide-react';
 import { money, sourceAmount, packet, type Graph } from '../domain/packet';
 import { calculationPresentation } from '../domain/presentation';
+import { amountIssue } from '../domain/schedules';
+import type { Finding } from '../domain/findings';
 import type { ReviewEvent } from '../domain/review';
 
 export interface EvidenceSelection {
@@ -15,6 +17,7 @@ export interface TreeProps {
   onAction: (target: string, kind: ExceptionAction) => void;
   events: ReviewEvent[];
   writable: boolean;
+  issueFindings?: Finding[];
 }
 export function EvidenceLink({
   id,
@@ -91,6 +94,21 @@ export default function CalculationTree({
       chain.some((item) => item.key === e.target) &&
       ['flag', 'adjust', 'note'].includes(e.kind),
   );
+  const issue = amountIssue(graph, props.issueFindings ?? [], lineId);
+  const renderedAmount = (
+    <strong
+      className={issue ? `amount-issue amount-issue-${issue.kind}` : undefined}
+      title={issue?.description}
+      aria-description={issue?.description}
+    >
+      {issue && (
+        <span className="issue-symbol" aria-hidden="true">
+          {issue.kind === 'direct' ? '!' : '↳'}
+        </span>
+      )}
+      {money(line.value)}
+    </strong>
+  );
   const latestCorrection = related.filter((e) => e.kind === 'adjust').at(-1);
   return (
     <article
@@ -110,12 +128,12 @@ export default function CalculationTree({
           >
             <ChevronRight size={16} className={expanded ? 'rotated' : ''} />
             <span>{displayLabel ?? line.label}</span>
-            <strong>{money(line.value)}</strong>
+            {renderedAmount}
           </button>
         ) : (
           <div className="calculation-label">
             <span>{displayLabel ?? line.label}</span>
-            <strong>{money(line.value)}</strong>
+            {renderedAmount}
           </div>
         )}
         {related.length > 0 && (
@@ -163,6 +181,14 @@ export default function CalculationTree({
           hidden={expandable && !expanded}
           className={expandable ? 'calculation-body' : 'leaf-evidence'}
         >
+          {expandable && (
+            <div className="calculation-explanation">
+              <strong>How this is calculated</strong>
+              <p>{packet.engine_reference.rules[detail.rule] ?? detail.rule}</p>
+              {detail.note && <p>{detail.note}</p>}
+              <small>{detail.key} · Supplied calculation · Inputs below</small>
+            </div>
+          )}
           {latestCorrection && (
             <p className="callout">
               Proposed value: <strong>{money(latestCorrection.amount)}</strong>.

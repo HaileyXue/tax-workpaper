@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react';
 import { money } from '../domain/packet';
 import {
+  amountIssue,
   dividends,
   relevantFindings,
   summaryRows,
@@ -19,9 +20,9 @@ export default function ReturnSchedules({
   const [view, setView] = useState('Summary');
   const [activeCell, setActiveCell] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
-  const open = findings.filter(
-    (f) => f.severity === 'warning' && !resolved(f.id),
-  );
+  const open =
+    tree.issueFindings ??
+    findings.filter((f) => f.severity === 'warning' && !resolved(f.id));
   const rows =
     view === 'Wages & interest' ? wagesAndInterest(graph) : dividends(graph);
   const columns =
@@ -47,13 +48,21 @@ export default function ReturnSchedules({
     if (!ref) return <span className="empty-cell">—</span>;
     const item = graph.values.get(ref) ?? graph.lines.get(ref);
     if (!item) return <span className="empty-cell">—</span>;
+    const issue = amountIssue(graph, open, ref);
     return (
       <button
-        className={`schedule-amount ${activeCell === ref ? 'is-selected' : ''}`}
+        className={`schedule-amount ${activeCell === ref ? 'is-selected' : ''} ${issue ? `amount-issue amount-issue-${issue.kind}` : ''}`}
+        title={issue?.description}
+        aria-description={issue?.description}
         aria-label={`Inspect ${path.at(-1)} ${ref}`}
         aria-expanded={graph.lines.has(ref) ? selected === ref : undefined}
         onClick={() => inspect(ref, path)}
       >
+        {issue && (
+          <span aria-hidden="true" className="issue-symbol">
+            {issue.kind === 'direct' ? '!' : '↳'}
+          </span>
+        )}
         {money(item.value)}
       </button>
     );
@@ -266,6 +275,10 @@ export default function ReturnSchedules({
           </table>
         </div>
         <p className="schedule-footnote">
+          <span className="issue-legend">
+            ! Direct review issue · ↳ Affected by an upstream issue. Select the
+            amount to inspect; expand “items to review” for the findings.
+          </span>
           — means no figure is mapped from the packet for this cell; it does not
           mean zero.{' '}
           {view !== 'Summary' &&

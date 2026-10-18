@@ -175,10 +175,10 @@ test('compares packet summary figures without filling unmapped cells', async ({
   });
   await expect(
     agi.getByRole('button', { name: 'Inspect Federal F1040.11' }),
-  ).toHaveText('$445,590');
+  ).toContainText('$445,590');
   await expect(
     agi.getByRole('button', { name: 'Inspect California F540NR.17' }),
-  ).toHaveText('$481,096');
+  ).toContainText('$481,096');
   const caSource = panel.getByRole('row').filter({
     has: page.getByRole('rowheader', {
       name: 'California-source AGI',
@@ -233,4 +233,71 @@ test('groups W-2 fields and attaches packet-linked warnings to affected interest
       .getByRole('tabpanel')
       .getByRole('button', { name: 'Inspect Qualified dividends ev-0490' }),
   ).toBeVisible();
+});
+
+test('resizes source evidence by dragging and keyboard without losing context', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+  await expect(page).toHaveTitle('Tax workpaper');
+  await expect(
+    page.getByRole('link', { name: 'Tax workpaper', exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole('tab', { name: 'Wages & interest', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Inspect Wages ev-0016' }).click();
+  const panel = page.getByRole('complementary', { name: 'Source evidence' });
+  const handle = page.getByRole('separator', {
+    name: 'Resize source evidence',
+  });
+  const start = (await panel.boundingBox())!;
+  const grip = (await handle.boundingBox())!;
+  await page.mouse.move(grip.x + grip.width / 2, 200);
+  await page.mouse.down();
+  await page.mouse.move(grip.x - 120, 200, { steps: 10 });
+  await page.mouse.up();
+  expect((await panel.boundingBox())!.width).toBeGreaterThan(start.width + 100);
+  await expect(panel.locator('mark')).toHaveText('104,600.00');
+  await handle.focus();
+  await page.keyboard.press('Home');
+  await expect(handle).toHaveAttribute('aria-valuenow', '300');
+  await page.keyboard.press('ArrowLeft');
+  await expect(handle).toHaveAttribute('aria-valuenow', '324');
+  await expect(panel).toHaveCSS('width', '324px');
+  await page.getByRole('button', { name: 'Close evidence' }).click();
+  await page.getByRole('button', { name: 'Inspect Wages ev-0016' }).click();
+  await expect(panel).toHaveCSS('width', '324px');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(handle).not.toBeVisible();
+  await expect(panel).toHaveCSS('width', '390px');
+});
+
+test('highlights affected amounts and explains calculations using packet rules', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('.issues-section')).toHaveClass(/has-issues/);
+  const agi = page.getByRole('button', {
+    name: 'Inspect Federal F1040.11',
+    exact: true,
+  });
+  await expect(agi).toHaveClass(/amount-issue-upstream/);
+  await agi.click();
+  await expect(
+    page.locator('.schedule-breakdown .calculation-explanation').first(),
+  ).toContainText('How this is calculated');
+  await page
+    .getByRole('tab', { name: 'Wages & interest', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', {
+      name: 'Inspect Interest SchB.1.2',
+      exact: true,
+    }),
+  ).toHaveClass(/amount-issue-direct/);
+  await expect(
+    page.getByRole('button', { name: 'Inspect Wages ev-0016', exact: true }),
+  ).not.toHaveClass(/amount-issue/);
 });

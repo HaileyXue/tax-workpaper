@@ -28,7 +28,7 @@ The user's priority was a clean, employer-reviewable repository and a working ta
 
 ## Validation approach
 
-Domain tests exercise real packet paths, version isolation, missing-reference behavior, cycle protection, independent checks, role restrictions, undo authorship, and estimate math. A production build checks browser compilation. Six Playwright browser tests pass for inline tracing and retained expansion, contextual evidence, correction persistence/undo, mobile layout and read-only roles, and final sign-off persistence/invalidation. Twenty domain tests and the production build pass. The prior dependency audit reported zero known vulnerabilities; this revision adds no dependencies.
+Domain tests exercise real packet paths, version isolation, missing-reference behavior, cycle protection, independent checks, role restrictions, undo authorship, and estimate math. A production build checks browser compilation. Eight Playwright browser tests pass for inline tracing and retained expansion, contextual evidence, correction persistence/undo, mobile layout and read-only roles, and final sign-off persistence/invalidation. Twenty domain tests and the production build pass. The prior dependency audit reported zero known vulnerabilities; this revision adds no dependencies.
 
 The app intentionally imports the full packet for the prototype. The production bundle is correspondingly large; a production data API or lazy-loaded packet can reduce initial JavaScript parsing costs.
 
@@ -59,3 +59,11 @@ The screenshots clarified useful interaction choices: group related amounts by p
 Summary, wages/interest, and dividend tables map to existing IDs in the selected packet version. All financial values resolve from that packet; missing mappings are shown as a dash, not zero. California total-income and allocation rows are distinguished explicitly. A calculation warning propagates forward to dependent amounts, not backward to every source it shares. No row is automatically marked reviewed or reconciled. The original packet remains unchanged; user-authored review events remain a separate local record.
 
 The full calculation tree is available under one secondary disclosure. Source documents remain clearly labeled simulations of packet content; this revision does not invent PDF layouts or replace the supplied computed totals.
+
+## Review priority and calculation clarity
+
+The app is named **Tax workpaper** in navigation and the browser title. The original case-study documentation and existing local-storage key retain their provenance; renaming the interface must not discard saved reviews.
+
+Unresolved blockers give “Issues to resolve” a prominent amber treatment. Amount highlights use both color and symbols: `!` identifies a finding on that line or one of its immediate source references, while `↳` identifies a downstream impact. These markers indicate review needs, not a conclusion that every affected amount is incorrect. Resolved findings are excluded; active reviewer flags are included. Findings without numeric references remain in the issues section.
+
+The desktop evidence panel has a pointer-draggable and keyboard-operable separator, bounded to preserve calculation space. Width remains selected while navigating during the session. Mobile retains the full-width bottom panel. Expanded calculations expose the packet’s rule description and note before the inputs; these remain supplied engine explanations, not independently validated formulas. CPA usability has not yet been tested with a practicing reviewer. A useful next improvement is explicit signed arithmetic for rules where the packet defines the operators unambiguously; complex tax rules should not be guessed from their dependency lists.
