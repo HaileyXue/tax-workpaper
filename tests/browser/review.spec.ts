@@ -58,10 +58,9 @@ test('records a correction proposal and persists it independently of engine tota
   page,
 }) => {
   await openCase(page);
-  await page
-    .getByRole('textbox', { name: 'Search return calculations' })
-    .fill('SchB.1.2');
-  const result = page.getByRole('region', { name: 'Search results' });
+  await issue(page, 'duplicate-sweep');
+  await page.locator('.issue-references button').nth(1).click();
+  const result = page.locator('.schedule-breakdown');
   await result.locator('[data-line="SchB.1.2"] .action-menu > summary').click();
   await result
     .getByRole('button', { name: 'Propose correction', exact: true })
@@ -77,7 +76,6 @@ test('records a correction proposal and persists it independently of engine tota
   await expect(
     page.getByRole('button', { name: 'Sign off return', exact: true }),
   ).toBeDisabled();
-  await page.locator('.issues-section > summary').click();
   await page
     .locator('.finding-link')
     .filter({ hasText: 'Correction proposal:' })
@@ -101,7 +99,7 @@ test('records a correction proposal and persists it independently of engine tota
   ).toBeVisible();
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
   await expect(
-    page.getByText('undo · SchB.1.2', { exact: true }),
+    page.locator('.history-row').filter({ hasText: 'undo ·' }),
   ).toBeVisible();
 });
 
@@ -349,23 +347,19 @@ test('focused statements navigate back without nesting and expose related record
     }),
   ).toBeVisible();
   await page
-    .getByRole('textbox', { name: 'Search return calculations' })
-    .fill('F8606.18');
-  await page
-    .getByRole('button', {
-      name: 'Expand Taxable amount of conversion',
-      exact: true,
-    })
+    .getByRole('button', { name: 'Inspect input Taxable amount', exact: true })
     .click();
   const related = page.getByRole('region', {
     name: 'Related records',
     exact: true,
   });
   await related.getByRole('button', { name: /Basis carried to 2026/ }).click();
-  await expect(page.locator('[data-line="F8606.14"]')).toBeVisible();
+  await expect(
+    page.locator('.schedule-breakdown [data-line="F8606.14"]'),
+  ).toBeVisible();
   await expect(
     page.getByRole('navigation', { name: 'Review path' }),
-  ).toContainText('Taxable amount of conversion');
+  ).toContainText('Taxable amount');
 });
 
 test('documents show identity, selected row, page controls and all extracted fields', async ({
@@ -408,4 +402,26 @@ test('documents show identity, selected row, page controls and all extracted fie
   await expect(first).not.toHaveAttribute('aria-current', 'true');
   await page.getByRole('button', { name: 'Close evidence' }).click();
   await expect(second).not.toHaveAttribute('aria-current', 'true');
+});
+
+test('return inspection and action labels hide internal calculation references', async ({
+  page,
+}) => {
+  await openCase(page);
+  await expect(
+    page.getByRole('textbox', { name: 'Search return calculations' }),
+  ).toHaveCount(0);
+  await income(page);
+  await page
+    .getByRole('button', { name: 'Inspect input Total wages', exact: true })
+    .click();
+  const statement = page.locator('.schedule-breakdown');
+  await statement.locator('.action-menu > summary').click();
+  await expect(statement).not.toContainText('F1040.1z');
+  await expect(statement).not.toContainText('R-SUM');
+  await statement
+    .getByRole('button', { name: 'Add note', exact: true })
+    .click();
+  await expect(page.getByRole('dialog')).toContainText('Total wages');
+  await expect(page.getByRole('dialog')).not.toContainText('F1040.1z');
 });

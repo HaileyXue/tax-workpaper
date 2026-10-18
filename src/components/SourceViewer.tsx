@@ -142,7 +142,7 @@ export default function SourceViewer({
         <div className="chips">
           {graph.documentUsage(documentId).map((key) => (
             <button key={key} onClick={() => onReference(key)}>
-              {graph.lines.get(key)?.label ?? key}
+              {graph.lines.get(key)?.label ?? 'Supporting calculation'}
               <ArrowUpRight size={12} />
             </button>
           ))}

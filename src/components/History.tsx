@@ -1,3 +1,4 @@
+import { referenceLabel, displayText } from '../domain/presentation';
 import { useState } from 'react';
 import { money, packet, type Graph, type Staff } from '../domain/packet';
 import { activeEvents, canWrite, type ReviewEvent } from '../domain/review';
@@ -77,9 +78,9 @@ export default function History({
         <div className="history-row" key={e.id}>
           <div>
             <strong>
-              {e.kind} · {e.target}
+              {e.kind} · {referenceLabel(graph, e.target)}
             </strong>
-            <p>{e.note}</p>
+            <p>{displayText(graph, e.note)}</p>
             {e.kind === 'adjust' && (
               <p>
                 {money(e.original)} → {money(e.amount)} · {e.category}

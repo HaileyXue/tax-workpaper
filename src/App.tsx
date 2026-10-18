@@ -1,3 +1,4 @@
+import { referenceLabel, displayText } from './domain/presentation';
 import {
   useEffect,
   useMemo,
@@ -307,7 +308,7 @@ export default function App() {
                     .filter((e) => e.kind === 'adjust')
                     .map((f) => ({
                       id: f.id,
-                      title: `Correction proposal: ${graph.lines.get(f.target)?.label ?? graph.values.get(f.target)?.label ?? f.target}`,
+                      title: `Correction proposal: ${referenceLabel(graph, f.target)}`,
                       detail: f.note,
                       refs: [f.target],
                       origin: 'Correction proposal',
@@ -510,7 +511,11 @@ export default function App() {
                 <span className="eyebrow">EVIDENCE FOR</span>
                 <p>
                   {evidence.path
-                    .map((id) => graph.lines.get(id)?.label ?? id)
+                    .map((id) =>
+                      graph.lines.has(id) || graph.values.has(id)
+                        ? referenceLabel(graph, id)
+                        : displayText(graph, id),
+                    )
                     .join(' › ')}
                 </p>
               </div>
@@ -536,7 +541,7 @@ export default function App() {
                 />
               ) : (
                 <>
-                  <h3>{evidence.ref}</h3>
+                  <h3>{referenceLabel(graph, evidence.ref)}</h3>
                   {resolveReference(evidence.ref, graph) === undefined ? (
                     <p className="callout">
                       Reference not found in the supplied packet. This remains
@@ -544,10 +549,16 @@ export default function App() {
                     </p>
                   ) : (
                     <pre>
-                      {JSON.stringify(
-                        resolveReference(evidence.ref, graph),
-                        null,
-                        2,
+                      {displayText(
+                        graph,
+                        JSON.stringify(
+                          resolveReference(evidence.ref, graph),
+                          (key, value) =>
+                            ['rule', 'inputs', 'sources', 'key'].includes(key)
+                              ? undefined
+                              : value,
+                          2,
+                        ),
                       )}
                     </pre>
                   )}

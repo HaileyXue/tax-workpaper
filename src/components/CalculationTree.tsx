@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronRight, FileText, MoreHorizontal } from 'lucide-react';
-import { money, sourceAmount, packet, type Graph } from '../domain/packet';
-import { calculationPresentation } from '../domain/presentation';
+import { money, sourceAmount, type Graph } from '../domain/packet';
+import {
+  calculationPresentation,
+  referenceLabel,
+  displayText,
+} from '../domain/presentation';
 import { additionalRecords, amountIssue } from '../domain/schedules';
 import type { Finding } from '../domain/findings';
 import type { ReviewEvent } from '../domain/review';
@@ -36,10 +40,10 @@ export function EvidenceLink({
       : doc
         ? doc.title
         : id.startsWith('py:')
-          ? `Prior year · ${id.slice(3)}`
+          ? 'Prior-year record'
           : id.startsWith('ref:')
-            ? `Reference · ${id.slice(4)}`
-            : id;
+            ? 'Calculation assumption'
+            : referenceLabel(graph, id);
   return (
     <button
       className="evidence-link"
@@ -103,12 +107,11 @@ export default function CalculationTree({
     setLimit(Math.max(20, index + 1));
   }, [props.revealPath, graph]);
   const line = graph.lines.get(lineId);
-  if (!line)
-    return <p className="callout">Missing calculation input: {lineId}</p>;
+  if (!line) return <p className="callout">Missing calculation input.</p>;
   if (path.includes(lineId))
     return (
       <p className="callout">
-        Circular reference to {lineId}. Check the calculation graph.
+        A circular calculation reference needs investigation.
       </p>
     );
   const {
@@ -128,7 +131,7 @@ export default function CalculationTree({
   const children = detail.inputs.filter(
     (id) =>
       !query ||
-      `${id} ${graph.lines.get(id)?.label} ${graph.lines.get(id)?.value}`
+      `${graph.lines.get(id)?.label} ${graph.lines.get(id)?.value}`
         .toLowerCase()
         .includes(query.toLowerCase()),
   );
@@ -178,7 +181,7 @@ export default function CalculationTree({
                     : undefined
                 }
               >
-                {graph.lines.get(id)?.label ?? id}
+                {referenceLabel(graph, id)}
                 {index < trail.length - 1 && <ChevronRight size={14} />}
               </button>
             );
@@ -225,11 +228,8 @@ export default function CalculationTree({
           <div>
             {chain.map((item) => (
               <div className="rule-reference" key={item.key}>
-                <strong>
-                  {item.key} · {item.label}
-                </strong>
-                <p>{packet.engine_reference.rules[item.rule] ?? item.rule}</p>
-                {item.note && <p>{item.note}</p>}
+                <strong>{item.label}</strong>
+                {item.note && <p>{displayText(graph, item.note)}</p>}
               </div>
             ))}
             {writable && (
@@ -258,8 +258,8 @@ export default function CalculationTree({
           {expandable && (
             <div className="calculation-explanation">
               <strong>How this is calculated</strong>
-              <p>{packet.engine_reference.rules[detail.rule] ?? detail.rule}</p>
-              {detail.note && <p>{detail.note}</p>}
+              <p>Inputs supporting this amount are shown below.</p>
+              {detail.note && <p>{displayText(graph, detail.note)}</p>}
             </div>
           )}
           {latestCorrection && (
@@ -273,7 +273,7 @@ export default function CalculationTree({
             <label className="detail-search">
               {detail.inputs.length} calculation inputs
               <input
-                aria-label={`Search inputs for ${lineId}`}
+                aria-label={`Search inputs for ${line.label}`}
                 placeholder="Find a transaction or input…"
                 value={query}
                 onChange={(e) => {
@@ -292,7 +292,7 @@ export default function CalculationTree({
                   className="calculation-input-row"
                   key={id}
                   onClick={() => navigate(id)}
-                  aria-label={`Inspect input ${input?.label ?? id}`}
+                  aria-label={`Inspect input ${input?.label ?? 'Missing input'}`}
                 >
                   <span>{input?.label ?? 'Missing calculation input'}</span>
                   <strong

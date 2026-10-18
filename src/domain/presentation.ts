@@ -26,3 +26,30 @@ export function calculationPresentation(graph: Graph, key: string) {
   );
   return { chain, detail, expandable };
 }
+
+/** Human labels only; internal graph references remain in the data layer. */
+export function referenceLabel(graph: Graph, ref: string): string {
+  return (
+    graph.lines.get(ref)?.label ??
+    graph.values.get(ref)?.label ??
+    graph.documents.get(ref)?.title ??
+    (ref.startsWith('qa-')
+      ? 'Client answer'
+      : ref.startsWith('py:')
+        ? 'Prior-year record'
+        : ref.startsWith('ref:')
+          ? 'Calculation assumption'
+          : ref.startsWith('agency:')
+            ? 'Tax agency record'
+            : ref.startsWith('asset:')
+              ? 'Asset record'
+              : 'Supporting record')
+  );
+}
+
+export function displayText(graph: Graph, text: string): string {
+  return text.replace(
+    /\b(?:F\d+[A-Za-z]*|Sch[A-Za-z0-9_-]+)\.[A-Za-z0-9_.-]+/g,
+    (ref) => referenceLabel(graph, ref),
+  );
+}

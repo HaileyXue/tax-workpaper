@@ -1,3 +1,4 @@
+import { referenceLabel } from '../domain/presentation';
 import { useState } from 'react';
 import { money, type Graph, type Staff } from '../domain/packet';
 import { canWrite, estimateImpact, type ReviewEvent } from '../domain/review';
@@ -62,7 +63,7 @@ export default function ExceptionForm({
             : 'Add note'}
       </h3>
       <p className="small muted">
-        {target} · {graph.version.version} · {staff.name}
+        {referenceLabel(graph, target)} · {graph.version.version} · {staff.name}
       </p>
       <fieldset disabled={!canWrite(staff)}>
         {kind === 'adjust' && (
