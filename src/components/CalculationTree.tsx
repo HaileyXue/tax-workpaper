@@ -103,7 +103,7 @@ export default function CalculationTree({
     >
       {issue && (
         <span className="issue-symbol" aria-hidden="true">
-          {issue.kind === 'direct' ? '!' : '↳'}
+          !
         </span>
       )}
       {money(line.value)}
@@ -226,14 +226,29 @@ export default function CalculationTree({
             <div className="direct-sources">
               {detail.sources.slice(0, limit).map((id) => {
                 const value = graph.values.get(id);
+                const sourceIssue = amountIssue(
+                  graph,
+                  props.issueFindings ?? [],
+                  id,
+                );
                 return (
                   <div className="source-input" key={id}>
                     <div>
-                      {value && detail.sources.length > 1 && (
+                      {value && (detail.sources.length > 1 || sourceIssue) && (
                         <span className="source-value">
                           {graph.documents.get(value.document_id)?.issuer ??
                             value.label}
-                          <strong>{sourceAmount(value)}</strong>
+                          <strong
+                            className={
+                              sourceIssue
+                                ? 'amount-issue amount-issue-direct'
+                                : undefined
+                            }
+                            title={sourceIssue?.description}
+                          >
+                            {sourceIssue && <span aria-hidden="true">! </span>}
+                            {sourceAmount(value)}
+                          </strong>
                         </span>
                       )}
                       <EvidenceLink id={id} path={context} {...props} />

@@ -120,14 +120,31 @@ export function relevantFindings(
 }
 
 export function amountIssue(graph: Graph, findings: Finding[], ref: string) {
-  const matches = relevantFindings(graph, findings, [ref]);
+  // Highlight only the reference explicitly identified by the finding. Never
+  // propagate an issue color to a consumer or infer that its inputs are wrong.
+  const matches = findings.filter((finding) => finding.refs.includes(ref));
   if (!matches.length) return undefined;
-  const directRefs = new Set([ref, ...(graph.lines.get(ref)?.sources ?? [])]);
-  const direct = matches.some((finding) =>
-    finding.refs.some((id) => directRefs.has(id)),
-  );
   return {
-    kind: direct ? 'direct' : 'upstream',
-    description: `${direct ? 'Review issue' : 'Affected by upstream issue'}: ${matches.map((f) => f.title).join('; ')}`,
+    kind: 'direct',
+    description: `Issue to resolve: ${matches.map((f) => f.title).join('; ')}`,
   };
+}
+
+export function scheduleDestination(graph: Graph, refs: string[]) {
+  for (const [view, rows] of [
+    ['Wages & interest', wagesAndInterest(graph)],
+    ['Dividends', dividends(graph)],
+  ] as const) {
+    for (const row of rows)
+      for (const ref of Object.values(row.cells)) {
+        if (
+          ref &&
+          refs.some(
+            (id) => id === ref || graph.lines.get(ref)?.sources.includes(id),
+          )
+        )
+          return { view, ref };
+      }
+  }
+  return undefined;
 }

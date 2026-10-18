@@ -283,7 +283,7 @@ test('resizes source evidence by dragging and keyboard without losing context', 
   await expect(panel).toHaveCSS('width', '390px');
 });
 
-test('highlights affected amounts and explains calculations using packet rules', async ({
+test('highlights source amounts only and explains calculations using packet rules', async ({
   page,
 }) => {
   await page.goto('/');
@@ -293,7 +293,7 @@ test('highlights affected amounts and explains calculations using packet rules',
     name: 'Inspect Federal F1040.11',
     exact: true,
   });
-  await expect(agi).toHaveClass(/amount-issue-upstream/);
+  await expect(agi).not.toHaveClass(/amount-issue/);
   await agi.click();
   await expect(
     page.locator('.schedule-breakdown .calculation-explanation').first(),
@@ -306,7 +306,7 @@ test('highlights affected amounts and explains calculations using packet rules',
       name: 'Inspect Interest SchB.1.2',
       exact: true,
     }),
-  ).toHaveClass(/amount-issue-direct/);
+  ).not.toHaveClass(/amount-issue/);
   await expect(
     page.getByRole('button', { name: 'Inspect Wages ev-0016', exact: true }),
   ).not.toHaveClass(/amount-issue/);
@@ -372,4 +372,50 @@ test('lands on the supplied case and keeps issue counts consistent after resolut
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
+});
+
+test('issue links jump to the source schedule or a referenced record below', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
+  await page.locator('.issues-section > summary').click();
+  const sweep = page
+    .locator('.findings > .finding')
+    .filter({ hasText: 'Same bank sweep interest counted twice' });
+  await sweep
+    .getByRole('button', {
+      name: 'Same bank sweep interest counted twice',
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByRole('tab', { name: 'Wages & interest', exact: true }),
+  ).toHaveAttribute('aria-selected', 'true');
+  const amount = page.getByRole('button', {
+    name: 'Inspect Interest SchB.1.1',
+    exact: true,
+  });
+  await expect(amount).toBeFocused();
+  await expect(amount).not.toHaveClass(/amount-issue/);
+  await expect(
+    page.locator('.schedule-breakdown .source-value .amount-issue'),
+  ).toHaveText('! $1,840');
+  const crypto = page
+    .locator('.findings > .finding')
+    .filter({ hasText: 'digital asset basis missing' });
+  await crypto.locator(':scope > summary').click();
+  const location = page.getByRole('region', { name: 'Issue location' });
+  await expect(location).toBeFocused();
+  await expect(
+    location.locator('.issue-source-number .amount-issue'),
+  ).toBeVisible();
+  const questionnaire = page
+    .locator('.findings > .finding')
+    .filter({ hasText: 'questionnaire sales conflict' });
+  await questionnaire.locator(':scope > summary').click();
+  await expect(location).toContainText(
+    'This issue points to a record rather than a calculated number.',
+  );
+  await expect(location.locator('.amount-issue')).toHaveCount(0);
 });

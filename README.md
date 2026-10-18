@@ -42,7 +42,7 @@ npm run format:check  # Repository formatting
 - A Cases landing page with live issue counts for the supplied household and an All cases navigation link.
 - One white-background Return workspace with selective calculation breakdowns; Documents and History are secondary tools in the left sidebar.
 - Plain rows for amounts with up to three direct references; expandable breakdowns for calculations and long source lists. Unchanged carry/sum links are flattened, with their full lineage retained in the details menu.
-- Highlighted review priorities and amount-level issue markers distinguish directly linked findings from upstream effects. Expanded calculations show the packet’s rule and notes beside their inputs.
+- Highlighted review priorities and source-level issue markers identify only references explicitly named by a finding. Totals do not inherit source highlights. Issue titles jump to their linked schedule, number, or record. Expanded calculations show the packet’s rule and notes beside their inputs.
 - Evidence displayed in a resizable panel beside the calculation on desktop and in a bottom panel on mobile; other document fields and reverse usage are collapsed by default.
 - Search across all 627 current-version lines; large input lists load in batches with filtering.
 - No routine verification forms: contextual flag, note, and correction actions open only on request. Existing verification records remain in history.

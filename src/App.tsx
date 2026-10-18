@@ -14,8 +14,14 @@ import {
   History as HistoryIcon,
   LayoutDashboard,
 } from 'lucide-react';
-import { createGraph, packet, resolveReference } from './domain/packet';
-import { findIssues } from './domain/findings';
+import {
+  createGraph,
+  packet,
+  resolveReference,
+  sourceAmount,
+} from './domain/packet';
+import { scheduleDestination, amountIssue } from './domain/schedules';
+import { findIssues, type Finding } from './domain/findings';
 import {
   activeEvents,
   canWrite,
@@ -27,6 +33,7 @@ import {
   type ReviewEvent,
 } from './domain/review';
 import CalculationTree, {
+  EvidenceLink,
   type EvidenceSelection,
   type ExceptionAction,
   type TreeProps,
@@ -76,6 +83,23 @@ export default function App() {
     kind: ExceptionAction;
   } | null>(null);
   const [spotlight, setSpotlight] = useState<string | null>(null);
+  const [focusedIssue, setFocusedIssue] = useState<Finding | null>(null);
+  const [scheduleJump, setScheduleJump] = useState<{
+    view: string;
+    ref: string;
+    sequence: number;
+  } | null>(null);
+  const calculationsRef = useRef<HTMLDetailsElement>(null);
+  const spotlightRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!spotlight) return;
+    if (calculationsRef.current) calculationsRef.current.open = true;
+    const frame = requestAnimationFrame(() => {
+      spotlightRef.current?.scrollIntoView({ block: 'center' });
+      spotlightRef.current?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [spotlight, focusedIssue]);
   const [allLines, setAllLines] = useState(30);
   const evidenceTrigger = useRef<HTMLElement | null>(null);
   const graph = useMemo(() => createGraph(packet, version), [version]);
@@ -145,6 +169,20 @@ export default function App() {
     onEvidence: openEvidence,
     onAction: (target, kind) => setAction({ target, kind }),
   };
+  const navigateIssue = (finding: Finding) => {
+    setTab('Return');
+    setEvidence(null);
+    setFocusedIssue({ ...finding });
+    setSearch('');
+    const destination = scheduleDestination(graph, finding.refs);
+    if (destination) {
+      setSpotlight(null);
+      setScheduleJump({ ...destination, sequence: performance.now() });
+    } else {
+      setScheduleJump(null);
+      setSpotlight(finding.refs[0] ?? null);
+    }
+  };
   const exportRecords = () => {
     const url = URL.createObjectURL(
       new Blob(
@@ -182,6 +220,8 @@ export default function App() {
     setEvidence(null);
     setAction(null);
     setCaseOpen(false);
+    setScheduleJump(null);
+    setFocusedIssue(null);
     setNotice('');
   };
   if (!caseOpen)
@@ -264,6 +304,8 @@ export default function App() {
                 value={version}
                 onChange={(e) => {
                   setVersion(e.target.value);
+                  setScheduleJump(null);
+                  setFocusedIssue(null);
                   setEvidence(null);
                   setSpotlight(null);
                 }}
@@ -307,6 +349,7 @@ export default function App() {
               <Exceptions
                 {...tree}
                 findings={findings}
+                onNavigate={navigateIssue}
                 resolved={resolved}
                 staff={staff}
                 save={save}
@@ -314,7 +357,22 @@ export default function App() {
               {activeFlags.length > 0 && <h3>Raised during review</h3>}
               {activeFlags.map((f) => (
                 <details className="finding" key={f.id}>
-                  <summary>
+                  <summary
+                    onClick={(e) => {
+                      if (
+                        !(e.currentTarget.parentElement as HTMLDetailsElement)
+                          .open
+                      )
+                        navigateIssue({
+                          id: f.id,
+                          title: f.note,
+                          detail: f.note,
+                          refs: [f.target],
+                          origin: 'Reviewer flag',
+                          severity: 'warning',
+                        });
+                    }}
+                  >
                     <span>{f.note}</span>
                     <small>
                       {resolved(f.id) ? 'Resolved' : 'Issue to resolve'}
@@ -372,12 +430,21 @@ export default function App() {
             </details>
             <ReturnSchedules
               key={version}
+              jump={scheduleJump}
               {...tree}
               findings={findings}
               resolved={resolved}
             />
-            <details className="utility-section all-calculations">
+            <details
+              ref={calculationsRef}
+              className="utility-section all-calculations"
+            >
               <summary>All calculations & schedules</summary>
+              <p className="muted small">
+                Full calculation index, including supporting schedules and
+                informational outputs beyond the tables above. Some amounts also
+                appear in Summary.
+              </p>
               <div className="section-heading">
                 <h2>Return calculations</h2>
                 <label className="search">
@@ -394,16 +461,74 @@ export default function App() {
                 </label>
               </div>
               {spotlight && (
-                <section className="spotlight">
+                <section
+                  ref={spotlightRef}
+                  tabIndex={-1}
+                  className="spotlight"
+                  aria-label="Issue location"
+                >
                   <div className="section-top">
-                    <h3>Linked calculation</h3>
+                    <h3>{focusedIssue?.title ?? 'Linked calculation'}</h3>
                     <button onClick={() => setSpotlight(null)}>Dismiss</button>
                   </div>
-                  <CalculationTree
-                    key={`${version}-${spotlight}`}
-                    {...tree}
-                    lineId={spotlight}
-                  />
+                  {focusedIssue && (
+                    <>
+                      <p>{focusedIssue.detail}</p>
+                      <div className="issue-references">
+                        {focusedIssue.refs.map((ref) => (
+                          <button
+                            key={ref}
+                            aria-pressed={spotlight === ref}
+                            onClick={() => setSpotlight(ref)}
+                          >
+                            {graph.values.get(ref)?.label ??
+                              graph.lines.get(ref)?.label ??
+                              ref}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {graph.lines.has(spotlight) ? (
+                    <CalculationTree
+                      key={`${version}-${spotlight}`}
+                      {...tree}
+                      lineId={spotlight}
+                      initiallyExpanded
+                    />
+                  ) : (
+                    <div className="issue-source-number">
+                      {graph.values.has(spotlight) && (
+                        <p>
+                          <strong
+                            className={
+                              amountIssue(
+                                graph,
+                                tree.issueFindings ?? [],
+                                spotlight,
+                              )
+                                ? 'amount-issue amount-issue-direct'
+                                : undefined
+                            }
+                          >
+                            {sourceAmount(graph.values.get(spotlight)!)}
+                          </strong>
+                        </p>
+                      )}
+                      {!graph.values.has(spotlight) && (
+                        <p>
+                          This issue points to a record rather than a calculated
+                          number.
+                        </p>
+                      )}
+                      <EvidenceLink
+                        id={spotlight}
+                        path={[focusedIssue?.title ?? 'Linked evidence']}
+                        graph={graph}
+                        onEvidence={openEvidence}
+                      />
+                    </div>
+                  )}
                 </section>
               )}
               <div hidden={Boolean(search)} key={`groups-${version}`}>

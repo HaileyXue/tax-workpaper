@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { money } from '../domain/packet';
 import {
   amountIssue,
@@ -14,10 +14,35 @@ import CalculationTree, { type TreeProps } from './CalculationTree';
 export default function ReturnSchedules({
   findings,
   resolved,
+  jump,
   ...tree
-}: TreeProps & { findings: Finding[]; resolved: (id: string) => boolean }) {
+}: TreeProps & {
+  findings: Finding[];
+  resolved: (id: string) => boolean;
+  jump?: { view: string; ref: string; sequence: number } | null;
+}) {
   const { graph, onEvidence } = tree;
+  const scheduleRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!jump) return;
+    setView(jump.view);
+    setSelected(graph.lines.has(jump.ref) ? jump.ref : null);
+    setActiveCell(jump.ref);
+  }, [jump, graph]);
   const [view, setView] = useState('Summary');
+  useEffect(() => {
+    if (!jump) return;
+    const frame = requestAnimationFrame(() => {
+      const button = [
+        ...(scheduleRef.current?.querySelectorAll<HTMLButtonElement>(
+          '[data-schedule-ref]',
+        ) ?? []),
+      ].find((el) => el.dataset.scheduleRef === jump.ref);
+      button?.scrollIntoView({ block: 'center' });
+      button?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [jump, view]);
   const [activeCell, setActiveCell] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const open =
@@ -54,13 +79,14 @@ export default function ReturnSchedules({
         className={`schedule-amount ${activeCell === ref ? 'is-selected' : ''} ${issue ? `amount-issue amount-issue-${issue.kind}` : ''}`}
         title={issue?.description}
         aria-description={issue?.description}
+        data-schedule-ref={ref}
         aria-label={`Inspect ${path.at(-1)} ${ref}`}
         aria-expanded={graph.lines.has(ref) ? selected === ref : undefined}
         onClick={() => inspect(ref, path)}
       >
         {issue && (
           <span aria-hidden="true" className="issue-symbol">
-            {issue.kind === 'direct' ? '!' : '↳'}
+            !
           </span>
         )}
         {money(item.value)}
@@ -141,7 +167,11 @@ export default function ReturnSchedules({
     </Fragment>
   );
   return (
-    <section className="return-schedules" aria-label="Return schedules">
+    <section
+      ref={scheduleRef}
+      className="return-schedules"
+      aria-label="Return schedules"
+    >
       <div
         className="schedule-tabs"
         role="tablist"
@@ -196,8 +226,8 @@ export default function ReturnSchedules({
           <h2>{view === 'Summary' ? 'Return summary' : view}</h2>
           <p>
             {view === 'Summary'
-              ? 'Federal and California figures from the selected engine snapshot.'
-              : 'Related figures together. Select an amount to inspect its evidence or calculation.'}
+              ? 'Federal and California totals. Wages & interest and Dividends are supporting schedules for the income figures.'
+              : 'Payer-level detail supporting the return summary. Select an amount to inspect its evidence or calculation.'}
           </p>
         </div>
         <div className="schedule-scroll">
@@ -276,8 +306,8 @@ export default function ReturnSchedules({
         </div>
         <p className="schedule-footnote">
           <span className="issue-legend">
-            ! Direct review issue · ↳ Affected by an upstream issue. Select the
-            amount to inspect; expand “issues to resolve” for the findings.
+            Only numbers directly identified by an issue are highlighted. Expand
+            “issues to resolve” for related findings.
           </span>
           — means no figure is mapped from the packet for this cell; it does not
           mean zero.{' '}

@@ -12,6 +12,7 @@ export default function Exceptions({
   graph,
   staff,
   save,
+  onNavigate,
   ...tree
 }: {
   findings: Finding[];
@@ -19,16 +20,38 @@ export default function Exceptions({
   graph: Graph;
   staff: Staff;
   save: SaveEvent;
+  onNavigate?: (finding: Finding) => void;
 } & Omit<TreeProps, 'graph'>) {
   return (
     <div className="findings">
       {findings.map((f) => (
         <details className="finding" key={f.id}>
-          <summary>
+          <summary
+            onClick={(e) => {
+              if (!(e.currentTarget.parentElement as HTMLDetailsElement).open)
+                onNavigate?.(f);
+            }}
+            title="Go to the referenced number or evidence"
+          >
             <span
               className={`status-dot ${resolved(f.id) ? 'done' : f.severity}`}
             />
-            <span>{f.title}</span>
+            {onNavigate ? (
+              <button
+                className="issue-jump"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const details = e.currentTarget.closest('details');
+                  if (details) details.open = true;
+                  onNavigate(f);
+                }}
+              >
+                {f.title}
+              </button>
+            ) : (
+              <span>{f.title}</span>
+            )}
             <small>
               {resolved(f.id)
                 ? 'Resolved'

@@ -1,4 +1,6 @@
 import {
+  amountIssue,
+  scheduleDestination,
   wagesAndInterest,
   dividends,
   summaryRows,
@@ -274,5 +276,23 @@ describe('packet-only schedule mappings', () => {
         (f) => f.id === 'duplicate-sweep',
       ),
     ).toBe(false);
+  });
+});
+
+describe('issue locations', () => {
+  it('highlights only explicit issue references, never consumers or inferred inputs', () => {
+    const issues = findIssues(graph);
+    expect(amountIssue(graph, issues, 'ev-0538')).toBeDefined();
+    expect(amountIssue(graph, issues, 'SchB.1.2')).toBeUndefined();
+    expect(amountIssue(graph, issues, 'F1040.11')).toBeUndefined();
+    expect(amountIssue(graph, [], 'ev-0538')).toBeUndefined();
+    expect(amountIssue(graph, issues, 'ev-0016')).toBeUndefined();
+  });
+  it('locates a payer schedule only from direct supplied references', () => {
+    expect(scheduleDestination(graph, ['ev-0538'])).toEqual({
+      view: 'Wages & interest',
+      ref: 'SchB.1.2',
+    });
+    expect(scheduleDestination(graph, ['qa-14'])).toBeUndefined();
   });
 });
