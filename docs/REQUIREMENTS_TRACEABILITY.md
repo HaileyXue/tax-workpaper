@@ -127,14 +127,89 @@ The JSON may contain data related to a record below. This table marks a record a
 | Recorded walkthrough with technical decisions and tradeoffs; video link | **Not implemented** | No recording or video link exists. Record the final app, demonstrate the review loop, explain architecture and deliberate limits, and add the link to the README. |
 | Disclose tool use, including AI | **Satisfied** | The README states that OpenAI Codex assisted with packet inspection, design, implementation, documentation, and validation. |
 
-## Recommended implementation order
+## Selected implementation scope
 
-1. **Finish the submission artifact:** deploy a private preview after the product is finalized, record the walkthrough, and add the video link.
-2. **Prove completeness:** implement document dispositions, area/applicability checks, outside-filing records, and risk-based verification. These close the largest gap in the workpaper's core claim that nothing was overlooked.
-3. **Make accounting workpapers explicit:** add payment reconciliation, books-to-tax, state allocation, sales-lot, asset/depreciation, basis, rental, K-1, retirement, foreign, deduction, credit, and carryforward views. Reuse the existing lineage graph rather than duplicate data.
-4. **Move review records to a secure backend:** authenticate users, enforce roles and clearance on the server, append events transactionally, log evidence access, and support concurrent sessions.
-5. **Complete collaboration and change management:** add questions, attachments, deadlines, notifications, personal queues, last-seen changes, bulk actions, and integration with a recalculation service.
-6. **Add filing and after-filing states:** freeze filed snapshots, collect client authorization, track submissions and rejections, layer amendments, assemble notice packages, and roll records forward.
+Trying to implement every missing item would produce many shallow screens and weaken the strongest part of the prototype. The remaining build should use four tests:
+
+1. Does it help a CPA decide whether this return is supportable?
+2. Does the supplied packet contain enough data to implement it honestly?
+3. Does it demonstrate a hard product problem rather than routine administration?
+4. Can it become a complete, testable workflow before the submission is finalized?
+
+Using those tests, the following four product improvements have the highest priority.
+
+### Priority 1 — Investment sales review workpaper
+
+Build a scalable `SalesLotReview` inside the return-first workspace. The selected snapshot contains 302 Form 8949 lines, or 48.2% of all 627 calculation lines. This is the clearest place to prove that the design can handle large detail without overwhelming a reviewer.
+
+The workpaper should:
+
+- use only supplied sale lines and their source relationships;
+- group and subtotal by packet-supported brokerage, asset class, term, or source document;
+- show proceeds, basis, adjustments, and gain or loss when those values are supplied;
+- prioritize missing basis, source/detail mismatches, corrected documents, and questionnaire conflicts;
+- reconcile displayed subtotals to supplied Schedule D/Form 8949 totals;
+- retain issue actions and the resizable source-document panel.
+
+**Why first:** it covers nearly half the current calculation graph, addresses the brief's explicit “hundreds of sales” challenge, and brings several real packet issues into one demonstrable workflow. A strong sales workpaper is more valuable than adding several low-detail area pages.
+
+### Priority 2 — Completeness and document disposition
+
+Add a `CompletenessLedger` that combines document disposition, return-area consideration, and outside-filing identification. Final sign-off should require every supplied document and applicable area to have a disposition, while clean numbers should remain free of routine review forms.
+
+The ledger should:
+
+- classify each of the 74 documents as used, superseded, duplicate, irrelevant, wrong year, or pending;
+- require a reason, actor, time, and replacement link where applicable;
+- derive an initial area inventory from supplied forms, household facts, firm starter standards, and diagnostics;
+- track applicable, not applicable, complete, and blocked states;
+- surface supplied outside-return items such as FBAR and information-return questions;
+- require targeted verification only for risky, changed, low-confidence, or policy-selected evidence.
+
+**Why second:** lineage proves where known numbers came from; completeness proves that nothing important was silently omitted. That is the largest remaining gap in the workpaper's core promise and makes final sign-off materially more trustworthy.
+
+### Priority 3 — Clear calculation explanations and independent reconciliations
+
+Extend the current focused calculation statement with typed presentations for operations the packet supports unambiguously: totals, comparisons, allocations, limitations, and rollforwards. Pair those presentations with a small set of high-value independent checks.
+
+The improvement should:
+
+- explain the relationship between inputs and result in accounting language without displaying engine IDs;
+- never infer an operator from coincidentally equal values or vague rule text;
+- reconcile sales subtotals, payments, document totals, and selected prior-year changes where the packet supplies both sides;
+- show the independently observed amount, expected amount, difference, evidence, and scope;
+- keep issue navigation attached to the exact source and affected calculation chain.
+
+**Why third:** source links alone do not explain a calculation. This improves the signature interaction throughout the app and strengthens trust without pretending the frontend can rerun the tax engine.
+
+### Priority 4 — California part-year allocation workpaper
+
+Build a `StateAllocationWorkpaper` from the 30 supplied Schedule CA (540NR) lines, 19 Form 540NR lines, and their evidence relationships.
+
+The workpaper should:
+
+- show federal or total income beside California-source amounts when both are supplied;
+- distinguish residency/allocation inputs, adjustments, and calculated state outputs;
+- explain the tie from source categories to California-source AGI and allocated taxable income;
+- highlight unresolved sourcing decisions and the supplied California AMT warning;
+- link every displayed amount back to the existing calculation and evidence panel.
+
+**Why fourth:** the California-to-Texas move is one of the case's defining complexities. This workpaper demonstrates that the design can present jurisdiction-specific reasoning rather than only federal totals, while remaining fully grounded in supplied data.
+
+### Submission work after those priorities
+
+After the selected product scope is stable, deploy the private preview, record the walkthrough, and add the video link. The video should lead with the sales review, completeness sign-off, calculation trace, and state allocation rather than touring every screen.
+
+## Intentionally deferred requirements
+
+The following are valid production requirements but are poor uses of the remaining case-study time:
+
+- **Recalculation and arbitrary what-if modeling:** the packet contains immutable computed snapshots and five alternatives, not a callable tax engine. The app should continue to label corrections as proposals.
+- **Production authentication, concurrent editing, access logs, and encrypted storage:** these require a backend and security program. The current role switcher is enough to demonstrate workflow roles, provided its limits remain explicit.
+- **E-filing, client signatures, extensions, amendments, and notice response:** these depend on external systems and regulated operational processes. Scripted timeline data must not be presented as working filing functionality.
+- **Firm timekeeping, budgets, and global search:** the packet represents one case, so these features would be mostly invented scaffolding.
+- **Full custom workpapers for every remaining tax area:** depreciation, rentals, K-1s, basis, retirement, foreign reporting, deductions, credits, and carryovers should remain traceable through the central view. Build another specialized workpaper only if the four priorities finish with enough time for the same level of depth.
+- **Messaging, attachments, deadlines, notifications, and bulk administration:** useful collaboration features, but less important than proving the return's evidence, completeness, large-detail review, and state allocation.
 
 ## Verification evidence
 
