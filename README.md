@@ -30,7 +30,7 @@ npm run format:check  # Repository formatting
 ## Try the review loop
 
 1. Open the supplied household from **Cases**, where the badge shows its latest-version **issues to resolve**. On **Return**, compare federal and California totals in the unified summary.
-2. Select federal **Total income**, then the D08 W-2 source link under wages. The evidence panel highlights `104,600.00` while the calculation stays visible. No verification action is required.
+2. Select federal **Total income**, then the Corvane W-2 source link under wages. The evidence panel highlights `104,600.00` while the calculation stays visible. No verification action is required.
 3. Open **Issues to resolve** and select **Same bank sweep interest counted twice**. Summary opens the calculation path and smoothly scrolls to the source. Both source amounts and affected totals are highlighted.
 4. Use **Decision & assignment** beside the linked calculation to record a disposition. To propose a correction, search Summary for `SchB.1.2` and choose **… → Propose correction**. Enter $0, category `interest`, and a rationale. Estimated effects appear; engine totals remain unchanged.
 5. Reload, reopen the case, and visit **History** to inspect the proposal, compare snapshots, view precomputed alternatives, or undo your own action. Export history for a portable record.

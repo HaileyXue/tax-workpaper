@@ -35,9 +35,7 @@ export default function SourceViewer({
         <span className="tag">Simulated document</span>
       </div>
       <h3>{doc.title}</h3>
-      <p className="muted small">
-        {doc.id} · {doc.file_name}
-      </p>
+      <p className="muted small">{doc.file_name}</p>
       <div className="document-toolbar">
         <label>
           Page{' '}
@@ -53,14 +51,12 @@ export default function SourceViewer({
           </select>{' '}
           of {doc.page_count}
         </label>
-        <span>Printed content from packet</span>
+        <span>Document text</span>
       </div>
       {value && (
         <div className="locator">
           <strong>{value.label}</strong>
-          <span>
-            Page {value.page} · Field {value.field} · {value.id}
-          </span>
+          <span>Page {value.page}</span>
         </div>
       )}
       <article className="paper">
@@ -79,9 +75,7 @@ export default function SourceViewer({
             text
           )}
         </div>
-        <div className="paper-footer">
-          {doc.id} / PAGE {pageNumber} · SIMULATED SOURCE
-        </div>
+        <div className="paper-footer">PAGE {pageNumber} · SIMULATED SOURCE</div>
       </article>
       {value && !unique && (
         <p className="callout">
@@ -90,6 +84,15 @@ export default function SourceViewer({
           claimed.
         </p>
       )}
+      <details className="utility-section source-audit">
+        <summary>Source details</summary>
+        <p>Document reference: {doc.id}</p>
+        {value && (
+          <p>
+            Field: {value.field} · Value reference: {value.id}
+          </p>
+        )}
+      </details>
       <details className="utility-section">
         <summary>Other extracted fields on this page</summary>
         <h4>
@@ -106,7 +109,7 @@ export default function SourceViewer({
               <span>
                 {v.label}
                 <small>
-                  {v.id} · {Math.round(v.confidence * 100)}% confidence
+                  {Math.round(v.confidence * 100)}% extraction confidence
                 </small>
               </span>
               <strong>{sourceAmount(v)}</strong>
@@ -122,18 +125,18 @@ export default function SourceViewer({
         <div className="chips">
           {graph.documentUsage(documentId).map((key) => (
             <button key={key} onClick={() => onReference(key)}>
-              {key}
+              {graph.lines.get(key)?.label ?? key}
               <ArrowUpRight size={12} />
             </button>
           ))}
         </div>
         {!graph.documentUsage(documentId).length && (
           <p className="muted">
-            No mapped tax-line consumers.{' '}
+            No linked calculations.{' '}
             {graph.version.documents_superseded.includes(documentId)
-              ? 'Marked superseded by the engine.'
+              ? 'Replaced by another document.'
               : graph.version.documents_used.includes(documentId)
-                ? 'Listed as used by the engine; purpose needs review.'
+                ? 'Listed as used; purpose needs review.'
                 : 'Not listed as used in this version; disposition needs review.'}
           </p>
         )}

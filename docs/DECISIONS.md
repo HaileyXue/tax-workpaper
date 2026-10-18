@@ -31,6 +31,8 @@ Earlier iterations used those payer tables and a separate full calculation index
 | Conservative sign-off invalidation                  | Any later review event reopens sign-off. Filing approval, e-signatures, and production retention are not implemented.                                                                           |
 | Scripted timeline distinguished from actual actions | Supplied future filing events are scenario data, not evidence that the prototype filed a return.                                                                                                |
 
+Internal calculation and extraction IDs stay in on-demand audit details rather than routine labels. Source links use issuer, document type, page, and human-readable field labels. Screen-reader labels also use calculation names. The recursive breakdown remains in place; a flatter input/result statement is a potential next interaction refinement, with arithmetic operators shown only when defined by the supplied data.
+
 The static prototype bundles the complete fictional packet, resulting in a large JavaScript bundle. A production API or lazy-loaded packet would improve initial loading and enforce access boundaries. CPA usability has not been validated with a practicing reviewer.
 
 ## Validation

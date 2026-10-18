@@ -113,7 +113,7 @@ export default function ReturnSummary({
     return (
       <button
         className={`schedule-amount ${warning ? `amount-issue amount-issue-${warning.kind}` : ''}`}
-        aria-label={`Inspect ${label} ${ref}`}
+        aria-label={`Inspect ${label} ${line.label}`}
         aria-description={warning?.description}
         title={warning?.description}
         aria-expanded={selected === ref}
@@ -207,7 +207,7 @@ export default function ReturnSummary({
           </div>
           <p className="schedule-footnote">
             — means no figure is mapped for this cell, not zero. Amounts come
-            from the selected engine snapshot.
+            from the selected return version.
           </p>
           <section
             className="additional-records"

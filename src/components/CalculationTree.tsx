@@ -32,9 +32,9 @@ export function EvidenceLink({
     : graph.documents.get(id);
   const label =
     value && doc
-      ? `${doc.id} · ${doc.document_type} · p. ${value.page} · ${value.label}`
+      ? `${doc.issuer} · ${doc.document_type} · p. ${value.page} · ${value.label}`
       : doc
-        ? `${doc.id} · ${doc.title}`
+        ? doc.title
         : id.startsWith('py:')
           ? `Prior year · ${id.slice(3)}`
           : id.startsWith('ref:')
@@ -140,7 +140,7 @@ export default function CalculationTree({
           <button
             className="calculation-toggle"
             aria-expanded={expanded}
-            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${displayLabel ?? line.label} (${lineId})`}
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${displayLabel ?? line.label}`}
             onClick={() => {
               setMounted(true);
               setExpanded(!expanded);
@@ -163,7 +163,7 @@ export default function CalculationTree({
         )}
         <details className="action-menu">
           <summary
-            aria-label={`Actions for ${lineId}`}
+            aria-label={`Actions for ${line.label}`}
             title="Calculation details and actions"
           >
             <MoreHorizontal size={17} />
@@ -206,13 +206,13 @@ export default function CalculationTree({
               <strong>How this is calculated</strong>
               <p>{packet.engine_reference.rules[detail.rule] ?? detail.rule}</p>
               {detail.note && <p>{detail.note}</p>}
-              <small>{detail.key} · Supplied calculation · Inputs below</small>
             </div>
           )}
           {latestCorrection && (
             <p className="callout">
               Proposed value: <strong>{money(latestCorrection.amount)}</strong>.
-              Engine amount remains {money(line.value)}. {latestCorrection.note}
+              Current return amount remains {money(line.value)}.{' '}
+              {latestCorrection.note}
             </p>
           )}
           {detail.inputs.length > 20 && (

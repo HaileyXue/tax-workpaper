@@ -11,7 +11,7 @@ async function openCase(page: Page) {
 }
 async function income(page: Page) {
   await page
-    .getByRole('button', { name: 'Inspect Federal F1040.9', exact: true })
+    .getByRole('button', { name: 'Inspect Federal Total income', exact: true })
     .click();
 }
 async function issue(page: Page, id: string) {
@@ -31,15 +31,23 @@ test('one summary traces income to evidence without a separate explorer or sched
   ).toHaveCount(0);
   await income(page);
   const parent = page.getByRole('button', {
-    name: 'Collapse Total income (F1040.9)',
+    name: 'Collapse Total income',
     exact: true,
   });
-  await page.getByRole('button', { name: /D08 · W-2 · p. 1/ }).click();
+  await page
+    .getByRole('button', { name: /Corvane Systems.*W-2 · p. 1/ })
+    .click();
   const evidence = page.getByRole('complementary', { name: 'Source evidence' });
   await expect(evidence.locator('mark')).toHaveText('104,600.00');
   await expect(parent).toBeVisible();
   await expect(page.locator('.schedule-breakdown')).toBeVisible();
-  await expect(page.getByRole('button', { name: /D10 ·/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /W-2 · p. 1/ })).toHaveCount(2);
+  await expect(
+    page.getByText(/Supplied calculation · Inputs below/),
+  ).toHaveCount(0);
+  await expect(evidence.getByText('Document reference: D08')).not.toBeVisible();
+  await evidence.getByText('Source details', { exact: true }).click();
+  await expect(evidence.getByText('Document reference: D08')).toBeVisible();
 });
 
 test('records a correction proposal and persists it independently of engine totals', async ({
@@ -50,7 +58,7 @@ test('records a correction proposal and persists it independently of engine tota
     .getByRole('textbox', { name: 'Search return calculations' })
     .fill('SchB.1.2');
   const result = page.getByRole('region', { name: 'Search results' });
-  await result.getByLabel('Actions for SchB.1.2').click();
+  await result.locator('[data-line="SchB.1.2"] .action-menu > summary').click();
   await result
     .getByRole('button', { name: 'Propose correction', exact: true })
     .click();
@@ -100,7 +108,9 @@ test('supports mobile evidence inspection and read-only roles', async ({
   await openCase(page);
   await page.getByLabel('Viewing as').selectOption('st-05');
   await income(page);
-  const link = page.getByRole('button', { name: /D08 · W-2 · p. 1/ });
+  const link = page.getByRole('button', {
+    name: /Corvane Systems.*W-2 · p. 1/,
+  });
   await link.click();
   await expect(
     page.getByRole('complementary', { name: 'Source evidence' }),
@@ -151,7 +161,7 @@ test('final sign-off persists and reopens when a note changes the review snapsho
   ).toBeVisible();
   await income(page);
   const leaf = page.locator('.schedule-breakdown [data-line="F1040.1z"]');
-  await leaf.getByLabel('Actions for F1040.1z').click();
+  await leaf.locator('.action-menu > summary').click();
   await leaf.getByRole('button', { name: 'Add note', exact: true }).click();
   await page
     .getByRole('dialog')
@@ -168,10 +178,12 @@ test('compares packet summary figures without filling unmapped cells', async ({
 }) => {
   await openCase(page);
   await expect(
-    page.getByRole('button', { name: 'Inspect Federal F1040.11' }),
+    page.getByRole('button', { name: 'Inspect Federal Adjusted gross income' }),
   ).toContainText('$445,590');
   await expect(
-    page.getByRole('button', { name: 'Inspect California F540NR.17' }),
+    page.getByRole('button', {
+      name: 'Inspect California Total AGI using California law',
+    }),
   ).toContainText('$481,096');
   const row = page.getByRole('row').filter({
     has: page.getByRole('rowheader', {
@@ -180,7 +192,9 @@ test('compares packet summary figures without filling unmapped cells', async ({
     }),
   });
   await expect(row.getByRole('cell').first()).toHaveText('—');
-  await page.getByRole('button', { name: 'Inspect Federal F1040.11' }).click();
+  await page
+    .getByRole('button', { name: 'Inspect Federal Adjusted gross income' })
+    .click();
   await expect(
     page.locator('.schedule-breakdown .calculation-explanation').first(),
   ).toContainText('How this is calculated');
@@ -192,7 +206,9 @@ test('resizes evidence with pointer and keyboard and keeps mobile full width', a
   await page.setViewportSize({ width: 1440, height: 1000 });
   await openCase(page);
   await income(page);
-  await page.getByRole('button', { name: /D08 · W-2 · p. 1/ }).click();
+  await page
+    .getByRole('button', { name: /Corvane Systems.*W-2 · p. 1/ })
+    .click();
   const panel = page.getByRole('complementary', { name: 'Source evidence' });
   const handle = page.getByRole('separator', {
     name: 'Resize source evidence',
@@ -218,7 +234,7 @@ test('issue banner contains links only, opens the summary chain and scrolls to i
 }) => {
   await openCase(page);
   await expect(
-    page.getByRole('button', { name: 'Inspect Federal F1040.11' }),
+    page.getByRole('button', { name: 'Inspect Federal Adjusted gross income' }),
   ).toHaveClass(/amount-issue-upstream/);
   await issue(page, 'duplicate-sweep');
   await expect(
