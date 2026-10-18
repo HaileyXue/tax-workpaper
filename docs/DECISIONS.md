@@ -8,7 +8,7 @@ The sections below describe the current implementation. The dated decision recor
 
 **Tax workpaper** opens on Cases. The delivered packet contains one reviewable household; related returns without their own packet are not invented as available cases. The issue count uses the latest supplied engine version plus saved review events. Reloading returns to Cases without discarding those events.
 
-Return contains one unified summary: federal/California totals, expandable supporting calculations, search, and other return records. Documents and History remain secondary tools in the left sidebar. The canvas is white with dark text, green controls, and amber issues. Source evidence stays beside the calculation in a resizable panel on desktop and a full-width bottom panel on mobile.
+Return contains one unified summary: federal/California totals, focused supporting calculations, search, and related return records. Documents and History remain secondary tools in the left sidebar. The canvas is white with dark text, green controls, and amber issues. Source evidence stays beside the calculation in a resizable panel on desktop and a full-width bottom panel on mobile.
 
 The issues banner contains direct links, not nested calculations or forms. Clicking an issue finds its actual dependency path, reveals the path within Summary, and smoothly scrolls to the source. Reduced-motion preferences use immediate scrolling. Assignment and resolution are available beside that calculation. Correction proposals remain proposals and link to History for withdrawal; they cannot be resolved into an invented engine result.
 
@@ -18,7 +18,7 @@ Highlights follow the source and affected downstream amounts. Unrelated inputs r
 
 A schedule is a supporting calculation or list; it is not a requirement to create a separate page. The [IRS describes Schedule B](https://www.irs.gov/forms-pubs/about-schedule-b-form-1040) as supporting interest and ordinary dividend reporting. That accounting distinction supports a hierarchy from totals to details, not the earlier choice to place Wages & interest and Dividends beside Summary as peer tabs.
 
-Earlier iterations used those payer tables and a separate full calculation index. The current implementation removes that duplicated navigation. In v3, 51 of 627 lines lie outside the displayed totals' dependency graph, including carried-forward IRA basis, ending S-corporation stock basis, and required-1099 questions. These remain accessible in Summary under Other return records and through search. Coverage tests ensure every line remains reachable. Questionnaire issues without numeric links navigate to their actual record instead of a fabricated number.
+Earlier iterations used those payer tables and a separate full calculation index. The current implementation removes that duplicated navigation. In v3, 51 of 627 lines lie outside the displayed totals' dependency graph, including carried-forward IRA basis, ending S-corporation stock basis, and required-1099 questions. These remain accessible in Summary under Related return records and through search. Coverage tests ensure every line remains reachable. Questionnaire issues without numeric links navigate to their actual record instead of a fabricated number.
 
 ## Technical decisions and limits
 
@@ -30,18 +30,18 @@ Earlier iterations used those payer tables and a separate full calculation index
 | Browser-local append-only review log                | Reproducible persistence, attribution, and undo; not secure multiuser storage.                                                                                                                  |
 | Source text instead of invented PDFs                | The packet supplies printed page text. Only unique exact matches receive source highlights; ambiguous locations remain explicit.                                                                |
 | Client-side role switcher                           | Demonstrates permissions, but is not a production authorization boundary.                                                                                                                       |
-| Selective expansion                                 | Simple source-backed numbers remain plain rows; real calculations and long lists expand. Unchanged carry/sum steps retain their full lineage in details.                                        |
+| Focused calculation statements                      | One breakdown at a time, with a review trail and aligned inputs/result. This sacrifices simultaneous visibility of every depth for readability.                                                 |
 | No routine per-value verification                   | User-requested exception-driven review with one final acknowledgment. This deliberately departs from the employer brief's per-number verification requirement; legacy records remain preserved. |
 | Conservative sign-off invalidation                  | Any later review event reopens sign-off. Filing approval, e-signatures, and production retention are not implemented.                                                                           |
 | Scripted timeline distinguished from actual actions | Supplied future filing events are scenario data, not evidence that the prototype filed a return.                                                                                                |
 
-Internal calculation and extraction IDs stay in on-demand audit details rather than routine labels. Source links use issuer, document type, page, and human-readable field labels. Screen-reader labels also use calculation names. The recursive breakdown remains in place; a flatter input/result statement is a potential next interaction refinement, with arithmetic operators shown only when defined by the supplied data.
+Internal calculation and extraction IDs stay in on-demand audit details rather than routine labels. Source links use issuer, document type, page, and human-readable field labels. Screen-reader labels also use calculation names. The focused breakdown replaces recursive cards. Input selection updates the same statement, with a review trail back to previous contexts. Rules retain their supplied explanations without guessed operators. Even R-SUM is described generically as an arithmetic combination in this packet, so its name alone does not justify addition markers.
 
 The static prototype bundles the complete fictional packet, resulting in a large JavaScript bundle. A production API or lazy-loaded packet would improve initial loading and enforce access boundaries. CPA usability has not been validated with a practicing reviewer.
 
 ## Validation
 
-Twenty-two domain tests cover lineage, independent checks, version isolation, review permissions, estimates, and complete summary coverage. Nine browser tests cover issue-to-source navigation, long paths, nonnumeric records, correction persistence/undo, contextual resolution, sign-off, resizing, mobile layout, and read-only roles. TypeScript, the production build, and repository formatting checks pass. Browser workflow tests block external font requests so network latency cannot stall local navigation. This revision introduces no dependencies.
+Twenty-two domain tests cover lineage, independent checks, version isolation, review permissions, estimates, and complete summary coverage. Ten browser tests cover issue-to-source navigation, long paths, nonnumeric records, correction persistence/undo, contextual resolution, sign-off, resizing, mobile layout, and read-only roles. TypeScript, the production build, and repository formatting checks pass. Browser workflow tests block external font requests so network latency cannot stall local navigation. This revision introduces no dependencies.
 
 ## Hosting and repository
 
@@ -111,7 +111,7 @@ The initial entries were reconstructed from the project conversation on 2026-10-
 
 ### D07 — Integrate other records by subject without inventing arithmetic links
 
-- **Recorded:** 2026-10-17. **Status:** Proposed; not implemented. The current interface still has Other return records.
+- **Recorded:** 2026-10-17. **Status:** Partially implemented by D10. Same-form links and a complete form index are available; broader subject/entity mapping remains proposed.
 - **Problem:** The existing bucket is computed from graph reachability. It groups together records that accountants would associate with different subjects. The 51-of-627 figure describes v3 coverage relative to the current summary roots; it is not a universal tax classification or proof that those records cannot affect current-year work.
 - **Proposed decision:** Attach a Related records area to relevant calculation contexts within Summary. Keep calculation inputs and related records visually distinct. Provide a compact subject index in the same workspace so records are accessible even when there is no current-year amount to select.
 - **Reason:** Records can belong to the same subject without being operands in the same formula. A future-year balance, filing answer, or supporting explanation should have a meaningful home without being added to a current-year total.
@@ -138,7 +138,7 @@ Proposed implementation and acceptance criteria:
 
 ### D08 — Prefer flat calculation statements over deep nesting
 
-- **Recorded:** 2026-10-17. **Status:** Proposed; not implemented. Recursive breakdowns remain current behavior.
+- **Recorded:** 2026-10-17. **Status:** Adopted and implemented by D10. This entry preserves the original proposal.
 - **Decision under consideration:** Present immediate inputs in an aligned statement with the result underneath. Reveal selected input details in the same workspace while retaining the parent statement and a short location trail. Use transaction tables for large detail, and appropriate presentations for limits, allocations, and carryforwards.
 - **Reason:** Deep indentation asks the reviewer to reconstruct arithmetic and remember their position. A flat statement makes the inputs and result easier to compare.
 - **Tradeoff:** A focused detail view must retain enough parent context and preserve automatic issue-to-source navigation. One representation will not fit every calculation.
@@ -150,3 +150,15 @@ Proposed implementation and acceptance criteria:
 - **Decision:** Open on Cases, show the latest-version Issues to resolve count, and use that language consistently. Remove redundant “open items” controls. List only supplied cases. Continue meaningful commits and pushes to the authorized private repository; defer cloud hosting.
 - **Reason:** The user wants an understandable entry point, consistent terminology, and a clean employer-reviewable repository while the product is developed locally.
 - **Tradeoff:** Reloading returns to Cases rather than restoring a deep location. Browser-local persistence and simulated roles remain prototype limits.
+
+### D10 — Keep return-first; inspect one calculation at a time
+
+- **Recorded:** 2026-10-17. **Status:** Implemented following explicit user approval.
+- **Decision:** Keep the federal/California Summary as the central view. Open a single statement beneath the selected summary row. Clicking an input replaces that statement instead of nesting another card. A Review path returns to previous contexts. Source evidence remains in the resizable side panel.
+- **Reason:** Deep expansion creates excessive indentation and makes the reviewer reconstruct the calculation while remembering their position. Aligned inputs and a result make immediate relationships easier to scan.
+- **Tradeoff accepted:** Reviewers cannot see every calculation depth simultaneously. They gain a bounded layout, but must select inputs to inspect deeper detail. The summary stays in the document above/below the selected row, rather than occupying a fixed panel at every scroll position.
+- **Calculation fidelity:** Operations show their supplied explanations and inputs, without invented operators or recomputed totals. R-SUM is described generically as an arithmetic combination, so no addition operator is inferred from that identifier. Long input lists remain searchable and paginated. Specialized allocation/limit visualizations remain future work.
+- **Navigation:** Issue links choose the source's actual parent calculation directly, preserve its path, and scroll/focus the referenced record. Affected summary totals, trail entries, inputs, and sources retain issue highlighting. Review path describes navigation history; selecting a related record does not create an arithmetic edge.
+- **Related records:** Link records outside summary arithmetic coverage beside calculations sharing their supplied form. Exclude broad summary forms (1040, 540NR, Schedules 1–3), where shared form membership would misleadingly connect unrelated subjects. Describe these explicitly as same-form records, not additional operands. Retain a Related return records form index and search as complete access paths. This conservative mapping avoids invented client facts but is less tailored than future entity-aware topic mappings; records may appear in several contexts with a shared ID and review history.
+- **Alternative rejected:** Topic-first as the primary view, and unlimited recursive cards. Neither is required for complete lineage or record access.
+- **Validation:** Browser coverage includes forward/back navigation, absence of nested calculations, same-form related records, deep issue jumps, evidence inspection, correction persistence, final sign-off invalidation, roles, mobile layout, and panel resizing. Existing per-version domain coverage protects access to every supplied calculation line.

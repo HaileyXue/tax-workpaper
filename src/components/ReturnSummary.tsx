@@ -211,12 +211,13 @@ export default function ReturnSummary({
           </p>
           <section
             className="additional-records"
-            aria-label="Other return records"
+            aria-label="Related return records"
           >
-            <h3>Other return records</h3>
+            <h3>Related return records</h3>
             <p className="small muted">
-              These records do not feed the totals above. They include
-              carryforwards, filing questions, and informational outputs.
+              Find supporting records by form, including carryforwards and
+              filing questions. They are also linked beside calculations from
+              the same form.
             </p>
             {location?.additional && !graph.lines.has(location.root) && (
               <div
@@ -238,7 +239,7 @@ export default function ReturnSummary({
                 <EvidenceLink
                   {...tree}
                   id={location.root}
-                  path={['Return summary', 'Other return records']}
+                  path={['Return summary', 'Related return records']}
                 />
               </div>
             )}

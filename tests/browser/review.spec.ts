@@ -30,8 +30,11 @@ test('one summary traces income to evidence without a separate explorer or sched
     page.getByText('All calculations & schedules', { exact: true }),
   ).toHaveCount(0);
   await income(page);
+  await page
+    .getByRole('button', { name: 'Inspect input Total wages', exact: true })
+    .click();
   const parent = page.getByRole('button', {
-    name: 'Collapse Total income',
+    name: 'Total income',
     exact: true,
   });
   await page
@@ -108,6 +111,9 @@ test('supports mobile evidence inspection and read-only roles', async ({
   await openCase(page);
   await page.getByLabel('Viewing as').selectOption('st-05');
   await income(page);
+  await page
+    .getByRole('button', { name: 'Inspect input Total wages', exact: true })
+    .click();
   const link = page.getByRole('button', {
     name: /Corvane Systems.*W-2 · p. 1/,
   });
@@ -160,6 +166,9 @@ test('final sign-off persists and reopens when a note changes the review snapsho
     page.getByRole('button', { name: 'Signed off', exact: true }),
   ).toBeVisible();
   await income(page);
+  await page
+    .getByRole('button', { name: 'Inspect input Total wages', exact: true })
+    .click();
   const leaf = page.locator('.schedule-breakdown [data-line="F1040.1z"]');
   await leaf.locator('.action-menu > summary').click();
   await leaf.getByRole('button', { name: 'Add note', exact: true }).click();
@@ -207,6 +216,9 @@ test('resizes evidence with pointer and keyboard and keeps mobile full width', a
   await openCase(page);
   await income(page);
   await page
+    .getByRole('button', { name: 'Inspect input Total wages', exact: true })
+    .click();
+  await page
     .getByRole('button', { name: /Corvane Systems.*W-2 · p. 1/ })
     .click();
   const panel = page.getByRole('complementary', { name: 'Source evidence' });
@@ -247,15 +259,11 @@ test('issue banner contains links only, opens the summary chain and scrolls to i
   await expect(source).toBeInViewport();
   await expect(source.locator('.amount-issue')).toContainText('1,840');
   await expect(
-    page.locator(
-      '.schedule-breakdown [data-line="F1040.9"] > .calculation-heading .amount-issue',
-    ),
+    page.locator('.calculation-trail .amount-issue').first(),
   ).toBeVisible();
   await expect(
-    page.locator(
-      '.schedule-breakdown [data-line="F1040.2b"] > .calculation-heading .amount-issue',
-    ),
-  ).toBeVisible();
+    page.locator('.schedule-breakdown .calculation .calculation'),
+  ).toHaveCount(0);
   await expect(page.locator('.issues-section .finding-content')).toHaveCount(0);
   await page.locator('.issue-references button').nth(1).click();
   await expect(
@@ -313,4 +321,48 @@ test('case count follows resolutions and reload returns to cases', async ({
   await expect(page.locator('.case-issue-badge')).toHaveText(
     '8 issues to resolve',
   );
+});
+
+test('focused statements navigate back without nesting and expose related records', async ({
+  page,
+}) => {
+  await openCase(page);
+  await income(page);
+  await page
+    .getByRole('button', { name: 'Inspect input Total wages', exact: true })
+    .click();
+  await expect(
+    page.locator('.schedule-breakdown [data-line="F1040.1z"]'),
+  ).toBeVisible();
+  await expect(
+    page.locator('.schedule-breakdown .calculation .calculation'),
+  ).toHaveCount(0);
+  await page
+    .getByRole('navigation', { name: 'Review path' })
+    .getByRole('button', { name: 'Total income', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', {
+      name: 'Inspect input Total wages',
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page
+    .getByRole('textbox', { name: 'Search return calculations' })
+    .fill('F8606.18');
+  await page
+    .getByRole('button', {
+      name: 'Expand Taxable amount of conversion',
+      exact: true,
+    })
+    .click();
+  const related = page.getByRole('region', {
+    name: 'Related records',
+    exact: true,
+  });
+  await related.getByRole('button', { name: /Basis carried to 2026/ }).click();
+  await expect(page.locator('[data-line="F8606.14"]')).toBeVisible();
+  await expect(
+    page.getByRole('navigation', { name: 'Review path' }),
+  ).toContainText('Taxable amount of conversion');
 });

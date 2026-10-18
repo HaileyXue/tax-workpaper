@@ -41,7 +41,7 @@ npm run format:check  # Repository formatting
 - One packet-backed summary integrates totals, supporting calculations, full-line search, and other return records. Separate payer tabs and the duplicate calculation index have been removed. Missing mappings display a dash, never an invented zero.
 - A Cases landing page with live issue counts for the supplied household and an All cases navigation link.
 - One white-background Return workspace with selective calculation breakdowns; Documents and History are secondary tools in the left sidebar.
-- Plain rows for amounts with up to three direct references; expandable breakdowns for calculations and long source lists. Unchanged carry/sum links are flattened, with their full lineage retained in the details menu.
+- Focused calculation statements with aligned inputs and results. Selecting an input replaces the detail in place; a review trail returns to earlier contexts. Same-form related records stay separate from arithmetic inputs.
 - The issue banner contains direct links only. Selecting an issue reveals its real dependency path in Summary, focuses the source, and scrolls smoothly (or instantly with reduced motion). Highlighting follows the affected chain without flagging unrelated inputs. Assignment and resolution are contextual, beside the linked calculation.
 - Evidence displayed in a resizable panel beside the calculation on desktop and in a bottom panel on mobile; other document fields and reverse usage are collapsed by default.
 - Search across all 627 current-version lines; large input lists load in batches with filtering.
@@ -58,7 +58,7 @@ npm run format:check  # Repository formatting
 - **Review, not recalculation:** corrections are proposals. Estimates use manually selected packet rates and are not cumulative recomputed return totals. Currency, California sourcing, thresholds, credits, and QBI require review.
 - **Filing is not implemented:** the final review sign-off is a local acknowledgment only. Client authorization, e-signatures, filing freezes, amendments, notices, and production retention controls remain future work. Later timeline events are labeled scripted scenario data.
 - **Source fidelity:** the packet has no PDFs. Synthetic coordinates are not presented as real PDF coordinates. Ambiguous or absent text gets a field/page locator and a visible warning, not a fabricated highlight.
-- **Coverage:** automated checks are intentionally narrow; no claim that every planted error has been found. All 627 current-version lines remain accessible through Summary breakdowns, search, and Other return records; dedicated asset/basis editors remain future work.
+- **Coverage:** automated checks are intentionally narrow; no claim that every planted error has been found. All 627 current-version lines remain accessible through Summary breakdowns, search, and Related return records; dedicated asset/basis editors remain future work.
 
 ## Repository guide
 

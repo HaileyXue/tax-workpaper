@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronRight, FileText, MoreHorizontal } from 'lucide-react';
 import { money, sourceAmount, packet, type Graph } from '../domain/packet';
 import { calculationPresentation } from '../domain/presentation';
-import { amountIssue } from '../domain/schedules';
+import { additionalRecords, amountIssue } from '../domain/schedules';
 import type { Finding } from '../domain/findings';
 import type { ReviewEvent } from '../domain/review';
 
@@ -51,7 +51,7 @@ export function EvidenceLink({
   );
 }
 export default function CalculationTree({
-  lineId,
+  lineId: rootId,
   displayLabel,
   initiallyExpanded = false,
   path = [],
@@ -63,26 +63,45 @@ export default function CalculationTree({
   path?: string[];
 }) {
   const { graph, events, onAction, writable } = props;
+  const heading = useRef<HTMLDivElement>(null);
+  const [trail, setTrail] = useState<string[]>([rootId]);
+  const lineId = trail.at(-1)!;
+  useEffect(() => {
+    if (trail.length > 1 && !props.revealPath)
+      heading.current?.focus({ preventScroll: true });
+  }, [trail, props.revealPath]);
+  const navigate = (id: string) => {
+    setTrail((current) =>
+      current.includes(id)
+        ? current.slice(0, current.indexOf(id) + 1)
+        : [...current, id],
+    );
+    setQuery('');
+    setLimit(20);
+    setExpanded(true);
+    setMounted(true);
+  };
   const [expanded, setExpanded] = useState(initiallyExpanded);
   const [mounted, setMounted] = useState(initiallyExpanded);
   const [limit, setLimit] = useState(20);
   const [query, setQuery] = useState('');
   useEffect(() => {
     if (!props.revealPath) return;
-    const presentation = calculationPresentation(graph, lineId);
-    if (!presentation.chain.some((l) => props.revealPath!.includes(l.key)))
-      return;
+    const calculations = props.revealPath.filter((id) => graph.lines.has(id));
+    if (!calculations.length) return;
+    setTrail(calculations);
     setExpanded(true);
     setMounted(true);
     setQuery('');
-    const detail = presentation.detail;
+    const detail = calculationPresentation(graph, calculations.at(-1)!).detail;
     const index = Math.max(
+      -1,
       ...[...(detail?.inputs ?? []), ...(detail?.sources ?? [])].map((id, i) =>
         props.revealPath!.includes(id) ? i : -1,
       ),
     );
     setLimit(Math.max(20, index + 1));
-  }, [props.revealPath, graph, lineId]);
+  }, [props.revealPath, graph]);
   const line = graph.lines.get(lineId);
   if (!line)
     return <p className="callout">Missing calculation input: {lineId}</p>;
@@ -98,7 +117,14 @@ export default function CalculationTree({
     expandable,
   } = calculationPresentation(graph, lineId);
   const detail = sourceLine!;
-  const context = [...path, ...chain.map((item) => item.key)];
+  const context = [...path, ...trail, ...chain.map((item) => item.key)];
+  const relatedRecords = additionalRecords(graph).filter(
+    (record) =>
+      !['F1040', 'F540NR', 'Sch1', 'Sch2', 'Sch3'].includes(record.form) &&
+      chain.some((item) => item.form === record.form) &&
+      !chain.some((item) => item.key === record.key) &&
+      !detail.inputs.includes(record.key),
+  );
   const children = detail.inputs.filter(
     (id) =>
       !query ||
@@ -135,24 +161,52 @@ export default function CalculationTree({
       data-aliases={chain.map((l) => l.key).join(' ')}
       tabIndex={-1}
     >
-      <div className="calculation-heading">
+      {trail.length > 1 && (
+        <nav className="calculation-trail" aria-label="Review path">
+          {trail.map((id, index) => {
+            const warning = amountIssue(graph, props.issueFindings ?? [], id);
+            return (
+              <button
+                key={id}
+                onClick={() => navigate(id)}
+                aria-current={
+                  index === trail.length - 1 ? 'location' : undefined
+                }
+                className={
+                  warning
+                    ? `amount-issue amount-issue-${warning.kind}`
+                    : undefined
+                }
+              >
+                {graph.lines.get(id)?.label ?? id}
+                {index < trail.length - 1 && <ChevronRight size={14} />}
+              </button>
+            );
+          })}
+        </nav>
+      )}
+      <div className="calculation-heading" ref={heading} tabIndex={-1}>
         {expandable ? (
           <button
             className="calculation-toggle"
             aria-expanded={expanded}
-            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${displayLabel ?? line.label}`}
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${(lineId === rootId ? displayLabel : undefined) ?? line.label}`}
             onClick={() => {
               setMounted(true);
               setExpanded(!expanded);
             }}
           >
             <ChevronRight size={16} className={expanded ? 'rotated' : ''} />
-            <span>{displayLabel ?? line.label}</span>
+            <span>
+              {(lineId === rootId ? displayLabel : undefined) ?? line.label}
+            </span>
             {renderedAmount}
           </button>
         ) : (
           <div className="calculation-label">
-            <span>{displayLabel ?? line.label}</span>
+            <span>
+              {(lineId === rootId ? displayLabel : undefined) ?? line.label}
+            </span>
             {renderedAmount}
           </div>
         )}
@@ -230,9 +284,31 @@ export default function CalculationTree({
             </label>
           )}
           <div className="calculation-children">
-            {children.slice(0, limit).map((id) => (
-              <CalculationTree key={id} {...props} lineId={id} path={context} />
-            ))}
+            {children.slice(0, limit).map((id) => {
+              const input = graph.lines.get(id);
+              const warning = amountIssue(graph, props.issueFindings ?? [], id);
+              return (
+                <button
+                  className="calculation-input-row"
+                  key={id}
+                  onClick={() => navigate(id)}
+                  aria-label={`Inspect input ${input?.label ?? id}`}
+                >
+                  <span>{input?.label ?? 'Missing calculation input'}</span>
+                  <strong
+                    className={
+                      warning
+                        ? `amount-issue amount-issue-${warning.kind}`
+                        : undefined
+                    }
+                    title={warning?.description}
+                  >
+                    {money(input?.value)}
+                  </strong>
+                  <ChevronRight size={16} />
+                </button>
+              );
+            })}
           </div>
           {children.length > limit && (
             <button
@@ -292,6 +368,35 @@ export default function CalculationTree({
                 </button>
               )}
             </div>
+          )}
+          {(detail.inputs.length > 0 || detail.sources.length > 1) && (
+            <div className="calculation-result">
+              <span>{line.label}</span>
+              {renderedAmount}
+            </div>
+          )}
+          {relatedRecords.length > 0 && (
+            <section
+              className="related-calculation-records"
+              aria-label="Related records"
+            >
+              <h4>Related records</h4>
+              <p className="small muted">
+                From the same form; these are not additional inputs to the
+                calculation above.
+              </p>
+              {relatedRecords.map((record) => (
+                <button
+                  key={record.key}
+                  className="calculation-input-row"
+                  onClick={() => navigate(record.key)}
+                >
+                  <span>{record.label}</span>
+                  <strong>{money(record.value)}</strong>
+                  <ChevronRight size={16} />
+                </button>
+              ))}
+            </section>
           )}
           {!detail.inputs.length && !detail.sources.length && (
             <p className="muted small">
