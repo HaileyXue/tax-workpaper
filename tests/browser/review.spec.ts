@@ -425,3 +425,50 @@ test('return inspection and action labels hide internal calculation references',
   await expect(page.getByRole('dialog')).toContainText('Total wages');
   await expect(page.getByRole('dialog')).not.toContainText('F1040.1z');
 });
+
+test('document filters combine ownership, uploader and search; source page shows supplied metadata', async ({
+  page,
+}) => {
+  await openCase(page);
+  await page.getByRole('button', { name: 'Documents', exact: true }).click();
+  await page
+    .getByRole('combobox', { name: 'Belongs to', exact: true })
+    .selectOption('taxpayer');
+  await page
+    .getByRole('combobox', { name: 'Uploaded by', exact: true })
+    .selectOption('client');
+  await page.getByRole('textbox', { name: 'Search documents' }).fill('D08');
+  await expect(page.locator('.document-row')).toHaveCount(1);
+  await page.locator('.document-row').click();
+  const panel = page.getByRole('complementary', { name: 'Source evidence' });
+  await expect(panel.getByText('EVIDENCE FOR', { exact: true })).toHaveCount(0);
+  await expect(panel.locator('.paper-heading')).toHaveText(
+    '2025 Form W-2 - Corvane Systems, Inc. (Ngozi Okafor)',
+  );
+  const metadata = panel.locator('.document-metadata');
+  await expect(metadata).toContainText('Corvane Systems, Inc.');
+  await expect(metadata).toContainText('Ngozi Okafor');
+  await expect(metadata).toContainText('2025');
+  await expect(metadata.locator('time')).toHaveAttribute(
+    'datetime',
+    '2026-01-29T18:40:00Z',
+  );
+  await expect(metadata).toContainText('Client');
+  await page
+    .getByRole('combobox', { name: 'Uploaded by', exact: true })
+    .selectOption('firm');
+  await expect(page.locator('.document-row')).toHaveCount(0);
+  await expect(
+    page.getByText('No documents match these filters.'),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Clear filters' }).click();
+  await expect(page.locator('.document-row')).toHaveCount(74);
+  await page
+    .getByRole('combobox', { name: 'Belongs to', exact: true })
+    .selectOption('dependent:ada');
+  await expect(page.locator('.document-row').first()).toBeVisible();
+  await page.locator('.document-row').first().click();
+  await expect(panel.locator('.document-metadata')).toContainText(
+    'Ada Lindqvist-Okafor',
+  );
+});

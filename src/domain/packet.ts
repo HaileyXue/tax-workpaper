@@ -18,6 +18,8 @@ export interface SourceDocument {
   id: string;
   title: string;
   issuer: string;
+  belongs_to: string;
+  uploaded_by: string;
   document_type: string;
   file_name: string;
   received_at: string;
@@ -233,4 +235,21 @@ export function sourceAmount(value: SourceValue): string {
   return value.value_type === 'money'
     ? money(value.value)
     : String(value.value ?? '—');
+}
+
+export function documentOwnerLabel(owner: string): string {
+  if (owner === 'joint') return 'Joint';
+  const person = packet.household.people.find((p) =>
+    owner.startsWith('dependent:')
+      ? p.id === owner.slice(10)
+      : p.role === owner,
+  );
+  return person && typeof person.name === 'string' ? person.name : owner;
+}
+export function documentUploaderLabel(uploader: string): string {
+  return uploader === 'client'
+    ? 'Client'
+    : uploader === 'firm'
+      ? 'Firm'
+      : uploader;
 }

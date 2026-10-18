@@ -1,3 +1,4 @@
+import { documentOwnerLabel, documentUploaderLabel } from './domain/packet';
 import { referenceLabel, displayText } from './domain/presentation';
 import {
   useEffect,
@@ -53,6 +54,16 @@ export default function App() {
   const [error, setError] = useState(initial.error ?? '');
   const [notice, setNotice] = useState('');
   const [search, setSearch] = useState('');
+  const [documentOwner, setDocumentOwner] = useState('');
+  const [documentUploader, setDocumentUploader] = useState('');
+  const filteredDocuments = packet.documents.filter(
+    (d) =>
+      (!documentOwner || d.belongs_to === documentOwner) &&
+      (!documentUploader || d.uploaded_by === documentUploader) &&
+      `${d.id} ${d.title} ${d.issuer}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+  );
   const [evidence, setEvidence] = useState<EvidenceSelection | null>(null);
   useEffect(() => {
     if (evidence)
@@ -440,37 +451,83 @@ export default function App() {
                   />
                 </label>
               </div>
-              {packet.documents
-                .filter((d) =>
-                  `${d.id} ${d.title} ${d.issuer}`
-                    .toLowerCase()
-                    .includes(search.toLowerCase()),
-                )
-                .map((d) => (
-                  <button
-                    className={`document-row ${sourceDoc?.id === d.id ? 'selected' : ''}`}
-                    aria-current={sourceDoc?.id === d.id ? true : undefined}
-                    key={d.id}
-                    onClick={() =>
-                      openEvidence({ ref: d.id, path: ['Documents', d.title] })
-                    }
+              <div className="document-filters">
+                <label>
+                  Belongs to
+                  <select
+                    value={documentOwner}
+                    onChange={(e) => setDocumentOwner(e.target.value)}
                   >
-                    <span className="line-code">{d.id}</span>
-                    <span>
-                      {d.title}
-                      <small>
-                        {d.page_count} pages ·{' '}
-                        {graph.documentUsage(d.id).length} linked lines
-                        {graph.version.documents_superseded.includes(d.id)
-                          ? ' · Superseded'
-                          : !graph.version.documents_used.includes(d.id)
-                            ? ' · Not used in this snapshot'
-                            : ''}
-                      </small>
-                    </span>
-                    <span>View source →</span>
+                    <option value="">All owners</option>
+                    {[
+                      ...new Set(packet.documents.map((d) => d.belongs_to)),
+                    ].map((owner) => (
+                      <option key={owner} value={owner}>
+                        {documentOwnerLabel(owner)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Uploaded by
+                  <select
+                    value={documentUploader}
+                    onChange={(e) => setDocumentUploader(e.target.value)}
+                  >
+                    <option value="">All uploaders</option>
+                    {[
+                      ...new Set(packet.documents.map((d) => d.uploaded_by)),
+                    ].map((uploader) => (
+                      <option key={uploader} value={uploader}>
+                        {documentUploaderLabel(uploader)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <span className="small muted" role="status">
+                  {filteredDocuments.length} of {packet.documents.length}{' '}
+                  documents
+                </span>
+                {(documentOwner || documentUploader || search) && (
+                  <button
+                    onClick={() => {
+                      setDocumentOwner('');
+                      setDocumentUploader('');
+                      setSearch('');
+                    }}
+                  >
+                    Clear filters
                   </button>
-                ))}
+                )}
+              </div>
+              {!filteredDocuments.length && (
+                <p>No documents match these filters.</p>
+              )}
+              {filteredDocuments.map((d) => (
+                <button
+                  className={`document-row ${sourceDoc?.id === d.id ? 'selected' : ''}`}
+                  aria-current={sourceDoc?.id === d.id ? true : undefined}
+                  key={d.id}
+                  onClick={() =>
+                    openEvidence({ ref: d.id, path: ['Documents', d.title] })
+                  }
+                >
+                  <span className="line-code">{d.id}</span>
+                  <span>
+                    {d.title}
+                    <small>
+                      {d.page_count} pages · {graph.documentUsage(d.id).length}{' '}
+                      linked lines
+                      {graph.version.documents_superseded.includes(d.id)
+                        ? ' · Superseded'
+                        : !graph.version.documents_used.includes(d.id)
+                          ? ' · Not used in this snapshot'
+                          : ''}
+                    </small>
+                  </span>
+                  <span>View source →</span>
+                </button>
+              ))}
             </section>
           )}
           {tab === 'History' && (
@@ -507,18 +564,6 @@ export default function App() {
               onChange={setEvidenceWidth}
             />
             <div className="evidence-heading">
-              <div>
-                <span className="eyebrow">EVIDENCE FOR</span>
-                <p>
-                  {evidence.path
-                    .map((id) =>
-                      graph.lines.has(id) || graph.values.has(id)
-                        ? referenceLabel(graph, id)
-                        : displayText(graph, id),
-                    )
-                    .join(' › ')}
-                </p>
-              </div>
               <button aria-label="Close evidence" onClick={closeEvidence}>
                 <X size={18} />
               </button>

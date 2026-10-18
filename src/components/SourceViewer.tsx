@@ -5,7 +5,13 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { sourceAmount, type Graph, type SourceValue } from '../domain/packet';
+import {
+  sourceAmount,
+  documentOwnerLabel,
+  documentUploaderLabel,
+  type Graph,
+  type SourceValue,
+} from '../domain/packet';
 
 export default function SourceViewer({
   graph,
@@ -86,9 +92,39 @@ export default function SourceViewer({
       )}
       <article className="paper">
         <div className="paper-heading">
-          <strong>{doc.document_type}</strong>
-          <span>{doc.tax_year}</span>
+          <strong>{doc.title}</strong>
         </div>
+        <dl className="document-metadata">
+          <div>
+            <dt>Issuer</dt>
+            <dd>{doc.issuer}</dd>
+          </div>
+          <div>
+            <dt>Belongs to</dt>
+            <dd>{documentOwnerLabel(doc.belongs_to)}</dd>
+          </div>
+          <div>
+            <dt>Tax year</dt>
+            <dd>{doc.tax_year}</dd>
+          </div>
+          <div>
+            <dt>Received</dt>
+            <dd>
+              <time dateTime={doc.received_at}>
+                {new Date(doc.received_at).toLocaleString('en-US', {
+                  timeZone: 'UTC',
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}{' '}
+                UTC
+              </time>
+            </dd>
+          </div>
+          <div>
+            <dt>Uploaded by</dt>
+            <dd>{documentUploaderLabel(doc.uploaded_by)}</dd>
+          </div>
+        </dl>
         <div className="printed-text">
           {unique ? (
             <>
