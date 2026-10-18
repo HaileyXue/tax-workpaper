@@ -1484,3 +1484,62 @@ textarea::placeholder {
     display: none;
   }
 }
+
+.back-to-cases {
+  justify-content: flex-start;
+  border: 0;
+  padding: 0;
+  font-size: 13px;
+}
+.case-list {
+  margin-top: 36px;
+}
+.case-card {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 22px;
+  padding: 28px;
+  border: 1px solid #bccdc2;
+  border-radius: 8px;
+  background: white;
+}
+.case-description {
+  flex: 1;
+  min-width: 230px;
+}
+.case-description h2 {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.case-description p,
+.case-count {
+  color: #3e5147;
+  font-size: 13px;
+}
+.case-description p {
+  margin: 0;
+}
+.case-issue-badge {
+  padding: 10px 14px;
+  border: 1px solid #7eaa90;
+  border-radius: 5px;
+  color: #075b35;
+  background: #e0f3e7;
+  font-weight: 600;
+}
+.case-issue-badge.has-issues {
+  border-color: #d69b22;
+  color: #754000;
+  background: #fff0c2;
+}
+@media (max-width: 800px) {
+  .case-card {
+    padding: 20px;
+    gap: 16px;
+  }
+  .case-description {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+}

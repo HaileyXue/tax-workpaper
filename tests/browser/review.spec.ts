@@ -17,6 +17,7 @@ test('expands in place and shows contextual evidence without losing the calculat
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
   await expect(page.getByRole('navigation').getByRole('button')).toHaveCount(3);
   await expect(
     page.getByText('Record your review', { exact: true }),
@@ -48,6 +49,7 @@ test('records exceptions only on request and persists correction proposals', asy
   page,
 }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
   await page.getByText('All calculations & schedules', { exact: true }).click();
   await page
     .getByRole('textbox', { name: 'Search return calculations' })
@@ -87,6 +89,7 @@ test('records exceptions only on request and persists correction proposals', asy
     page.getByRole('button', { name: 'Sign off return', exact: true }),
   ).toBeDisabled();
   await page.reload();
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
   await page.getByRole('button', { name: 'History', exact: true }).click();
   await expect(
     page.getByText('Duplicate sweep confirmed using D28 and D29.', {
@@ -104,6 +107,7 @@ test('supports mobile evidence inspection and read-only roles', async ({
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
   await page.getByLabel('Viewing as').selectOption('st-05');
   await wages(page);
   await page.getByRole('button', { name: /D08 · W-2 · p. 1/ }).click();
@@ -129,7 +133,8 @@ test('final sign-off persists and reopens when a note changes the review snapsho
 }) => {
   // Resolve the supplied warnings through the UI; no fabricated verification records.
   await page.goto('/');
-  await page.getByRole('button', { name: /open items/ }).click();
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
+  await page.locator('.issues-section > summary').click();
   for (const finding of await page.locator('.finding').all()) {
     await finding.locator(':scope > summary').click();
     await finding
@@ -148,6 +153,7 @@ test('final sign-off persists and reopens when a note changes the review snapsho
     page.getByRole('button', { name: 'Signed off', exact: true }),
   ).toBeVisible();
   await page.reload();
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Signed off', exact: true }),
   ).toBeVisible();
@@ -169,6 +175,7 @@ test('compares packet summary figures without filling unmapped cells', async ({
   page,
 }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
   const panel = page.getByRole('tabpanel');
   const agi = panel.getByRole('row').filter({
     has: page.getByRole('rowheader', { name: /^Adjusted gross income/ }),
@@ -195,6 +202,7 @@ test('groups W-2 fields and attaches packet-linked warnings to affected interest
   page,
 }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
   await page
     .getByRole('tab', { name: 'Wages & interest', exact: true })
     .click();
@@ -240,6 +248,7 @@ test('resizes source evidence by dragging and keyboard without losing context', 
 }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/');
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
   await expect(page).toHaveTitle('Tax workpaper');
   await expect(
     page.getByRole('link', { name: 'Tax workpaper', exact: true }),
@@ -278,6 +287,7 @@ test('highlights affected amounts and explains calculations using packet rules',
   page,
 }) => {
   await page.goto('/');
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
   await expect(page.locator('.issues-section')).toHaveClass(/has-issues/);
   const agi = page.getByRole('button', {
     name: 'Inspect Federal F1040.11',
@@ -300,4 +310,66 @@ test('highlights affected amounts and explains calculations using packet rules',
   await expect(
     page.getByRole('button', { name: 'Inspect Wages ev-0016', exact: true }),
   ).not.toHaveClass(/amount-issue/);
+});
+
+test('lands on the supplied case and keeps issue counts consistent after resolution', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(
+    page.getByRole('heading', { name: 'Cases', exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('.case-card')).toHaveCount(1);
+  await expect(page.locator('.case-issue-badge')).toHaveText(
+    '9 issues to resolve',
+  );
+  await expect(
+    page.getByRole('button', { name: 'Return', exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
+  await expect(page.getByRole('button', { name: /open items/i })).toHaveCount(
+    0,
+  );
+  await expect(page.locator('.issues-section > summary')).toContainText(
+    '9 issues to resolve',
+  );
+  await page.locator('.issues-section > summary').click();
+  const finding = page
+    .locator('.findings > .finding')
+    .filter({ hasText: 'Same bank sweep interest counted twice' });
+  await finding.locator(':scope > summary').click();
+  await finding
+    .getByRole('textbox', { name: 'Resolution evidence' })
+    .fill('Test-only disposition for count synchronization.');
+  await finding
+    .getByRole('button', { name: 'Resolve issue', exact: true })
+    .click();
+  await expect(page.locator('.issues-section > summary')).toContainText(
+    '8 issues to resolve',
+  );
+  await page.getByRole('button', { name: 'All cases', exact: true }).click();
+  await expect(page.locator('.case-issue-badge')).toHaveText(
+    '8 issues to resolve',
+  );
+  await page.reload();
+  await expect(page.locator('.case-issue-badge')).toHaveText(
+    '8 issues to resolve',
+  );
+  await page.getByRole('button', { name: 'Open case', exact: true }).click();
+  await page
+    .getByRole('combobox', { name: 'Return version' })
+    .selectOption('v1');
+  await page.getByRole('link', { name: 'Tax workpaper', exact: true }).click();
+  await expect(page.locator('.case-issue-badge')).toHaveText(
+    '8 issues to resolve',
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    page.getByRole('button', { name: 'Open case', exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
 });

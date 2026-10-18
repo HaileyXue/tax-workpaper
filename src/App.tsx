@@ -7,6 +7,7 @@ import {
 } from 'react';
 import {
   Download,
+  ArrowLeft,
   Search,
   X,
   FileText,
@@ -31,6 +32,7 @@ import CalculationTree, {
   type TreeProps,
 } from './components/CalculationTree';
 import ReturnSchedules from './components/ReturnSchedules';
+import Cases from './components/Cases';
 import SourceViewer from './components/SourceViewer';
 import EvidenceResizeHandle from './components/EvidenceResizeHandle';
 import ExceptionForm from './components/ExceptionForm';
@@ -53,6 +55,7 @@ const groups = [
 ];
 const initial = loadReviews();
 export default function App() {
+  const [caseOpen, setCaseOpen] = useState(false);
   const [evidenceWidth, setEvidenceWidth] = useState(440);
   const [tab, setTab] = useState('Return');
   const [version, setVersion] = useState('v3');
@@ -74,7 +77,6 @@ export default function App() {
   } | null>(null);
   const [spotlight, setSpotlight] = useState<string | null>(null);
   const [allLines, setAllLines] = useState(30);
-  const issueRef = useRef<HTMLDetailsElement>(null);
   const evidenceTrigger = useRef<HTMLElement | null>(null);
   const graph = useMemo(() => createGraph(packet, version), [version]);
   const findings = useMemo(() => findIssues(graph), [graph]);
@@ -176,6 +178,26 @@ export default function App() {
       .includes(search.toLowerCase()),
   );
   const activeFlags = current.filter((e) => e.kind === 'flag');
+  const showCases = () => {
+    setEvidence(null);
+    setAction(null);
+    setCaseOpen(false);
+    setNotice('');
+  };
+  if (!caseOpen)
+    return (
+      <Cases
+        events={events}
+        error={error}
+        onOpen={(latestVersion) => {
+          setVersion(latestVersion);
+          setTab('Return');
+          setSearch('');
+          setSpotlight(null);
+          setCaseOpen(true);
+        }}
+      />
+    );
   return (
     <>
       <aside className="app-sidebar" aria-label="Workspace sidebar">
@@ -184,11 +206,15 @@ export default function App() {
           href="#"
           onClick={(e) => {
             e.preventDefault();
-            setTab('Return');
+            showCases();
           }}
         >
           Tax workpaper
         </a>
+        <button className="back-to-cases" onClick={showCases}>
+          <ArrowLeft size={16} />
+          All cases
+        </button>
         <nav aria-label="Workspace">
           {['Return', 'Documents', 'History'].map((name) => (
             <button
@@ -267,31 +293,15 @@ export default function App() {
           <div hidden={tab !== 'Return'}>
             <div className="return-intro">
               <p>Open a breakdown or inspect its source.</p>
-              <button
-                className="issue-count"
-                onClick={() => {
-                  if (issueRef.current) {
-                    issueRef.current.open = true;
-                    issueRef.current.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'start',
-                    });
-                  }
-                }}
-              >
-                {approval.blockers} open{' '}
-                {approval.blockers === 1 ? 'item' : 'items'}
-              </button>
             </div>
             <details
-              ref={issueRef}
               className={`issues-section ${approval.blockers > 0 ? 'has-issues' : ''}`}
             >
               <summary>
                 <strong>Issues to resolve</strong>{' '}
                 <span>
-                  {warnings} warnings · {approval.flags} flags ·{' '}
-                  {approval.proposals} proposals
+                  {approval.blockers}{' '}
+                  {approval.blockers === 1 ? 'issue' : 'issues'} to resolve
                 </span>
               </summary>
               <Exceptions
@@ -306,7 +316,9 @@ export default function App() {
                 <details className="finding" key={f.id}>
                   <summary>
                     <span>{f.note}</span>
-                    <small>{resolved(f.id) ? 'Resolved' : 'Open'}</small>
+                    <small>
+                      {resolved(f.id) ? 'Resolved' : 'Issue to resolve'}
+                    </small>
                   </summary>
                   <div className="finding-content">
                     {graph.lines.has(f.target) ? (
@@ -487,7 +499,7 @@ export default function App() {
                 <input
                   name="note"
                   type="hidden"
-                  value="Reviewed the return and supporting evidence; no open blocking items in this local review snapshot."
+                  value="Reviewed the return and supporting evidence; no issues to resolve in this local review snapshot."
                 />
                 <button
                   className="primary"
@@ -502,7 +514,7 @@ export default function App() {
               </form>
               <p className="small muted">
                 {approval.blockers > 0
-                  ? `${approval.blockers} blocking items remain. `
+                  ? `${approval.blockers} ${approval.blockers === 1 ? 'issue' : 'issues'} to resolve. `
                   : ''}
                 Reviewer or partner required. Review sign-off does not file the
                 return or certify a recomputed tax result.

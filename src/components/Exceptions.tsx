@@ -33,7 +33,7 @@ export default function Exceptions({
               {resolved(f.id)
                 ? 'Resolved'
                 : f.severity === 'warning'
-                  ? 'Open'
+                  ? 'Issue to resolve'
                   : 'Advisory'}
             </small>
           </summary>

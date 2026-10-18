@@ -28,7 +28,7 @@ The user's priority was a clean, employer-reviewable repository and a working ta
 
 ## Validation approach
 
-Domain tests exercise real packet paths, version isolation, missing-reference behavior, cycle protection, independent checks, role restrictions, undo authorship, and estimate math. A production build checks browser compilation. Eight Playwright browser tests pass for inline tracing and retained expansion, contextual evidence, correction persistence/undo, mobile layout and read-only roles, and final sign-off persistence/invalidation. Twenty domain tests and the production build pass. The prior dependency audit reported zero known vulnerabilities; this revision adds no dependencies.
+Domain tests exercise real packet paths, version isolation, missing-reference behavior, cycle protection, independent checks, role restrictions, undo authorship, and estimate math. A production build checks browser compilation. Nine Playwright browser tests pass for inline tracing and retained expansion, contextual evidence, correction persistence/undo, mobile layout and read-only roles, and final sign-off persistence/invalidation. Twenty domain tests and the production build pass. The prior dependency audit reported zero known vulnerabilities; this revision adds no dependencies.
 
 The app intentionally imports the full packet for the prototype. The production bundle is correspondingly large; a production data API or lazy-loaded packet can reduce initial JavaScript parsing costs.
 
@@ -67,3 +67,9 @@ The app is named **Tax workpaper** in navigation and the browser title. The orig
 Unresolved blockers give “Issues to resolve” a prominent amber treatment. Amount highlights use both color and symbols: `!` identifies a finding on that line or one of its immediate source references, while `↳` identifies a downstream impact. These markers indicate review needs, not a conclusion that every affected amount is incorrect. Resolved findings are excluded; active reviewer flags are included. Findings without numeric references remain in the issues section.
 
 The desktop evidence panel has a pointer-draggable and keyboard-operable separator, bounded to preserve calculation space. Width remains selected while navigating during the session. Mobile retains the full-width bottom panel. Expanded calculations expose the packet’s rule description and note before the inputs; these remain supplied engine explanations, not independently validated formulas. CPA usability has not yet been tested with a practicing reviewer. A useful next improvement is explicit signed arithmetic for rules where the packet defines the operators unambiguously; complex tax rules should not be guessed from their dependency lists.
+
+## Cases landing page and consistent issue labels
+
+Opening or reloading the site lands on Cases. Only the supplied household is listed; related returns without a supplied case packet are not invented as accessible cases. The issue badge uses the latest supplied return version and the same sign-off blocker calculation as Return, including unresolved warnings, reviewer flags, and correction proposals. Saved resolutions are reflected on return to Cases and after reload. Opening the case selects that latest version; earlier snapshots remain available in the workspace.
+
+User-facing counts consistently say “issue(s) to resolve,” including schedule rows and sign-off guidance. The redundant “open items” button is removed. The case title and identifier come from the packet. This is a single-packet prototype, not a multi-client backend.

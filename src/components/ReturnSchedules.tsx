@@ -91,7 +91,7 @@ export default function ReturnSchedules({
     items.length > 0 && (
       <details className="inline-findings">
         <summary>
-          {items.length} {items.length === 1 ? 'item' : 'items'} to review
+          {items.length} {items.length === 1 ? 'issue' : 'issues'} to resolve
         </summary>
         {items.map((f) => (
           <div key={f.id}>
@@ -277,7 +277,7 @@ export default function ReturnSchedules({
         <p className="schedule-footnote">
           <span className="issue-legend">
             ! Direct review issue · ↳ Affected by an upstream issue. Select the
-            amount to inspect; expand “items to review” for the findings.
+            amount to inspect; expand “issues to resolve” for the findings.
           </span>
           — means no figure is mapped from the packet for this cell; it does not
           mean zero.{' '}

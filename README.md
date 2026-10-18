@@ -29,7 +29,7 @@ npm run format:check  # Repository formatting
 
 ## Try the review loop
 
-1. On **Return**, compare the supplied federal and California figures in **Summary**, then select **Wages & interest** to see employer wages and withholding together. Select **Dividends** to compare ordinary and qualified amounts.
+1. Open the supplied household from **Cases**, where the badge shows its latest-version **issues to resolve**. On **Return**, compare the supplied federal and California figures in **Summary**, then select **Wages & interest** to see employer wages and withholding together. Select **Dividends** to compare ordinary and qualified amounts.
 2. Select the Corvane wages amount. The evidence panel highlights `104,600.00` in the packet's printed content while the calculation stays visible. No verification action is required.
 3. Expand **Issues to resolve → Same bank sweep interest counted twice** and inspect the two source records.
 4. Open **All calculations & schedules**, search return calculations for `SchB.1.2` and choose its **… → Propose correction** action. Enter $0, category `interest`, and a rationale. Estimated tax effects appear; engine totals remain unchanged.
@@ -39,6 +39,7 @@ npm run format:check  # Repository formatting
 ## What works today
 
 - Compact packet-backed summary, wages/interest, and dividend schedules. Missing mappings display a dash, never an invented zero; warnings follow affected references.
+- A Cases landing page with live issue counts for the supplied household and an All cases navigation link.
 - One white-background Return workspace with selective calculation breakdowns; Documents and History are secondary tools in the left sidebar.
 - Plain rows for amounts with up to three direct references; expandable breakdowns for calculations and long source lists. Unchanged carry/sum links are flattened, with their full lineage retained in the details menu.
 - Highlighted review priorities and amount-level issue markers distinguish directly linked findings from upstream effects. Expanded calculations show the packet’s rule and notes beside their inputs.
