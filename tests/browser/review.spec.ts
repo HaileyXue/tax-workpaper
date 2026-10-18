@@ -48,9 +48,10 @@ test('one summary traces income to evidence without a separate explorer or sched
   await expect(
     page.getByText(/Supplied calculation · Inputs below/),
   ).toHaveCount(0);
-  await expect(evidence.getByText('Document reference: D08')).not.toBeVisible();
-  await evidence.getByText('Source details', { exact: true }).click();
-  await expect(evidence.getByText('Document reference: D08')).toBeVisible();
+  await expect(evidence.getByRole('heading', { name: /^D08/ })).toBeVisible();
+  await expect(
+    evidence.getByText('Source details', { exact: true }),
+  ).toHaveCount(0);
 });
 
 test('records a correction proposal and persists it independently of engine totals', async ({
@@ -365,4 +366,46 @@ test('focused statements navigate back without nesting and expose related record
   await expect(
     page.getByRole('navigation', { name: 'Review path' }),
   ).toContainText('Taxable amount of conversion');
+});
+
+test('documents show identity, selected row, page controls and all extracted fields', async ({
+  page,
+}) => {
+  await openCase(page);
+  await page.getByRole('button', { name: 'Documents', exact: true }).click();
+  const first = page
+    .locator('.document-row')
+    .filter({ has: page.getByText('D01', { exact: true }) });
+  await first.click();
+  await expect(first).toHaveAttribute('aria-current', 'true');
+  const panel = page.getByRole('complementary', { name: 'Source evidence' });
+  await expect(panel.getByRole('heading', { name: /^D01/ })).toBeVisible();
+  await expect(
+    panel.getByRole('button', { name: 'Previous page' }),
+  ).toBeDisabled();
+  await panel.getByRole('button', { name: 'Next page' }).click();
+  await expect(panel.getByRole('combobox', { name: 'Page' })).toHaveValue('2');
+  await expect(panel.getByRole('button', { name: 'Next page' })).toBeDisabled();
+  await panel.getByRole('button', { name: 'Previous page' }).click();
+  await expect(panel.getByRole('combobox', { name: 'Page' })).toHaveValue('1');
+  await panel.getByRole('combobox', { name: 'Page' }).selectOption('2');
+  await expect(panel.locator('.paper-footer')).toContainText('PAGE 2');
+  await panel.getByText(/^Extracted fields \(/).click();
+  await panel.getByRole('combobox', { name: 'Page' }).selectOption('1');
+  await expect(panel.locator('.field-row')).toHaveCount(3);
+  const pageTwoField = panel
+    .locator('.field-row')
+    .filter({ hasText: 'Page 2 ·' })
+    .first();
+  await pageTwoField.click();
+  await expect(panel.getByRole('combobox', { name: 'Page' })).toHaveValue('2');
+  await expect(first).toHaveAttribute('aria-current', 'true');
+  const second = page
+    .locator('.document-row')
+    .filter({ has: page.getByText('D02', { exact: true }) });
+  await second.click();
+  await expect(second).toHaveAttribute('aria-current', 'true');
+  await expect(first).not.toHaveAttribute('aria-current', 'true');
+  await page.getByRole('button', { name: 'Close evidence' }).click();
+  await expect(second).not.toHaveAttribute('aria-current', 'true');
 });

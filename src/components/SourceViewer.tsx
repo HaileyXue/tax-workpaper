@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { FileText, ArrowUpRight } from 'lucide-react';
+import {
+  FileText,
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { sourceAmount, type Graph, type SourceValue } from '../domain/packet';
 
 export default function SourceViewer({
@@ -14,10 +19,14 @@ export default function SourceViewer({
   onReference: (id: string) => void;
 }) {
   const doc = graph.documents.get(documentId)!;
-  const [pageNumber, setPageNumber] = useState(value?.page ?? 1);
+  const pages = [...doc.pages].sort((a, b) => a.page - b.page);
+  const [pageNumber, setPageNumber] = useState(
+    value?.page ?? pages[0]?.page ?? 1,
+  );
+  const pageIndex = pages.findIndex((p) => p.page === pageNumber);
   const page = doc.pages.find((p) => p.page === pageNumber);
   const extracted = [...graph.values.values()].filter(
-    (v) => v.document_id === documentId && v.page === pageNumber,
+    (v) => v.document_id === documentId,
   );
   const text = page?.printed_content ?? 'No page text supplied.';
   // Synthetic bounding boxes are not real PDF coordinates. Highlight only an exact
@@ -34,16 +43,26 @@ export default function SourceViewer({
         </span>
         <span className="tag">Simulated document</span>
       </div>
-      <h3>{doc.title}</h3>
+      <h3 className="source-document-title">
+        <span className="document-id">{doc.id}</span>
+        {doc.title}
+      </h3>
       <p className="muted small">{doc.file_name}</p>
       <div className="document-toolbar">
+        <button
+          aria-label="Previous page"
+          disabled={pageIndex <= 0}
+          onClick={() => setPageNumber(pages[pageIndex - 1].page)}
+        >
+          <ChevronLeft size={16} />
+        </button>
         <label>
           Page{' '}
           <select
             value={pageNumber}
             onChange={(e) => setPageNumber(Number(e.target.value))}
           >
-            {doc.pages.map((p) => (
+            {pages.map((p) => (
               <option key={p.page} value={p.page}>
                 {p.page}
               </option>
@@ -51,7 +70,13 @@ export default function SourceViewer({
           </select>{' '}
           of {doc.page_count}
         </label>
-        <span>Document text</span>
+        <button
+          aria-label="Next page"
+          disabled={pageIndex < 0 || pageIndex >= pages.length - 1}
+          onClick={() => setPageNumber(pages[pageIndex + 1].page)}
+        >
+          <ChevronRight size={16} />
+        </button>
       </div>
       {value && (
         <div className="locator">
@@ -77,28 +102,19 @@ export default function SourceViewer({
         </div>
         <div className="paper-footer">PAGE {pageNumber} · SIMULATED SOURCE</div>
       </article>
-      {value && !unique && (
+      {value && value.page === pageNumber && !unique && (
         <p className="callout">
           The extracted text cannot be uniquely located on this page. Compare
           the named field with the printed content; no exact text highlight is
           claimed.
         </p>
       )}
-      <details className="utility-section source-audit">
-        <summary>Source details</summary>
-        <p>Document reference: {doc.id}</p>
-        {value && (
-          <p>
-            Field: {value.field} · Value reference: {value.id}
-          </p>
-        )}
-      </details>
       <details className="utility-section">
-        <summary>Other extracted fields on this page</summary>
-        <h4>
-          Extracted fields on this page{' '}
-          <span className="muted">{extracted.length}</span>
-        </h4>
+        <summary>Extracted fields ({extracted.length})</summary>
+        <p className="small muted">
+          All extracted fields in this document. Select a field to open its
+          page.
+        </p>
         <div className="field-list">
           {extracted.map((v) => (
             <button
@@ -109,7 +125,8 @@ export default function SourceViewer({
               <span>
                 {v.label}
                 <small>
-                  {Math.round(v.confidence * 100)}% extraction confidence
+                  Page {v.page} · {Math.round(v.confidence * 100)}% extraction
+                  confidence
                 </small>
               </span>
               <strong>{sourceAmount(v)}</strong>

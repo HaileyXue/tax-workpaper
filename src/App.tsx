@@ -447,7 +447,8 @@ export default function App() {
                 )
                 .map((d) => (
                   <button
-                    className="document-row"
+                    className={`document-row ${sourceDoc?.id === d.id ? 'selected' : ''}`}
+                    aria-current={sourceDoc?.id === d.id ? true : undefined}
                     key={d.id}
                     onClick={() =>
                       openEvidence({ ref: d.id, path: ['Documents', d.title] })

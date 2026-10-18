@@ -1696,3 +1696,29 @@ textarea::placeholder {
   padding-left: 0;
   border-left: 0;
 }
+
+.source-document-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+}
+.document-id {
+  padding: 4px 9px;
+  border-radius: 5px;
+  background: #075b35;
+  color: white;
+  font-weight: 750;
+}
+.document-row.selected {
+  background: #e0f3e7;
+  box-shadow: inset 4px 0 #075b35;
+}
+.document-row.selected .line-code {
+  color: #075b35;
+  font-weight: 750;
+}
+.document-toolbar {
+  justify-content: flex-start;
+  gap: 12px;
+}
