@@ -166,6 +166,26 @@ nav button[aria-current='page'] {
   box-shadow: inset 3px 0 #087344;
   font-weight: 700;
 }
+nav button > span:not(.nav-count) {
+  flex: 1;
+  text-align: left;
+}
+.nav-count {
+  min-width: 23px;
+  height: 23px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #fff0c2;
+  color: #754000;
+  font-size: 11px;
+  font-weight: 700;
+}
+nav button[aria-current='page'] .nav-count {
+  background: #ffe197;
+}
 .staff-selector {
   margin-top: auto;
   display: grid;
@@ -1038,12 +1058,14 @@ mark {
     font-size: 22px;
   }
   nav {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
   nav button {
     padding: 10px;
     font-size: 13px;
+    min-width: 0;
   }
   nav button svg {
     width: 15px;
@@ -1405,7 +1427,7 @@ textarea::placeholder {
 }
 .schedule-table th:first-child {
   width: 45%;
-  padding-left: 0;
+  padding-left: 18px;
 }
 .schedule-table tfoot th,
 .schedule-table tfoot td {
@@ -1511,6 +1533,7 @@ textarea::placeholder {
   }
   .schedule-table th:first-child {
     min-width: 210px;
+    padding-left: 14px;
   }
 }
 .schedule-amount.is-selected {
@@ -1726,6 +1749,45 @@ textarea::placeholder {
 }
 .finding-link:hover {
   background: #ffe8a7;
+}
+.issues-workspace .section-heading {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.issue-total {
+  flex-shrink: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-soft);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 700;
+}
+.issue-total.has-issues {
+  border-color: #d69b22;
+  color: #754000;
+  background: #fff0c2;
+}
+.issues-list-panel {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: white;
+}
+.issues-list-panel .finding-link {
+  padding: 16px 18px;
+  border-top-color: var(--line);
+  color: var(--ink);
+}
+.issues-list-panel .finding-link:first-child {
+  border-top: 0;
+}
+.issues-list-panel .finding-link:hover {
+  background: #fff8e7;
+}
+.issues-list-panel .finding-link small {
+  color: #754000;
 }
 .issue-context {
   padding: 14px;

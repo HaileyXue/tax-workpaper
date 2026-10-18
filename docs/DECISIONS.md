@@ -10,7 +10,7 @@ The sections below describe the current implementation. The dated decision recor
 
 Return contains one unified summary: federal/California totals, focused supporting calculations and related return records. Documents and History remain secondary tools in the left sidebar. The canvas is white with dark text, green controls, and amber issues. Source evidence stays beside the calculation in a resizable panel on desktop and a full-width bottom panel on mobile.
 
-The issues banner contains direct links, not nested calculations or forms. Clicking an issue finds its actual dependency path, reveals the path within Summary, and smoothly scrolls to the source. Reduced-motion preferences use immediate scrolling. Assignment and resolution are available beside that calculation. Correction proposals remain proposals and link to History for withdrawal; they cannot be resolved into an invented engine result.
+The Issues tab contains direct links, not nested calculations or forms. Clicking an issue switches to Return, finds its actual dependency path, reveals the path within Summary, and smoothly scrolls to the source. Reduced-motion preferences use immediate scrolling. Assignment and resolution are available beside that calculation. Correction proposals remain proposals and link to History for withdrawal; they cannot be resolved into an invented engine result.
 
 Highlights follow the source and affected downstream amounts. Unrelated inputs remain unhighlighted. Highlighting indicates a dependency on an unresolved issue, not proof that every highlighted value is incorrect. Resolved findings are excluded, while active reviewer flags remain included.
 
@@ -95,7 +95,7 @@ The initial entries were reconstructed from the project conversation on 2026-10-
 ### D05 — Issue navigation and affected-chain highlighting
 
 - **Recorded:** 2026-10-17. **Status:** Implemented. Current reference: `1e4048a`.
-- **Decision:** The banner contains issue links only. A link reveals the actual calculation path in Summary and visibly scrolls to the source. Assignment and resolution appear beside the linked calculation. Highlight affected downstream amounts as well as the source.
+- **Decision:** Issue links reveal the actual calculation path in Summary and visibly scroll to the source. Assignment and resolution appear beside the linked calculation. Highlight affected downstream amounts as well as the source. The original banner placement was superseded by D15.
 - **Reason:** Users need both the originating issue and its consequences to be apparent in the overview, without opening more content beneath the banner.
 - **Tradeoff:** Multiple totals can be highlighted by the same issue; highlighting signals dependency, not multiple independent errors. Unrelated inputs are not highlighted.
 - **Superseded direction:** Source-only highlighting was explicitly requested and implemented in `7c8bb76`. The user subsequently reversed that preference and requested full-chain highlighting. That earlier implementation is not the current design.
@@ -203,3 +203,11 @@ Proposed implementation and acceptance criteria:
 - **Reason:** Similar sizes and weights made headings, subheadings, and controls compete. Reviewers need to scan the case, find issues, interpret totals, and then inspect detail in that order.
 - **Tradeoff:** Additional borders and surfaces make sections more explicit but slightly denser. Color remains secondary to size, weight, spacing, and borders so hierarchy survives grayscale and supports accessibility.
 - **Boundary:** This is a presentation change. It does not alter packet values, summary mappings, role behavior, document lineage, or review records.
+
+### D15 — Move issues into a dedicated workspace tab
+
+- **Recorded:** 2026-10-18. **Status:** Implemented at the user's request; supersedes the Return-page issue banner placement in D05.
+- **Decision:** Add Issues to the left navigation with the live blocking count. Keep the issue list limited to navigation and status. Selecting an item switches to Return, opens the supplied dependency path, scrolls to and focuses the referenced source, and leaves decision/assignment controls beside the affected calculation.
+- **Reason:** Issues are a primary review queue and deserve a stable destination. Removing the banner also makes the Return page start directly with the summary while preserving the issue-to-source workflow.
+- **Tradeoff:** The unresolved list and affected totals are no longer visible on the same screen. The navigation badge preserves awareness of outstanding work, and a single selection returns the reviewer to the exact calculation context.
+- **Table spacing:** Add explicit left padding to the Return item column on desktop and mobile so labels do not touch the table border.

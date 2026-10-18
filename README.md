@@ -31,7 +31,7 @@ npm run format:check  # Repository formatting
 
 1. Open the supplied household from **Cases**, where the badge shows its latest-version **issues to resolve**. On **Return**, compare federal and California totals in the unified summary.
 2. Select federal **Total income**, then the Corvane W-2 source link under wages. The evidence panel highlights `104,600.00` while the calculation stays visible. No verification action is required.
-3. Open **Issues to resolve** and select **Same bank sweep interest counted twice**. Summary opens the calculation path and smoothly scrolls to the source. Both source amounts and affected totals are highlighted.
+3. Open **Issues** in the left navigation and select **Same bank sweep interest counted twice**. Return opens the calculation path and smoothly scrolls to the source. Both source amounts and affected totals are highlighted.
 4. Use **Decision & assignment** beside the linked calculation to record a disposition. To propose a correction, search Summary for `SchB.1.2` and choose **… → Propose correction**. Enter $0, category `interest`, and a rationale. Estimated effects appear; engine totals remain unchanged.
 5. Reload, reopen the case, and visit **History** to inspect the proposal, compare snapshots, view precomputed alternatives, or undo your own action. Export history for a portable record.
 6. Final review sign-off is available to a reviewer or partner only after blocking warnings, manual flags, and correction proposals are cleared. Subsequent review events reopen it. This is a local review acknowledgment, not an e-signature or filing approval.
@@ -42,7 +42,7 @@ npm run format:check  # Repository formatting
 - A Cases landing page with live issue counts for the supplied household and an All cases navigation link.
 - One white-background Return workspace with selective calculation breakdowns; Documents and History are secondary tools in the left sidebar.
 - Focused calculation statements with aligned inputs and results. Selecting an input replaces the detail in place; a review trail returns to earlier contexts. Same-form related records stay separate from arithmetic inputs.
-- The issue banner contains direct links only. Selecting an issue reveals its real dependency path in Summary, focuses the source, and scrolls smoothly (or instantly with reduced motion). Highlighting follows the affected chain without flagging unrelated inputs. Assignment and resolution are contextual, beside the linked calculation.
+- The Issues tab contains direct links only. Selecting an issue switches to Return, reveals its real dependency path, focuses the source, and scrolls smoothly (or instantly with reduced motion). Highlighting follows the affected chain without flagging unrelated inputs. Assignment and resolution are contextual, beside the linked calculation.
 - Evidence displayed in a resizable panel beside the calculation on desktop and in a bottom panel on mobile; other document fields and reverse usage are collapsed by default.
 - Search across all 627 current-version lines; large input lists load in batches with filtering.
 - No routine verification forms: contextual flag, note, and correction actions open only on request. Existing verification records remain in history.

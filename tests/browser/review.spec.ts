@@ -15,9 +15,7 @@ async function income(page: Page) {
     .click();
 }
 async function issue(page: Page, id: string) {
-  const banner = page.locator('.issues-section');
-  if (!((await banner.getAttribute('open')) !== null))
-    await banner.locator(':scope > summary').click();
+  await page.getByRole('button', { name: /^Issues/ }).click();
   await page.locator(`[data-finding-id="${id}"]`).click();
 }
 
@@ -76,6 +74,7 @@ test('records a correction proposal and persists it independently of engine tota
   await expect(
     page.getByRole('button', { name: 'Sign off return', exact: true }),
   ).toBeDisabled();
+  await page.getByRole('button', { name: /^Issues/ }).click();
   await page
     .locator('.finding-link')
     .filter({ hasText: 'Correction proposal:' })
@@ -136,9 +135,9 @@ test('final sign-off persists and reopens when a note changes the review snapsho
   page,
 }) => {
   await openCase(page);
-  await page.locator('.issues-section > summary').click();
+  await page.getByRole('button', { name: /^Issues/ }).click();
   const ids = await page
-    .locator('.finding-link[data-severity="warning"]')
+    .locator('.issues-list-panel .finding-link[data-severity="warning"]')
     .evaluateAll((els) =>
       els.map((el) => (el as HTMLElement).dataset.findingId!),
     );
@@ -240,19 +239,26 @@ test('resizes evidence with pointer and keyboard and keeps mobile full width', a
   await expect(panel).toHaveCSS('width', '390px');
 });
 
-test('issue banner contains links only, opens the summary chain and scrolls to its source', async ({
+test('issue tab contains links only, opens the return chain and scrolls to its source', async ({
   page,
 }) => {
   await openCase(page);
   await expect(
     page.getByRole('button', { name: 'Inspect Federal Adjusted gross income' }),
   ).toHaveClass(/amount-issue-upstream/);
-  await issue(page, 'duplicate-sweep');
+  await page.getByRole('button', { name: /^Issues/ }).click();
   await expect(
     page.locator(
-      '.issues-section textarea, .issues-section .calculation, .issues-section details',
+      '.issues-list-panel textarea, .issues-list-panel .calculation, .issues-list-panel details',
     ),
   ).toHaveCount(0);
+  await expect(
+    page.getByRole('heading', { name: 'Issues to resolve' }),
+  ).toBeVisible();
+  await page.locator('[data-finding-id="duplicate-sweep"]').click();
+  await expect(
+    page.getByRole('button', { name: 'Return', exact: true }),
+  ).toHaveAttribute('aria-current', 'page');
   const source = page.locator('.schedule-breakdown [data-reference="ev-0492"]');
   await expect(source).toBeFocused();
   await expect(source).toBeInViewport();
@@ -263,7 +269,9 @@ test('issue banner contains links only, opens the summary chain and scrolls to i
   await expect(
     page.locator('.schedule-breakdown .calculation .calculation'),
   ).toHaveCount(0);
-  await expect(page.locator('.issues-section .finding-content')).toHaveCount(0);
+  await expect(page.locator('.issues-list-panel .finding-content')).toHaveCount(
+    0,
+  );
   await page.locator('.issue-references button').nth(1).click();
   await expect(
     page.locator('.schedule-breakdown [data-reference="ev-0538"]'),

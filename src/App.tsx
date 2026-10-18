@@ -15,6 +15,7 @@ import {
   FileText,
   History as HistoryIcon,
   LayoutDashboard,
+  CircleAlert,
 } from 'lucide-react';
 import { createGraph, packet, resolveReference } from './domain/packet';
 import { findIssues, type Finding } from './domain/findings';
@@ -183,6 +184,27 @@ export default function App() {
     ? graph.documents.get(value?.document_id ?? evidence.ref)
     : undefined;
   const activeFlags = current.filter((e) => e.kind === 'flag');
+  const issueItems: Finding[] = [
+    ...findings,
+    ...current
+      .filter((e) => e.kind === 'adjust')
+      .map((f) => ({
+        id: f.id,
+        title: `Correction proposal: ${referenceLabel(graph, f.target)}`,
+        detail: f.note,
+        refs: [f.target],
+        origin: 'Correction proposal',
+        severity: 'warning' as const,
+      })),
+    ...activeFlags.map((f) => ({
+      id: f.id,
+      title: f.note,
+      detail: f.note,
+      refs: [f.target],
+      origin: 'Reviewer flag',
+      severity: 'warning' as const,
+    })),
+  ];
   const showCases = () => {
     setEvidence(null);
     setAction(null);
@@ -223,7 +245,7 @@ export default function App() {
           All cases
         </button>
         <nav aria-label="Workspace">
-          {['Return', 'Documents', 'History'].map((name) => (
+          {['Return', 'Issues', 'Documents', 'History'].map((name) => (
             <button
               key={name}
               aria-current={tab === name ? 'page' : undefined}
@@ -234,12 +256,22 @@ export default function App() {
             >
               {name === 'Return' ? (
                 <LayoutDashboard size={17} />
+              ) : name === 'Issues' ? (
+                <CircleAlert size={17} />
               ) : name === 'Documents' ? (
                 <FileText size={17} />
               ) : (
                 <HistoryIcon size={17} />
               )}
-              {name}
+              <span>{name}</span>
+              {name === 'Issues' && approval.blockers > 0 && (
+                <span
+                  className="nav-count"
+                  aria-label={`${approval.blockers} issues to resolve`}
+                >
+                  {approval.blockers}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -303,42 +335,6 @@ export default function App() {
             <div className="return-intro">
               <p>Open a breakdown or inspect its source.</p>
             </div>
-            <details
-              className={`issues-section ${approval.blockers > 0 ? 'has-issues' : ''}`}
-            >
-              <summary>
-                <strong>Issues to resolve</strong>{' '}
-                <span>
-                  {approval.blockers}{' '}
-                  {approval.blockers === 1 ? 'issue' : 'issues'} to resolve
-                </span>
-              </summary>
-              <Exceptions
-                findings={[
-                  ...findings,
-                  ...current
-                    .filter((e) => e.kind === 'adjust')
-                    .map((f) => ({
-                      id: f.id,
-                      title: `Correction proposal: ${referenceLabel(graph, f.target)}`,
-                      detail: f.note,
-                      refs: [f.target],
-                      origin: 'Correction proposal',
-                      severity: 'warning' as const,
-                    })),
-                  ...activeFlags.map((f) => ({
-                    id: f.id,
-                    title: f.note,
-                    detail: f.note,
-                    refs: [f.target],
-                    origin: 'Reviewer flag',
-                    severity: 'warning' as const,
-                  })),
-                ]}
-                resolved={resolved}
-                onNavigate={navigateIssue}
-              />
-            </details>
             <ReturnSummary
               key={version}
               {...tree}
@@ -435,6 +431,34 @@ export default function App() {
               </p>
             </section>
           </div>
+          {tab === 'Issues' && (
+            <section className="workspace-section issues-workspace">
+              <header className="section-heading">
+                <div>
+                  <span className="section-kicker">Review queue</span>
+                  <h2>Issues to resolve</h2>
+                  <p>
+                    Select an issue to open its affected calculation and source
+                    in the Return tab.
+                  </p>
+                </div>
+                <span
+                  className={`issue-total ${approval.blockers > 0 ? 'has-issues' : ''}`}
+                  role="status"
+                >
+                  {approval.blockers}{' '}
+                  {approval.blockers === 1 ? 'issue' : 'issues'} to resolve
+                </span>
+              </header>
+              <div className="issues-list-panel">
+                <Exceptions
+                  findings={issueItems}
+                  resolved={resolved}
+                  onNavigate={navigateIssue}
+                />
+              </div>
+            </section>
+          )}
           {tab === 'Documents' && (
             <section className="workspace-section documents-section">
               <div className="section-heading">
