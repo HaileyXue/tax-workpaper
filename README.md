@@ -29,20 +29,20 @@ npm run format:check  # Repository formatting
 
 ## Try the review loop
 
-1. Open the supplied household from **Cases**, where the badge shows its latest-version **issues to resolve**. On **Return**, compare the supplied federal and California figures in **Summary**, then select **Wages & interest** to see employer wages and withholding together. Select **Dividends** to compare ordinary and qualified amounts.
-2. Select the Corvane wages amount. The evidence panel highlights `104,600.00` in the packet's printed content while the calculation stays visible. No verification action is required.
-3. Expand **Issues to resolve → Same bank sweep interest counted twice** and inspect the two source records.
-4. Open **All calculations & schedules**, search return calculations for `SchB.1.2` and choose its **… → Propose correction** action. Enter $0, category `interest`, and a rationale. Estimated tax effects appear; engine totals remain unchanged.
-5. Reload and open **History** to inspect the proposal, compare snapshots, view precomputed alternatives, or undo your own action. Export history for a portable record.
-6. Final review sign-off is available to a reviewer or partner only after blocking warnings, manual flags, and outstanding correction proposals are cleared. Subsequent review events reopen it. This is a local review acknowledgment, not an e-signature or filing approval.
+1. Open the supplied household from **Cases**, where the badge shows its latest-version **issues to resolve**. On **Return**, compare federal and California totals in the unified summary.
+2. Select federal **Total income**, then the D08 W-2 source link under wages. The evidence panel highlights `104,600.00` while the calculation stays visible. No verification action is required.
+3. Open **Issues to resolve** and select **Same bank sweep interest counted twice**. Summary opens the calculation path and smoothly scrolls to the source. Both source amounts and affected totals are highlighted.
+4. Use **Decision & assignment** beside the linked calculation to record a disposition. To propose a correction, search Summary for `SchB.1.2` and choose **… → Propose correction**. Enter $0, category `interest`, and a rationale. Estimated effects appear; engine totals remain unchanged.
+5. Reload, reopen the case, and visit **History** to inspect the proposal, compare snapshots, view precomputed alternatives, or undo your own action. Export history for a portable record.
+6. Final review sign-off is available to a reviewer or partner only after blocking warnings, manual flags, and correction proposals are cleared. Subsequent review events reopen it. This is a local review acknowledgment, not an e-signature or filing approval.
 
 ## What works today
 
-- Compact packet-backed summary, wages/interest, and dividend schedules. Missing mappings display a dash, never an invented zero; warnings follow affected references.
+- One packet-backed summary integrates totals, supporting calculations, full-line search, and other return records. Separate payer tabs and the duplicate calculation index have been removed. Missing mappings display a dash, never an invented zero.
 - A Cases landing page with live issue counts for the supplied household and an All cases navigation link.
 - One white-background Return workspace with selective calculation breakdowns; Documents and History are secondary tools in the left sidebar.
 - Plain rows for amounts with up to three direct references; expandable breakdowns for calculations and long source lists. Unchanged carry/sum links are flattened, with their full lineage retained in the details menu.
-- Highlighted review priorities and source-level issue markers identify only references explicitly named by a finding. Totals do not inherit source highlights. Issue titles jump to their linked schedule, number, or record. Expanded calculations show the packet’s rule and notes beside their inputs.
+- The issue banner contains direct links only. Selecting an issue reveals its real dependency path in Summary, focuses the source, and scrolls smoothly (or instantly with reduced motion). Highlighting follows the affected chain without flagging unrelated inputs. Assignment and resolution are contextual, beside the linked calculation.
 - Evidence displayed in a resizable panel beside the calculation on desktop and in a bottom panel on mobile; other document fields and reverse usage are collapsed by default.
 - Search across all 627 current-version lines; large input lists load in batches with filtering.
 - No routine verification forms: contextual flag, note, and correction actions open only on request. Existing verification records remain in history.
@@ -58,7 +58,7 @@ npm run format:check  # Repository formatting
 - **Review, not recalculation:** corrections are proposals. Estimates use manually selected packet rates and are not cumulative recomputed return totals. Currency, California sourcing, thresholds, credits, and QBI require review.
 - **Filing is not implemented:** the final review sign-off is a local acknowledgment only. Client authorization, e-signatures, filing freezes, amendments, notices, and production retention controls remain future work. Later timeline events are labeled scripted scenario data.
 - **Source fidelity:** the packet has no PDFs. Synthetic coordinates are not presented as real PDF coordinates. Ambiguous or absent text gets a field/page locator and a visible warning, not a fabricated highlight.
-- **Coverage:** automated checks are intentionally narrow; no claim that every planted error has been found. Large schedules are browsable as return lines; dedicated asset/basis workspaces remain future work.
+- **Coverage:** automated checks are intentionally narrow; no claim that every planted error has been found. All 627 current-version lines remain accessible through Summary breakdowns, search, and Other return records; dedicated asset/basis editors remain future work.
 
 ## Repository guide
 

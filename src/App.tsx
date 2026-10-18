@@ -14,13 +14,7 @@ import {
   History as HistoryIcon,
   LayoutDashboard,
 } from 'lucide-react';
-import {
-  createGraph,
-  packet,
-  resolveReference,
-  sourceAmount,
-} from './domain/packet';
-import { scheduleDestination, amountIssue } from './domain/schedules';
+import { createGraph, packet, resolveReference } from './domain/packet';
 import { findIssues, type Finding } from './domain/findings';
 import {
   activeEvents,
@@ -32,34 +26,21 @@ import {
   validateSignoff,
   type ReviewEvent,
 } from './domain/review';
-import CalculationTree, {
-  EvidenceLink,
+import {
   type EvidenceSelection,
   type ExceptionAction,
   type TreeProps,
 } from './components/CalculationTree';
-import ReturnSchedules from './components/ReturnSchedules';
+import ReturnSummary from './components/ReturnSummary';
 import Cases from './components/Cases';
 import SourceViewer from './components/SourceViewer';
 import EvidenceResizeHandle from './components/EvidenceResizeHandle';
 import ExceptionForm from './components/ExceptionForm';
 import Exceptions from './components/Exceptions';
+import IssueReview from './components/IssueReview';
 import History from './components/History';
 import ActionDialog from './components/ActionDialog';
 
-const groups = [
-  { title: 'Income', keys: ['F1040.9'] },
-  {
-    title: 'Adjustments & deductions',
-    keys: ['F1040.10', 'F1040.11', 'F1040.12', 'F1040.13', 'F1040.15'],
-  },
-  { title: 'Credits & taxes', keys: ['F1040.19', 'F1040.20', 'F1040.24'] },
-  { title: 'Payments & balance', keys: ['F1040.33', 'F1040.37', 'F1040.38'] },
-  {
-    title: 'California',
-    keys: ['F540NR.17', 'F540NR.32', 'F540NR.64', 'F540NR.78', 'F540NR.97'],
-  },
-];
 const initial = loadReviews();
 export default function App() {
   const [caseOpen, setCaseOpen] = useState(false);
@@ -82,25 +63,11 @@ export default function App() {
     target: string;
     kind: ExceptionAction;
   } | null>(null);
-  const [spotlight, setSpotlight] = useState<string | null>(null);
   const [focusedIssue, setFocusedIssue] = useState<Finding | null>(null);
-  const [scheduleJump, setScheduleJump] = useState<{
-    view: string;
+  const [summaryJump, setSummaryJump] = useState<{
     ref: string;
     sequence: number;
   } | null>(null);
-  const calculationsRef = useRef<HTMLDetailsElement>(null);
-  const spotlightRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    if (!spotlight) return;
-    if (calculationsRef.current) calculationsRef.current.open = true;
-    const frame = requestAnimationFrame(() => {
-      spotlightRef.current?.scrollIntoView({ block: 'center' });
-      spotlightRef.current?.focus({ preventScroll: true });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [spotlight, focusedIssue]);
-  const [allLines, setAllLines] = useState(30);
   const evidenceTrigger = useRef<HTMLElement | null>(null);
   const graph = useMemo(() => createGraph(packet, version), [version]);
   const findings = useMemo(() => findIssues(graph), [graph]);
@@ -174,14 +141,7 @@ export default function App() {
     setEvidence(null);
     setFocusedIssue({ ...finding });
     setSearch('');
-    const destination = scheduleDestination(graph, finding.refs);
-    if (destination) {
-      setSpotlight(null);
-      setScheduleJump({ ...destination, sequence: performance.now() });
-    } else {
-      setScheduleJump(null);
-      setSpotlight(finding.refs[0] ?? null);
-    }
+    setSummaryJump({ ref: finding.refs[0], sequence: performance.now() });
   };
   const exportRecords = () => {
     const url = URL.createObjectURL(
@@ -210,17 +170,12 @@ export default function App() {
   const sourceDoc = evidence
     ? graph.documents.get(value?.document_id ?? evidence.ref)
     : undefined;
-  const matchingLines = graph.version.lines.filter((l) =>
-    `${l.key} ${l.label} ${l.value}`
-      .toLowerCase()
-      .includes(search.toLowerCase()),
-  );
   const activeFlags = current.filter((e) => e.kind === 'flag');
   const showCases = () => {
     setEvidence(null);
     setAction(null);
     setCaseOpen(false);
-    setScheduleJump(null);
+    setSummaryJump(null);
     setFocusedIssue(null);
     setNotice('');
   };
@@ -233,7 +188,7 @@ export default function App() {
           setVersion(latestVersion);
           setTab('Return');
           setSearch('');
-          setSpotlight(null);
+          setSummaryJump(null);
           setCaseOpen(true);
         }}
       />
@@ -304,10 +259,9 @@ export default function App() {
                 value={version}
                 onChange={(e) => {
                   setVersion(e.target.value);
-                  setScheduleJump(null);
+                  setSummaryJump(null);
                   setFocusedIssue(null);
                   setEvidence(null);
-                  setSpotlight(null);
                 }}
               >
                 {packet.return_versions.map((v) => (
@@ -347,238 +301,60 @@ export default function App() {
                 </span>
               </summary>
               <Exceptions
-                {...tree}
-                findings={findings}
-                onNavigate={navigateIssue}
+                findings={[
+                  ...findings,
+                  ...current
+                    .filter((e) => e.kind === 'adjust')
+                    .map((f) => ({
+                      id: f.id,
+                      title: `Correction proposal: ${graph.lines.get(f.target)?.label ?? graph.values.get(f.target)?.label ?? f.target}`,
+                      detail: f.note,
+                      refs: [f.target],
+                      origin: 'Correction proposal',
+                      severity: 'warning' as const,
+                    })),
+                  ...activeFlags.map((f) => ({
+                    id: f.id,
+                    title: f.note,
+                    detail: f.note,
+                    refs: [f.target],
+                    origin: 'Reviewer flag',
+                    severity: 'warning' as const,
+                  })),
+                ]}
                 resolved={resolved}
-                staff={staff}
-                save={save}
+                onNavigate={navigateIssue}
               />
-              {activeFlags.length > 0 && <h3>Raised during review</h3>}
-              {activeFlags.map((f) => (
-                <details className="finding" key={f.id}>
-                  <summary
-                    onClick={(e) => {
-                      if (
-                        !(e.currentTarget.parentElement as HTMLDetailsElement)
-                          .open
-                      )
-                        navigateIssue({
-                          id: f.id,
-                          title: f.note,
-                          detail: f.note,
-                          refs: [f.target],
-                          origin: 'Reviewer flag',
-                          severity: 'warning',
-                        });
-                    }}
-                  >
-                    <span>{f.note}</span>
-                    <small>
-                      {resolved(f.id) ? 'Resolved' : 'Issue to resolve'}
-                    </small>
-                  </summary>
-                  <div className="finding-content">
-                    {graph.lines.has(f.target) ? (
-                      <CalculationTree {...tree} lineId={f.target} />
-                    ) : (
-                      <button
-                        onClick={() =>
-                          openEvidence({
-                            ref: f.target,
-                            path: ['Raised during review'],
-                          })
-                        }
-                      >
-                        View evidence
-                      </button>
-                    )}
-                    <form
-                      className="resolve"
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        save({
-                          kind: resolved(f.id) ? 'reopen' : 'resolve',
-                          target: f.id,
-                          note: String(
-                            new FormData(e.currentTarget).get('reason'),
-                          ),
-                        });
-                      }}
-                    >
-                      <label>
-                        Resolution evidence
-                        <textarea name="reason" required />
-                      </label>
-                      <button
-                        disabled={!canWrite(staff) || staff.role === 'preparer'}
-                      >
-                        {resolved(f.id) ? 'Reopen issue' : 'Resolve issue'}
-                      </button>
-                    </form>
-                  </div>
-                </details>
-              ))}
-              {approval.proposals > 0 && (
-                <p className="callout">
-                  Correction proposals remain separate from the engine totals
-                  and block final sign-off. Reconcile them with a new engine
-                  result or withdraw them in History; this prototype cannot
-                  recompute the return.
-                </p>
-              )}
             </details>
-            <ReturnSchedules
+            <ReturnSummary
               key={version}
-              jump={scheduleJump}
               {...tree}
-              findings={findings}
-              resolved={resolved}
-            />
-            <details
-              ref={calculationsRef}
-              className="utility-section all-calculations"
-            >
-              <summary>All calculations & schedules</summary>
-              <p className="muted small">
-                Full calculation index, including supporting schedules and
-                informational outputs beyond the tables above. Some amounts also
-                appear in Summary.
-              </p>
-              <div className="section-heading">
-                <h2>Return calculations</h2>
-                <label className="search">
-                  <Search size={15} />
-                  <input
-                    aria-label="Search return calculations"
-                    placeholder="Find a number or schedule"
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      setAllLines(30);
-                    }}
+              jump={summaryJump}
+              issue={focusedIssue}
+              onReference={(ref) =>
+                setSummaryJump({ ref, sequence: performance.now() })
+              }
+              issuePanel={
+                focusedIssue &&
+                (focusedIssue.origin === 'Correction proposal' ? (
+                  <p>
+                    This proposal does not change engine totals.{' '}
+                    <button onClick={() => setTab('History')}>
+                      Review proposal in History
+                    </button>
+                  </p>
+                ) : (
+                  <IssueReview
+                    key={focusedIssue.id}
+                    finding={focusedIssue}
+                    events={current}
+                    staff={staff}
+                    save={save}
+                    resolved={resolved}
                   />
-                </label>
-              </div>
-              {spotlight && (
-                <section
-                  ref={spotlightRef}
-                  tabIndex={-1}
-                  className="spotlight"
-                  aria-label="Issue location"
-                >
-                  <div className="section-top">
-                    <h3>{focusedIssue?.title ?? 'Linked calculation'}</h3>
-                    <button onClick={() => setSpotlight(null)}>Dismiss</button>
-                  </div>
-                  {focusedIssue && (
-                    <>
-                      <p>{focusedIssue.detail}</p>
-                      <div className="issue-references">
-                        {focusedIssue.refs.map((ref) => (
-                          <button
-                            key={ref}
-                            aria-pressed={spotlight === ref}
-                            onClick={() => setSpotlight(ref)}
-                          >
-                            {graph.values.get(ref)?.label ??
-                              graph.lines.get(ref)?.label ??
-                              ref}
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                  {graph.lines.has(spotlight) ? (
-                    <CalculationTree
-                      key={`${version}-${spotlight}`}
-                      {...tree}
-                      lineId={spotlight}
-                      initiallyExpanded
-                    />
-                  ) : (
-                    <div className="issue-source-number">
-                      {graph.values.has(spotlight) && (
-                        <p>
-                          <strong
-                            className={
-                              amountIssue(
-                                graph,
-                                tree.issueFindings ?? [],
-                                spotlight,
-                              )
-                                ? 'amount-issue amount-issue-direct'
-                                : undefined
-                            }
-                          >
-                            {sourceAmount(graph.values.get(spotlight)!)}
-                          </strong>
-                        </p>
-                      )}
-                      {!graph.values.has(spotlight) && (
-                        <p>
-                          This issue points to a record rather than a calculated
-                          number.
-                        </p>
-                      )}
-                      <EvidenceLink
-                        id={spotlight}
-                        path={[focusedIssue?.title ?? 'Linked evidence']}
-                        graph={graph}
-                        onEvidence={openEvidence}
-                      />
-                    </div>
-                  )}
-                </section>
-              )}
-              <div hidden={Boolean(search)} key={`groups-${version}`}>
-                {groups.map((group) => (
-                  <section className="return-group" key={group.title}>
-                    <h3>{group.title}</h3>
-                    {group.keys.map((id) => (
-                      <CalculationTree key={id} {...tree} lineId={id} />
-                    ))}
-                  </section>
-                ))}
-                <details className="utility-section">
-                  <summary>
-                    All schedules & additional outputs · {graph.lines.size}{' '}
-                    lines
-                  </summary>
-                  <p className="muted small">
-                    Includes informational outputs and detailed schedules. These
-                    are not additional amounts to add to the return totals.
-                  </p>
-                  {graph.version.lines.slice(0, allLines).map((l) => (
-                    <CalculationTree key={l.key} {...tree} lineId={l.key} />
-                  ))}
-                  {allLines < graph.lines.size && (
-                    <button onClick={() => setAllLines(allLines + 30)}>
-                      Show 30 more lines
-                    </button>
-                  )}
-                </details>
-              </div>
-              {search && (
-                <section aria-label="Search results">
-                  <p className="small muted">
-                    {matchingLines.length} matching calculations
-                  </p>
-                  {matchingLines.slice(0, allLines).map((l) => (
-                    <CalculationTree
-                      key={`${version}-${l.key}`}
-                      {...tree}
-                      lineId={l.key}
-                    />
-                  ))}
-                  {matchingLines.length > allLines && (
-                    <button onClick={() => setAllLines(allLines + 30)}>
-                      Show 30 more results
-                    </button>
-                  )}
-                </section>
-              )}
-            </details>
+                ))
+              }
+            />
             <section className="signoff">
               <h2>Final review sign-off</h2>
               <p>
@@ -750,7 +526,8 @@ export default function App() {
                   value={value}
                   onReference={(id) => {
                     if (graph.lines.has(id)) {
-                      setSpotlight(id);
+                      setFocusedIssue(null);
+                      setSummaryJump({ ref: id, sequence: performance.now() });
                       setTab('Return');
                       setSearch('');
                     } else setEvidence({ ...evidence, ref: id });

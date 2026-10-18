@@ -1573,3 +1573,70 @@ textarea::placeholder {
   text-decoration: underline;
   background: transparent;
 }
+
+.finding-link {
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid #d8b668;
+  border-radius: 0;
+  padding: 13px 0;
+  color: #653a00;
+}
+.finding-link > span:nth-child(2) {
+  flex: 1;
+}
+.finding-link small {
+  font-size: 12px;
+}
+.finding-link:hover {
+  background: #ffe8a7;
+}
+.issue-context {
+  padding: 14px;
+  margin: 12px 0;
+  border-left: 3px solid #b87100;
+  background: #fff6df;
+}
+.issue-context p {
+  margin: 8px 0;
+}
+.contextual-review {
+  margin-top: 10px;
+}
+.contextual-review > summary {
+  cursor: pointer;
+  color: #075b35;
+}
+.additional-records {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid #bccdc2;
+}
+.record-group {
+  border-bottom: 1px solid #cbd8cf;
+  padding: 14px 0;
+}
+.record-group > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+[data-reference]:focus-visible {
+  outline: 2px solid #087344;
+  outline-offset: 3px;
+}
+.source-input[data-reference] {
+  scroll-margin: 80px;
+}
+
+.source-value .amount-issue {
+  color: #754000;
+  background: #fff0c2;
+}
+.source-value .amount-issue-direct {
+  background: #ffe197;
+  box-shadow: inset 0 -2px #b87100;
+}

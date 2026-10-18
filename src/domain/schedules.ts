@@ -1,14 +1,9 @@
 import type { Graph } from './packet';
 import type { Finding } from './findings';
 
-export interface ScheduleRow {
-  id: string;
-  label: string;
-  documentId?: string;
-  cells: Record<string, string | undefined>;
-}
 // These are semantic mappings to supplied line IDs, never replacement figures.
 export const summaryRows = [
+  { label: 'Total income', federal: 'F1040.9' },
   {
     label: 'Adjusted gross income',
     federal: 'F1040.11',
@@ -48,59 +43,6 @@ export const summaryRows = [
   note?: string;
 }[];
 
-function numericLines(graph: Graph, pattern: RegExp) {
-  return [...graph.lines.values()].filter((l) => pattern.test(l.key));
-}
-export function wagesAndInterest(graph: Graph): ScheduleRow[] {
-  // Include W-2 fields only when they are explicitly linked to the selected return.
-  // This excludes D10's duplicate image without making an issuer-name assumption.
-  const byDoc = new Map<string, ScheduleRow>();
-  for (const [column, key] of Object.entries({
-    wages: 'F1040.1a',
-    withholding: 'F1040.25a',
-    stateWithholding: 'F540NR.71',
-  })) {
-    for (const ref of graph.evidence(key)) {
-      const value = graph.values.get(ref);
-      const doc = value && graph.documents.get(value.document_id);
-      if (!value || !doc || doc.document_type !== 'W-2') continue;
-      const row = byDoc.get(doc.id) ?? {
-        id: doc.id,
-        label: doc.issuer,
-        documentId: doc.id,
-        cells: {},
-      };
-      row.cells[column] = ref;
-      byDoc.set(doc.id, row);
-    }
-  }
-  return [
-    ...byDoc.values(),
-    ...numericLines(graph, /^SchB\.1\.\d+$/).map((line) => ({
-      id: line.key,
-      label: line.label.replace(/^Interest - /, ''),
-      documentId: line.sources
-        .map((id) => graph.values.get(id)?.document_id)
-        .find(Boolean),
-      cells: { interest: line.key },
-    })),
-  ];
-}
-export function dividends(graph: Graph): ScheduleRow[] {
-  return numericLines(graph, /^SchB\.5\.\d+$/).map((line) => ({
-    id: line.key,
-    label: line.label.replace(/^Ordinary dividends - /, ''),
-    documentId: line.sources
-      .map((id) => graph.values.get(id)?.document_id)
-      .find(Boolean),
-    cells: {
-      ordinary: line.key,
-      qualified: line.sources.find((id) =>
-        graph.values.get(id)?.label.toLowerCase().includes('qualified'),
-      ),
-    },
-  }));
-}
 export function relevantFindings(
   graph: Graph,
   findings: Finding[],
@@ -120,31 +62,64 @@ export function relevantFindings(
 }
 
 export function amountIssue(graph: Graph, findings: Finding[], ref: string) {
-  // Highlight only the reference explicitly identified by the finding. Never
-  // propagate an issue color to a consumer or infer that its inputs are wrong.
-  const matches = findings.filter((finding) => finding.refs.includes(ref));
+  const matches = relevantFindings(graph, findings, [ref]);
   if (!matches.length) return undefined;
+  const direct = matches.some((f) => f.refs.includes(ref));
   return {
-    kind: 'direct',
-    description: `Issue to resolve: ${matches.map((f) => f.title).join('; ')}`,
+    kind: direct ? 'direct' : 'upstream',
+    description: `${direct ? 'Issue to resolve' : 'Affected by an issue'}: ${matches.map((f) => f.title).join('; ')}`,
   };
 }
 
-export function scheduleDestination(graph: Graph, refs: string[]) {
-  for (const [view, rows] of [
-    ['Wages & interest', wagesAndInterest(graph)],
-    ['Dividends', dividends(graph)],
-  ] as const) {
-    for (const row of rows)
-      for (const ref of Object.values(row.cells)) {
-        if (
-          ref &&
-          refs.some(
-            (id) => id === ref || graph.lines.get(ref)?.sources.includes(id),
-          )
-        )
-          return { view, ref };
-      }
+export const summaryRoots = summaryRows
+  .flatMap((r) => [
+    'federal' in r ? r.federal : undefined,
+    'california' in r ? r.california : undefined,
+  ])
+  .filter((r): r is string => Boolean(r));
+
+export function referencePath(
+  graph: Graph,
+  root: string,
+  target: string,
+): string[] | undefined {
+  const seen = new Set<string>();
+  function visit(id: string): string[] | undefined {
+    if (id === target) return [id];
+    if (seen.has(id)) return;
+    seen.add(id);
+    const line = graph.lines.get(id);
+    for (const child of [...(line?.inputs ?? []), ...(line?.sources ?? [])]) {
+      const path = visit(child);
+      if (path) return [id, ...path];
+    }
   }
-  return undefined;
+  return visit(root);
+}
+
+export function additionalRecords(graph: Graph) {
+  const seen = new Set<string>();
+  function visit(id: string) {
+    if (seen.has(id)) return;
+    seen.add(id);
+    const line = graph.lines.get(id);
+    [...(line?.inputs ?? []), ...(line?.sources ?? [])].forEach(visit);
+  }
+  summaryRoots.forEach(visit);
+  return [...graph.lines.values()].filter((line) => !seen.has(line.key));
+}
+
+export function summaryLocation(graph: Graph, target: string) {
+  for (const root of summaryRoots) {
+    const path = referencePath(graph, root, target);
+    if (path) return { root, path, additional: false };
+  }
+  const records = additionalRecords(graph);
+  const direct = records.find((line) => line.key === target);
+  if (direct) return { root: direct.key, path: [target], additional: true };
+  for (const line of records) {
+    const path = referencePath(graph, line.key, target);
+    if (path) return { root: line.key, path, additional: true };
+  }
+  return { root: target, path: [target], additional: true };
 }

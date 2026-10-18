@@ -1,83 +1,52 @@
 # Implementation decisions and roadmap
 
-## First milestone
+## Current product model
 
-The user's priority was a clean, employer-reviewable repository and a working tax-line-to-source interaction before expansion. The initial milestone delivered that loop with five supporting views. The subsequent UI revision consolidates it into one Return workspace, with Documents and History as secondary tools. It does not claim the full employer brief is complete.
+**Tax workpaper** opens on Cases. The delivered packet contains one reviewable household; related returns without their own packet are not invented as available cases. The issue count uses the latest supplied engine version plus saved review events. Reloading returns to Cases without discarding those events.
 
-| Decision                                      | Reason and tradeoff                                                                                                                             |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| React + TypeScript + Vite                     | Small, readable static application with typed domain logic and reproducible builds. No backend until the first review interaction is validated. |
-| Preserve the packet at its supplied root path | Easy provenance comparison; no destructive migrations or invented replacement data.                                                             |
-| Versioned local review event log              | Fast reproducible prototype, reload persistence, and explicit undo history. Not a secure multiuser audit store.                                 |
-| Source text over synthetic PDF coordinates    | The packet's printed text is the evidence; coordinates are explicitly synthetic. Unique text highlights are honest and inspectable.             |
-| Corrections remain proposals                  | The engine cannot be rerun. Overwriting totals would imply unsupported accuracy.                                                                |
-| Explicit role simulation                      | Demonstrates action permissions while acknowledging that client-side state is not an authorization boundary. No production security claim.      |
-| Narrow independent checks                     | Demonstrates that engine confidence is not proof without pretending to implement a complete tax engine.                                         |
-| Scripted timeline labeled separately          | Future client signatures and e-file acceptance must not appear to be actual completed actions.                                                  |
-| Private GitHub repository                     | User-requested publication target; meaningful implementation and validation commits.                                                            |
+Return contains one unified summary: federal/California totals, expandable supporting calculations, search, and other return records. Documents and History remain secondary tools in the left sidebar. The canvas is white with dark text, green controls, and amber issues. Source evidence stays beside the calculation in a resizable panel on desktop and a full-width bottom panel on mobile.
 
-## Next milestones
+The issues banner contains direct links, not nested calculations or forms. Clicking an issue finds its actual dependency path, reveals the path within Summary, and smoothly scrolls to the source. Reduced-motion preferences use immediate scrolling. Assignment and resolution are available beside that calculation. Correction proposals remain proposals and link to History for withdrawal; they cannot be resolved into an invented engine result.
 
-1. Authenticated backend, durable event storage, server-enforced roles, sensitive-field redaction, evidence view logs, revision checks, and concurrent-session tests.
-2. Stronger review dependencies: refine the conservative final-sign-off invalidation policy, enforce separation of preparation and approval, and require partner review for material adjustments.
-3. Document disposition and completeness; independent reconciliation of payments, sales lots, business books, asset depreciation, basis, and carryovers.
-4. Dedicated schedules for assets, state splits, K-1s, retirement/foreign items, rentals, deductions, and prior-preparer differences.
-5. Assignments with deadlines, evidence attachments and client questions, notification delivery, bulk actions, and scenario comparison beyond tax deltas.
-6. Filing state machine with client approval, e-signature integration, immutable filing snapshots, amendments, notice packages, and carryforward planning.
-7. Hosted app link, applicant-recorded video, and final submission review.
+Highlights follow the source and affected downstream amounts. Unrelated inputs remain unhighlighted. Highlighting indicates a dependency on an unresolved issue, not proof that every highlighted value is incorrect. Resolved findings are excluded, while active reviewer flags remain included.
 
-## Validation approach
+## Why one summary can contain the supporting records
 
-Domain tests exercise real packet paths, version isolation, missing-reference behavior, cycle protection, independent checks, role restrictions, undo authorship, and estimate math. A production build checks browser compilation. Ten Playwright browser tests pass for inline tracing and retained expansion, contextual evidence, correction persistence/undo, mobile layout and read-only roles, and final sign-off persistence/invalidation. Twenty-two domain tests and the production build pass. The prior dependency audit reported zero known vulnerabilities; this revision adds no dependencies.
+A schedule is a supporting calculation or list; it is not a requirement to create a separate page. The [IRS describes Schedule B](https://www.irs.gov/forms-pubs/about-schedule-b-form-1040) as supporting interest and ordinary dividend reporting. That accounting distinction supports a hierarchy from totals to details, not the earlier choice to place Wages & interest and Dividends beside Summary as peer tabs.
 
-The app intentionally imports the full packet for the prototype. The production bundle is correspondingly large; a production data API or lazy-loaded packet can reduce initial JavaScript parsing costs.
+Earlier iterations used those payer tables and a separate full calculation index. The current implementation removes that duplicated navigation. In v3, 51 of 627 lines lie outside the displayed totals' dependency graph, including carried-forward IRA basis, ending S-corporation stock basis, and required-1099 questions. These remain accessible in Summary under Other return records and through search. Coverage tests ensure every line remains reachable. Questionnaire issues without numeric links navigate to their actual record instead of a fabricated number.
 
-## Local development and hosting decision
+## Technical decisions and limits
 
-A private Sites project was reserved, and its non-secret identity is in `.openai/hosting.json`. Source synchronization and deployment were blocked by automatic approval review because Sites is a separate destination from the user-authorized private GitHub repository. No app source, build, or packet was uploaded to Sites. The user subsequently chose to build and test locally first and defer cloud hosting until the app is finalized. Continue committing and pushing milestones to the private GitHub repository; do not deploy during local development.
+| Decision                                            | Reason and tradeoff                                                                                                                                                                             |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| React + TypeScript + Vite                           | Small local application with isolated domain logic and reproducible builds.                                                                                                                     |
+| Immutable supplied JSON                             | Every financial figure and dependency comes from the packet. Missing figures remain absent, not zero.                                                                                           |
+| Engine snapshots remain read-only                   | The engine cannot be rerun; corrections and estimated impacts do not replace return totals.                                                                                                     |
+| Browser-local append-only review log                | Reproducible persistence, attribution, and undo; not secure multiuser storage.                                                                                                                  |
+| Source text instead of invented PDFs                | The packet supplies printed page text. Only unique exact matches receive source highlights; ambiguous locations remain explicit.                                                                |
+| Client-side role switcher                           | Demonstrates permissions, but is not a production authorization boundary.                                                                                                                       |
+| Selective expansion                                 | Simple source-backed numbers remain plain rows; real calculations and long lists expand. Unchanged carry/sum steps retain their full lineage in details.                                        |
+| No routine per-value verification                   | User-requested exception-driven review with one final acknowledgment. This deliberately departs from the employer brief's per-number verification requirement; legacy records remain preserved. |
+| Conservative sign-off invalidation                  | Any later review event reopens sign-off. Filing approval, e-signatures, and production retention are not implemented.                                                                           |
+| Scripted timeline distinguished from actual actions | Supplied future filing events are scenario data, not evidence that the prototype filed a return.                                                                                                |
 
-## UI revision: exception-driven review
+The static prototype bundles the complete fictional packet, resulting in a large JavaScript bundle. A production API or lazy-loaded packet would improve initial loading and enforce access boundaries. CPA usability has not been validated with a practicing reviewer.
 
-The user explicitly requested fewer navigation destinations, inline collapsible calculations, contextual evidence, no routine per-number verification, one final sign-off, and a white background. These preferences override the original brief where they conflict.
+## Validation
 
-**Deliberate departure from the employer brief:** the original asks to record how every number was verified. The revised design does not require those records. Inspection is frictionless; exceptions and final review acknowledgment are recorded. Legacy verification events are preserved without creating new ones through the UI.
+Twenty-two domain tests cover lineage, independent checks, version isolation, review permissions, estimates, and complete summary coverage. Nine browser tests cover issue-to-source navigation, long paths, nonnumeric records, correction persistence/undo, contextual resolution, sign-off, resizing, mobile layout, and read-only roles. TypeScript, the production build, and repository formatting checks pass. Browser workflow tests block external font requests so network latency cannot stall local navigation. This revision introduces no dependencies.
 
-The source document viewer remains simulated. Final sign-off certifies only the local review snapshot; it neither approves unresolved correction proposals nor claims an updated engine calculation. The app cannot reconcile a proposal into a newly computed engine result yet, so active proposals block sign-off until withdrawn; a future engine-import workflow must handle reconciliation.
+## Hosting and repository
 
-## Readability refinement
+Development and testing remain local. Meaningful milestones are committed and pushed to the user-authorized private GitHub repository. Cloud hosting is deferred until finalization. A Sites project was previously reserved (`.openai/hosting.json`), but source synchronization was blocked and no source, packet, or build was uploaded there.
 
-Restored the left sidebar for Return, Documents, and History. The main canvas and sidebar are pure white, text is darker, and small labels are larger. Removed repeated form IDs from collapsed rows and placed rules, notes, and IDs in on-demand calculation details. Parent-child indentation and inline expansion still preserve context. Summary labels explicitly distinguish the federal balance due from the California refund. On narrow screens the sidebar becomes compact navigation above the content.
+## Remaining milestones
 
-## Selective disclosure
-
-Simple amounts display as plain rows with immediate source links. Disclosure controls are reserved for meaningful calculation breakdowns and source lists longer than three items. Explicit unchanged carry/sum steps are presented together, retaining the original graph and all intermediate rules and notes in the details menu. This removes unnecessary navigation without hiding meaningful transformations merely because their numeric results match.
-
-## Reference screenshots: compact schedules
-
-The screenshots clarified useful interaction choices: group related amounts by payer, compare federal and state figures, place exceptions beside affected rows, and retain the schedule while inspecting source evidence. They do not establish a working recalculation engine, authentic source PDFs, secure roles, or completed CPA review. No sample figures, clients, or review statuses from the screenshots are imported.
-
-Summary, wages/interest, and dividend tables map to existing IDs in the selected packet version. All financial values resolve from that packet; missing mappings are shown as a dash, not zero. California total-income and allocation rows are distinguished explicitly. A calculation warning propagates forward to dependent amounts, not backward to every source it shares. No row is automatically marked reviewed or reconciled. The original packet remains unchanged; user-authored review events remain a separate local record.
-
-The full calculation tree is available under one secondary disclosure. Source documents remain clearly labeled simulations of packet content; this revision does not invent PDF layouts or replace the supplied computed totals.
-
-## Review priority and calculation clarity
-
-The app is named **Tax workpaper** in navigation and the browser title. The original case-study documentation and existing local-storage key retain their provenance; renaming the interface must not discard saved reviews.
-
-Unresolved blockers give “Issues to resolve” a prominent amber treatment. The initial amount-highlight treatment distinguished direct and downstream impacts; the source-only revision below supersedes it. These markers indicate review needs, not a conclusion that every affected amount is incorrect. Resolved findings are excluded; active reviewer flags are included. Findings without numeric references remain in the issues section.
-
-The desktop evidence panel has a pointer-draggable and keyboard-operable separator, bounded to preserve calculation space. Width remains selected while navigating during the session. Mobile retains the full-width bottom panel. Expanded calculations expose the packet’s rule description and note before the inputs; these remain supplied engine explanations, not independently validated formulas. CPA usability has not yet been tested with a practicing reviewer. A useful next improvement is explicit signed arithmetic for rules where the packet defines the operators unambiguously; complex tax rules should not be guessed from their dependency lists.
-
-## Cases landing page and consistent issue labels
-
-Opening or reloading the site lands on Cases. Only the supplied household is listed; related returns without a supplied case packet are not invented as accessible cases. The issue badge uses the latest supplied return version and the same sign-off blocker calculation as Return, including unresolved warnings, reviewer flags, and correction proposals. Saved resolutions are reflected on return to Cases and after reload. Opening the case selects that latest version; earlier snapshots remain available in the workspace.
-
-User-facing counts consistently say “issue(s) to resolve,” including schedule rows and sign-off guidance. The redundant “open items” button is removed. The case title and identifier come from the packet. This is a single-packet prototype, not a multi-client backend.
-
-## Source-only issue highlighting and navigation
-
-The user requested that downstream totals stop inheriting issue highlights. Only explicit finding references now receive an issue marker. A calculation that merely consumes a flagged source remains uncolored; its source amount appears with the source link in the breakdown. Related issue summaries can still explain dependencies without coloring those totals. No source is inferred to be wrong just because it contributes to a flagged calculation.
-
-Issue titles navigate within Return: when a supplied reference maps to a payer schedule, the matching tab and breakdown open, the amount receives focus, and the page scrolls to it. Otherwise the full index opens at the referenced line or extracted value. Nonnumeric references, such as questionnaire answers, are presented as records rather than fabricated numbers. Resolution and assignment controls remain in the issue details.
-
-Summary is a return-level view; Wages & interest and Dividends are payer-level supporting schedules. Their peer-tab presentation is a prototype compromise, not a complete taxonomy of tax workpapers. The full index overlaps with reachable calculations but is also necessary for independent outputs: in v3, 51 of 627 lines are not reachable from the currently displayed summary and schedule totals. Examples include Form 8606 basis carried forward, Form 7203 ending stock basis, and Schedule C required-1099 questions. A future organization should place all supporting schedules under a consistent return-area structure and retain a separate path to informational and carryforward records.
+1. Authenticated backend, durable event storage, server-enforced roles, evidence access logs, redaction, and concurrent-session handling.
+2. Document completeness and independent reconciliation of payments, sales lots, books, depreciation, basis, and carryovers.
+3. Rich asset, rental, K-1, state-split, retirement, and deduction editing where supported by the data; explicit arithmetic displays only where operators are unambiguous.
+4. Evidence attachments, client questions, deadlines, notifications, and bulk actions.
+5. Engine-result import to reconcile correction proposals; stronger final approval dependencies and separation of duties.
+6. Client authorization, e-signatures, filing freezes, amendments, notice packages, and carryforward planning.
+7. Hosted submission link, applicant-recorded walkthrough video, and final review.

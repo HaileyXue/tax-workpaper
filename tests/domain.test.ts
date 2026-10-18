@@ -1,8 +1,9 @@
 import {
   amountIssue,
-  scheduleDestination,
-  wagesAndInterest,
-  dividends,
+  summaryLocation,
+  additionalRecords,
+  referencePath,
+  summaryRoots,
   summaryRows,
   relevantFindings,
 } from '../src/domain/schedules';
@@ -225,21 +226,11 @@ describe('selective calculation disclosure', () => {
 });
 
 describe('packet-only schedule mappings', () => {
-  it('uses the selected snapshot links and excludes duplicate W-2 images', () => {
-    const rows = wagesAndInterest(graph);
-    expect(rows.find((r) => r.id === 'D08')?.cells).toEqual({
-      wages: 'ev-0016',
-      withholding: 'ev-0017',
-      stateWithholding: 'ev-0031',
-    });
-    expect(rows.some((r) => r.id === 'D10')).toBe(false);
-    for (const version of packet.return_versions) {
-      const g = createGraph(packet, version.version);
-      for (const row of [...wagesAndInterest(g), ...dividends(g)]) {
-        for (const ref of Object.values(row.cells))
-          if (ref) expect(g.lines.has(ref) || g.values.has(ref)).toBe(true);
-      }
-    }
+  it('uses snapshot sources and excludes duplicate W-2 images', () => {
+    expect(graph.evidence('F1040.1a')).toContain('ev-0016');
+    expect(
+      graph.evidence('F1040.1a').map((id) => graph.values.get(id)?.document_id),
+    ).not.toContain('D10');
   });
   it('preserves missing cells and does not manufacture summary amounts', () => {
     const row = summaryRows.find((r) => r.label === 'California-source AGI')!;
@@ -260,11 +251,12 @@ describe('packet-only schedule mappings', () => {
   });
   it('does not substitute original dividends for corrected data and links warnings using references', () => {
     expect(
-      dividends(graph).find((r) => r.id === 'SchB.5.2')?.cells.qualified,
+      graph.lines.get('SchB.5.2')?.sources.find((id) => id === 'ev-0699'),
     ).toBe('ev-0699');
     expect(
-      dividends(createGraph(packet, 'v1')).find((r) => r.id === 'SchB.5.2')
-        ?.cells.qualified,
+      createGraph(packet, 'v1')
+        .lines.get('SchB.5.2')
+        ?.sources.find((id) => id === 'ev-0540'),
     ).toBe('ev-0540');
     expect(
       relevantFindings(graph, findIssues(graph), ['SchB.1.2']).some(
@@ -280,19 +272,35 @@ describe('packet-only schedule mappings', () => {
 });
 
 describe('issue locations', () => {
-  it('highlights only explicit issue references, never consumers or inferred inputs', () => {
+  it('highlights the downstream chain without marking unrelated inputs', () => {
     const issues = findIssues(graph);
     expect(amountIssue(graph, issues, 'ev-0538')).toBeDefined();
-    expect(amountIssue(graph, issues, 'SchB.1.2')).toBeUndefined();
-    expect(amountIssue(graph, issues, 'F1040.11')).toBeUndefined();
+    expect(amountIssue(graph, issues, 'SchB.1.2')?.kind).toBe('upstream');
+    expect(amountIssue(graph, issues, 'F1040.11')?.kind).toBe('upstream');
     expect(amountIssue(graph, [], 'ev-0538')).toBeUndefined();
     expect(amountIssue(graph, issues, 'ev-0016')).toBeUndefined();
   });
-  it('locates a payer schedule only from direct supplied references', () => {
-    expect(scheduleDestination(graph, ['ev-0538'])).toEqual({
-      view: 'Wages & interest',
-      ref: 'SchB.1.2',
+});
+
+describe('unified summary coverage', () => {
+  it('preserves every line and finds a real dependency path for every linked issue', () => {
+    const other = new Set(additionalRecords(graph).map((l) => l.key));
+    for (const line of graph.lines.values())
+      expect(
+        other.has(line.key) ||
+          summaryRoots.some((root) => referencePath(graph, root, line.key)),
+      ).toBeTruthy();
+    const location = summaryLocation(graph, 'ev-0538');
+    expect(location.root).toBe('F1040.9');
+    expect(location.path.at(-1)).toBe('ev-0538');
+    for (let i = 1; i < location.path.length; i++) {
+      const parent = graph.lines.get(location.path[i - 1])!;
+      expect([...parent.inputs, ...parent.sources]).toContain(location.path[i]);
+    }
+    expect(summaryLocation(graph, 'qa-14')).toEqual({
+      root: 'qa-14',
+      path: ['qa-14'],
+      additional: true,
     });
-    expect(scheduleDestination(graph, ['qa-14'])).toBeUndefined();
   });
 });

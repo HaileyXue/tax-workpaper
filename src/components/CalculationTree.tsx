@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronRight, FileText, MoreHorizontal } from 'lucide-react';
 import { money, sourceAmount, packet, type Graph } from '../domain/packet';
 import { calculationPresentation } from '../domain/presentation';
@@ -18,6 +18,7 @@ export interface TreeProps {
   events: ReviewEvent[];
   writable: boolean;
   issueFindings?: Finding[];
+  revealPath?: string[];
 }
 export function EvidenceLink({
   id,
@@ -66,6 +67,22 @@ export default function CalculationTree({
   const [mounted, setMounted] = useState(initiallyExpanded);
   const [limit, setLimit] = useState(20);
   const [query, setQuery] = useState('');
+  useEffect(() => {
+    if (!props.revealPath) return;
+    const presentation = calculationPresentation(graph, lineId);
+    if (!presentation.chain.some((l) => props.revealPath!.includes(l.key)))
+      return;
+    setExpanded(true);
+    setMounted(true);
+    setQuery('');
+    const detail = presentation.detail;
+    const index = Math.max(
+      ...[...(detail?.inputs ?? []), ...(detail?.sources ?? [])].map((id, i) =>
+        props.revealPath!.includes(id) ? i : -1,
+      ),
+    );
+    setLimit(Math.max(20, index + 1));
+  }, [props.revealPath, graph, lineId]);
   const line = graph.lines.get(lineId);
   if (!line)
     return <p className="callout">Missing calculation input: {lineId}</p>;
@@ -114,6 +131,9 @@ export default function CalculationTree({
     <article
       className={`calculation ${expandable ? 'calculation-group' : 'calculation-leaf'}`}
       data-line={lineId}
+      data-reference={lineId}
+      data-aliases={chain.map((l) => l.key).join(' ')}
+      tabIndex={-1}
     >
       <div className="calculation-heading">
         {expandable ? (
@@ -232,25 +252,35 @@ export default function CalculationTree({
                   id,
                 );
                 return (
-                  <div className="source-input" key={id}>
+                  <div
+                    className="source-input"
+                    key={id}
+                    data-reference={id}
+                    tabIndex={-1}
+                  >
                     <div>
-                      {value && (detail.sources.length > 1 || sourceIssue) && (
-                        <span className="source-value">
-                          {graph.documents.get(value.document_id)?.issuer ??
-                            value.label}
-                          <strong
-                            className={
-                              sourceIssue
-                                ? 'amount-issue amount-issue-direct'
-                                : undefined
-                            }
-                            title={sourceIssue?.description}
-                          >
-                            {sourceIssue && <span aria-hidden="true">! </span>}
-                            {sourceAmount(value)}
-                          </strong>
-                        </span>
-                      )}
+                      {value &&
+                        (detail.sources.length > 1 ||
+                          sourceIssue ||
+                          props.revealPath?.includes(id)) && (
+                          <span className="source-value">
+                            {graph.documents.get(value.document_id)?.issuer ??
+                              value.label}
+                            <strong
+                              className={
+                                sourceIssue
+                                  ? 'amount-issue amount-issue-direct'
+                                  : undefined
+                              }
+                              title={sourceIssue?.description}
+                            >
+                              {sourceIssue && (
+                                <span aria-hidden="true">! </span>
+                              )}
+                              {sourceAmount(value)}
+                            </strong>
+                          </span>
+                        )}
                       <EvidenceLink id={id} path={context} {...props} />
                     </div>
                   </div>
