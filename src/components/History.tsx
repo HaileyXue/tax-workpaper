@@ -24,10 +24,16 @@ export default function History({
   );
   const removed = base.lines.filter((l) => !graph.lines.has(l.key));
   return (
-    <section>
-      <h2>History</h2>
+    <section className="workspace-section history-section">
+      <header className="section-heading">
+        <div>
+          <span className="section-kicker">Audit trail</span>
+          <h2>History</h2>
+          <p>Compare supplied snapshots and review recorded work.</p>
+        </div>
+      </header>
       <details className="utility-section">
-        <summary>Compare engine snapshots</summary>
+        <summary>Compare return snapshots</summary>
         <label>
           Compare {graph.version.version} with{' '}
           <select value={baseId} onChange={(e) => setBaseId(e.target.value)}>
@@ -37,7 +43,7 @@ export default function History({
           </select>
         </label>
         <p className="muted">
-          {changed.length} added or changed · {removed.length} removed. Engine
+          {changed.length} added or changed · {removed.length} removed. Supplied
           snapshots exclude review proposals.
         </p>
         {changed.map((l) => (
@@ -67,7 +73,7 @@ export default function History({
           </div>
         ))}
       </details>
-      <h3>Review activity</h3>
+      <h3 className="subsection-heading">Review activity</h3>
       {!events.length && (
         <p className="muted">
           No exceptions or sign-offs recorded. Inspecting a number does not

@@ -130,6 +130,7 @@ export default function ReturnSummary({
     >
       <div className="section-heading">
         <div>
+          <span className="section-kicker">Federal and state overview</span>
           <h2>Return summary</h2>
           <p className="small muted">
             Open a total to follow its calculations to the source. Highlighted
@@ -194,6 +195,7 @@ export default function ReturnSummary({
           className="additional-records"
           aria-label="Related return records"
         >
+          <span className="section-kicker">Supporting information</span>
           <h3>Related return records</h3>
           <p className="small muted">
             Find supporting records by form, including carryforwards and filing

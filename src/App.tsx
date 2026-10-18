@@ -264,8 +264,8 @@ export default function App() {
                 Married filing jointly <span>·</span> California → Texas
               </p>
             </div>
-            <label>
-              Version
+            <label className="snapshot-selector">
+              <span>Return snapshot</span>
               <select
                 aria-label="Return version"
                 value={version}
@@ -280,6 +280,7 @@ export default function App() {
                   <option key={v.version}>{v.version}</option>
                 ))}
               </select>
+              <small>Controls calculations, document use, and lineage.</small>
             </label>
           </div>
           {error && (
@@ -435,12 +436,21 @@ export default function App() {
             </section>
           </div>
           {tab === 'Documents' && (
-            <section>
+            <section className="workspace-section documents-section">
               <div className="section-heading">
-                <h2>
-                  Documents{' '}
-                  <span className="muted">{packet.documents.length}</span>
-                </h2>
+                <div>
+                  <span className="section-kicker">Source library</span>
+                  <h2>
+                    Documents{' '}
+                    <span className="heading-count">
+                      {packet.documents.length}
+                    </span>
+                  </h2>
+                  <p>
+                    Inspect supplied source files and their use in the selected
+                    return snapshot.
+                  </p>
+                </div>
                 <label className="search">
                   <Search size={15} />
                   <input

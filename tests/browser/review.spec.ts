@@ -472,3 +472,19 @@ test('document filters combine ownership, uploader and search; source page shows
     'Ada Lindqvist-Okafor',
   );
 });
+
+test('return snapshot changes document use and superseded labels', async ({
+  page,
+}) => {
+  await openCase(page);
+  await page.getByRole('button', { name: 'Documents', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Search documents' }).fill('D30');
+  await expect(page.locator('.document-row')).toContainText('Superseded');
+  await page
+    .getByRole('combobox', { name: 'Return version' })
+    .selectOption('v1');
+  await expect(page.locator('.document-row')).not.toContainText('Superseded');
+  await expect(page.locator('.document-row')).not.toContainText(
+    'Not used in this snapshot',
+  );
+});

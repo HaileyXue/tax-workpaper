@@ -32,6 +32,7 @@ export default function Cases({
         <main>
           <header className="page-heading">
             <div>
+              <span className="eyebrow">Tax workpaper</span>
               <h1>Cases</h1>
               <p>Select a case to review its return and supporting evidence.</p>
             </div>

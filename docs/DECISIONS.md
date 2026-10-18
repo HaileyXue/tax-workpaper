@@ -41,7 +41,7 @@ The static prototype bundles the complete fictional packet, resulting in a large
 
 ## Validation
 
-Twenty-two domain tests cover lineage, independent checks, version isolation, review permissions, estimates, and complete summary coverage. Thirteen browser tests cover issue-to-source navigation, long paths, nonnumeric records, correction persistence/undo, contextual resolution, sign-off, resizing, mobile layout, and read-only roles. TypeScript, the production build, and repository formatting checks pass. Browser workflow tests block external font requests so network latency cannot stall local navigation. This revision introduces no dependencies.
+Twenty-two domain tests cover lineage, independent checks, version isolation, review permissions, estimates, and complete summary coverage. Fourteen browser tests cover issue-to-source navigation, long paths, nonnumeric records, correction persistence/undo, contextual resolution, sign-off, resizing, mobile layout, read-only roles, and snapshot-dependent document status. TypeScript, the production build, and repository formatting checks pass. Browser workflow tests block external font requests so network latency cannot stall local navigation. This revision introduces no dependencies.
 
 ## Hosting and repository
 
@@ -194,3 +194,12 @@ Proposed implementation and acceptance criteria:
 - **Data fidelity:** Owner codes resolve to household names using the supplied role or dependent ID; joint remains Joint. Uploaders are Client or Firm because that is all the packet identifies; do not invent individual uploaders. Received timestamps display in UTC to preserve an unambiguous supplied time.
 - **Filters:** Documents can be filtered by owner and uploader together with document search. Options come from the packet. Show the matching count, an empty state, and Clear filters. Selected-document highlighting remains independent of the filters; a document stays open if its row is filtered out.
 - **Tradeoff:** Removing the contextual breadcrumb gives more room to the document. The underlying calculation remains visible beside the panel, while document identity stays prominent. Metadata is packet context on a simulated page, not a claim that these fields were printed on an original PDF.
+
+### D14 — Clarify snapshot scope and strengthen visual hierarchy
+
+- **Recorded:** 2026-10-18. **Status:** Implemented at the user's request.
+- **Snapshot scope:** The selector chooses a complete supplied return snapshot, not a separate document version. The 74-document library is shared, while `documents_used`, `documents_superseded`, linked calculations, issue chains, and displayed totals vary by snapshot. Keep the selector available on Documents because its use and lineage labels depend on the selected snapshot; relabel it Return snapshot and explain that scope in the control.
+- **Visual decision:** Preserve the white, restrained workpaper direction while creating distinct levels for case title, page section, subsection, disclosure, and table label. Use a larger Manrope heading scale, uppercase green section kickers, clearer spacing, bordered content surfaces, stronger table headers, and a contained final sign-off panel.
+- **Reason:** Similar sizes and weights made headings, subheadings, and controls compete. Reviewers need to scan the case, find issues, interpret totals, and then inspect detail in that order.
+- **Tradeoff:** Additional borders and surfaces make sections more explicit but slightly denser. Color remains secondary to size, weight, spacing, and borders so hierarchy survives grayscale and supports accessibility.
+- **Boundary:** This is a presentation change. It does not alter packet values, summary mappings, role behavior, document lineage, or review records.
