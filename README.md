@@ -32,19 +32,19 @@ npm run format:check  # Repository formatting
 1. Open the supplied household from **Cases**, where the badge shows its latest-version **issues to resolve**. On **Return**, compare federal and California totals in the unified summary.
 2. Select federal **Total income**, then the Corvane W-2 source link under wages. The evidence panel highlights `104,600.00` while the calculation stays visible. No verification action is required.
 3. Open **Issues** in the left navigation and select **Same bank sweep interest counted twice**. Return opens the calculation path and smoothly scrolls to the source. Both source amounts and affected totals are highlighted.
-4. Use **Decision & assignment** beside the linked calculation to record a disposition. To propose a correction, search Summary for `SchB.1.2` and choose **… → Propose correction**. Enter $0, category `interest`, and a rationale. Estimated effects appear; engine totals remain unchanged.
+4. Use **Decision & assignment** beside the linked calculation to record a disposition. To propose a correction, use **… → Propose correction** on the affected amount. Enter the proposed value, select a supplied tax-effect category, and add a rationale. Estimated effects appear; engine totals remain unchanged.
 5. Reload, reopen the case, and visit **History** to inspect the proposal, compare snapshots, view precomputed alternatives, or undo your own action. Export history for a portable record.
 6. Final review sign-off is available to a reviewer or partner only after blocking warnings, manual flags, and correction proposals are cleared. Subsequent review events reopen it. This is a local review acknowledgment, not an e-signature or filing approval.
 
 ## What works today
 
-- One packet-backed summary integrates totals, supporting calculations, full-line search, and other return records. Separate payer tabs and the duplicate calculation index have been removed. Missing mappings display a dash, never an invented zero.
+- One packet-backed summary integrates totals, supporting calculations, and other return records. Separate payer tabs, return search, and the duplicate calculation index have been removed. Missing mappings display a dash, never an invented zero.
 - A Cases landing page with live issue counts for the supplied household and an All cases navigation link.
 - One white-background Return workspace with selective calculation breakdowns; Documents and History are secondary tools in the left sidebar.
 - Focused calculation statements with aligned inputs and results. Selecting an input replaces the detail in place; a review trail returns to earlier contexts. Same-form related records stay separate from arithmetic inputs.
 - The Issues tab contains direct links only. Selecting an issue switches to Return, reveals its real dependency path, focuses the source, and scrolls smoothly (or instantly with reduced motion). Highlighting follows the affected chain without flagging unrelated inputs. Assignment and resolution are contextual, beside the linked calculation.
 - Evidence displayed in a resizable panel beside the calculation on desktop and in a bottom panel on mobile; other document fields and reverse usage are collapsed by default.
-- Search across all 627 current-version lines; large input lists load in batches with filtering.
+- All 627 current-version lines remain reachable through summary calculations or Related return records; large input lists load in batches with filtering.
 - No routine verification forms: contextual flag, note, and correction actions open only on request. Existing verification records remain in history.
 - Engine diagnostics plus independent duplicate-interest, FX-year, and W-2 source checks; assignment and documented resolution.
 - Final, version-scoped review sign-off with blocker checks and conservative invalidation after any subsequent review event (including notes, assignments, and undo).
@@ -62,21 +62,21 @@ npm run format:check  # Repository formatting
 
 ## Repository guide
 
-| Path                                | Purpose                                                                          |
-| ----------------------------------- | -------------------------------------------------------------------------------- |
-| `CASE_STUDY.md`                     | Original employer brief                                                          |
-| `okafor_lindqvist_2025_packet.json` | Original, immutable fixture; schema guide is its `readme` property               |
-| `src/domain/`                       | Packet types, lineage graph, independent checks, review rules                    |
-| `src/components/`                   | Calculation tree, evidence viewer, exception form, history, and issue components |
-| `src/App.tsx`                       | Workspace screens and local review orchestration                                 |
-| `tests/`                            | Lineage, check, permission, undo, and estimate regression tests                  |
-| `docs/`                             | Architecture, findings, implementation decisions, and roadmap                    |
-| `.github/workflows/ci.yml`          | Reproducible test/build checks                                                   |
+| Path                                | Purpose                                                                             |
+| ----------------------------------- | ----------------------------------------------------------------------------------- |
+| `CASE_STUDY.md`                     | Original employer brief                                                             |
+| `okafor_lindqvist_2025_packet.json` | Original, immutable fixture; schema guide is its `readme` property                  |
+| `src/domain/`                       | Packet types, lineage graph, independent checks, review rules                       |
+| `src/components/`                   | Calculation tree, evidence viewer, exception form, history, and issue components    |
+| `src/App.tsx`                       | Workspace screens and local review orchestration                                    |
+| `tests/`                            | Lineage, check, permission, undo, and estimate regression tests                     |
+| `docs/`                             | Architecture, findings, requirement coverage, implementation decisions, and roadmap |
+| `.github/workflows/ci.yml`          | Reproducible test/build checks                                                      |
 
 ## Submission notes
 
 The living [decision log](docs/DECISIONS.md#dated-decision-records) records rationale, alternatives, tradeoffs, superseded choices, and proposal/implementation status.
 
-See [core idea and data model](docs/ARCHITECTURE.md), [findings](docs/FINDINGS.md), and [decisions and next steps](docs/DECISIONS.md). The applicant's recorded walkthrough and video link are still required by the case study.
+See [core idea and data model](docs/ARCHITECTURE.md), [requirements traceability](docs/REQUIREMENTS_TRACEABILITY.md), [findings](docs/FINDINGS.md), and [decisions and next steps](docs/DECISIONS.md). The applicant's recorded walkthrough and video link are still required by the case study.
 
 AI assistance: OpenAI Codex helped inspect the fixture, design and implement the prototype, write documentation, and run validation. Human review and the applicant's own explanation of tradeoffs remain essential.
