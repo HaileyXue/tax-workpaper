@@ -16,6 +16,7 @@ import {
   History as HistoryIcon,
   LayoutDashboard,
   CircleAlert,
+  FileCheck2,
 } from 'lucide-react';
 import { createGraph, packet, resolveReference } from './domain/packet';
 import { findIssues, type Finding } from './domain/findings';
@@ -238,7 +239,10 @@ export default function App() {
             showCases();
           }}
         >
-          Tax workpaper
+          <span className="brand-mark" aria-hidden="true">
+            <FileCheck2 size={17} />
+          </span>
+          <span>Tax workpaper</span>
         </a>
         <button className="back-to-cases" onClick={showCases}>
           <ArrowLeft size={16} />

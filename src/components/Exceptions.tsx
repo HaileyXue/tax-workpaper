@@ -1,3 +1,4 @@
+import { ArrowRight } from 'lucide-react';
 import type { ReviewEvent } from '../domain/review';
 import type { Finding } from '../domain/findings';
 export type SaveEvent = (
@@ -31,10 +32,10 @@ export default function Exceptions({
             {resolved(f.id)
               ? 'Resolved'
               : f.severity === 'warning'
-                ? 'Issue to resolve'
-                : 'Advisory'}
+                ? 'Go to issue'
+                : 'View advisory'}
           </small>
-          <span aria-hidden="true">↓</span>
+          <ArrowRight className="finding-arrow" size={15} aria-hidden="true" />
         </button>
       ))}
     </div>

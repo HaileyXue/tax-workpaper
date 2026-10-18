@@ -211,3 +211,12 @@ Proposed implementation and acceptance criteria:
 - **Reason:** Issues are a primary review queue and deserve a stable destination. Removing the banner also makes the Return page start directly with the summary while preserving the issue-to-source workflow.
 - **Tradeoff:** The unresolved list and affected totals are no longer visible on the same screen. The navigation badge preserves awareness of outstanding work, and a single selection returns the reviewer to the exact calculation context.
 - **Table spacing:** Add explicit left padding to the Return item column on desktop and mobile so labels do not touch the table border.
+
+### D16 — Refine the visual system without increasing information density
+
+- **Recorded:** 2026-10-18. **Status:** Implemented at the user's request.
+- **Decision:** Preserve the white canvas and existing layout while refining the forest/mint/amber palette, typography, radii, shadows, navigation states, and card surfaces. Add a compact file-check brand mark using the existing icon set. Use one small motion cue on issue-row arrows and respect the existing reduced-motion rule.
+- **Reason:** The product should feel deliberate and trustworthy without adding dashboards, illustrations, decorative panels, or more navigation. Visual hierarchy comes from typography, spacing, restrained color, and consistent component treatment.
+- **Issue action:** Warning rows say Go to issue and use a right arrow because the action changes context to the Return workspace. Advisory rows say View advisory. Resolved rows retain Resolved. The prior down arrow incorrectly implied movement lower on the same page.
+- **Tradeoff:** Subtle shadows and rounded surfaces add polish but can make a dense professional tool feel consumer-oriented if overused. They are limited to primary containers and interactive hover states; calculations and document rows remain visually quiet.
+- **Household context label:** Married filing jointly explains the federal filing unit and affects thresholds, deductions, and tax computation. California → Texas explains the part-year California workpaper and allocation columns. These facts are useful orientation, but they are not a full client profile; expanding the line with more household facts would compete with review work.

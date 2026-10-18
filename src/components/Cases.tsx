@@ -1,4 +1,4 @@
-import { ArrowRight, FolderOpen } from 'lucide-react';
+import { ArrowRight, FileCheck2, FolderOpen } from 'lucide-react';
 import { createGraph, packet } from '../domain/packet';
 import { findIssues } from '../domain/findings';
 import { activeEvents, signoffState, type ReviewEvent } from '../domain/review';
@@ -19,7 +19,10 @@ export default function Cases({
     <>
       <aside className="app-sidebar" aria-label="Workspace sidebar">
         <a className="brand" href="#">
-          Tax workpaper
+          <span className="brand-mark" aria-hidden="true">
+            <FileCheck2 size={17} />
+          </span>
+          <span>Tax workpaper</span>
         </a>
         <nav aria-label="Workspace">
           <button aria-current="page">

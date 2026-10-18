@@ -255,7 +255,10 @@ test('issue tab contains links only, opens the return chain and scrolls to its s
   await expect(
     page.getByRole('heading', { name: 'Issues to resolve' }),
   ).toBeVisible();
-  await page.locator('[data-finding-id="duplicate-sweep"]').click();
+  const issueRow = page.locator('[data-finding-id="duplicate-sweep"]');
+  await expect(issueRow).toContainText('Go to issue');
+  await expect(issueRow.locator('.finding-arrow')).toBeVisible();
+  await issueRow.click();
   await expect(
     page.getByRole('button', { name: 'Return', exact: true }),
   ).toHaveAttribute('aria-current', 'page');

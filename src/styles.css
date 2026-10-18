@@ -1,18 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
 :root {
   font-family: 'DM Sans', sans-serif;
-  color: #14251d;
+  color: #15251d;
   background: #fff;
-  --ink: #14251d;
-  --ink-soft: #4a5e53;
-  --green: #07683e;
-  --green-dark: #054d2f;
-  --green-soft: #e8f5ed;
-  --line: #d8e2db;
-  --line-strong: #b8cabf;
+  --ink: #15251d;
+  --ink-soft: #52645a;
+  --green: #087453;
+  --green-dark: #064c38;
+  --green-soft: #e6f4ed;
+  --line: #d8e2dc;
+  --line-strong: #b9cac0;
   --surface: #f7faf8;
-  --surface-strong: #eff6f1;
-  --amber: #a96000;
+  --surface-strong: #edf5f0;
+  --amber: #a76100;
+  --shadow-sm: 0 1px 2px #173c2b0a, 0 5px 16px #173c2b0a;
+  --shadow-md: 0 10px 30px #173c2b12;
   font-synthesis: none;
   font-size: 14px;
 }
@@ -42,13 +44,14 @@ button {
   background: white;
   color: #185c3d;
   border: 1px solid #bccdc2;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 9px 12px;
   cursor: pointer;
 }
 button:hover {
   background: #eef8f1;
   border-color: #7eaa90;
+  box-shadow: 0 2px 8px #173c2b0b;
 }
 button:disabled {
   opacity: 0.45;
@@ -68,7 +71,7 @@ select,
 textarea {
   background: #fff;
   border: 1px solid #bccdc2;
-  border-radius: 5px;
+  border-radius: 7px;
   padding: 9px;
   color: #14251d;
   min-width: 0;
@@ -133,17 +136,29 @@ small,
   flex-direction: column;
   gap: 40px;
   border-right: 1px solid var(--line);
-  background: #fbfdfb;
+  background: linear-gradient(180deg, #fbfdfc 0%, #f7faf8 100%);
 }
 .brand {
   display: flex;
   gap: 8px;
   align-items: center;
-  color: #08613b;
+  color: var(--green-dark);
   text-decoration: none;
   font-size: 22px;
   font-weight: 700;
-  letter-spacing: -1px;
+  letter-spacing: -0.7px;
+}
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 9px;
+  color: white;
+  background: var(--green);
+  box-shadow: 0 6px 16px #08745325;
 }
 nav {
   display: flex;
@@ -155,15 +170,15 @@ nav button {
   padding: 13px 14px;
   gap: 12px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 9px;
   color: #344c3e;
   background: #fff;
   font-size: 14px;
 }
 nav button[aria-current='page'] {
-  color: #075b35;
-  background: #e0f3e7;
-  box-shadow: inset 3px 0 #087344;
+  color: var(--green-dark);
+  background: var(--green-soft);
+  box-shadow: inset 3px 0 var(--green);
   font-weight: 700;
 }
 nav button > span:not(.nav-count) {
@@ -236,8 +251,9 @@ nav button[aria-current='page'] .nav-count {
   width: 176px;
   padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 11px;
   background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 .snapshot-selector > span {
   color: var(--ink);
@@ -527,6 +543,7 @@ nav button[aria-current='page'] .nav-count {
   padding: 17px 18px;
   margin: 18px 0;
   background: #fff;
+  box-shadow: var(--shadow-sm);
 }
 .issues-section > summary,
 .utility-section > summary {
@@ -618,10 +635,11 @@ nav button[aria-current='page'] .nav-count {
 .signoff {
   border: 1px solid var(--line);
   border-top: 4px solid var(--green);
-  border-radius: 9px;
+  border-radius: 12px;
   padding: 24px;
   margin-top: 44px;
   background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 .signoff > p {
   font-size: 12px;
@@ -640,8 +658,8 @@ nav button[aria-current='page'] .nav-count {
   font-size: 12px;
 }
 .primary {
-  background: #07683e;
-  border-color: #07683e;
+  background: var(--green);
+  border-color: var(--green);
   color: white;
 }
 .primary:hover {
@@ -669,6 +687,7 @@ nav button[aria-current='page'] .nav-count {
 .document-row:hover {
   border-color: var(--line);
   background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 .document-row > span:nth-child(2) {
   flex: 1;
@@ -828,7 +847,7 @@ footer button {
   border-radius: 6px;
   padding: 23px;
   color: #354b3a;
-  box-shadow: 0 8px 24px #20382a0b;
+  box-shadow: var(--shadow-md);
 }
 .paper-heading {
   display: flex;
@@ -930,7 +949,7 @@ mark {
   max-height: 90vh;
   padding: 25px;
   color: #14251d;
-  box-shadow: 0 16px 60px #20382a20;
+  box-shadow: 0 20px 70px #173c2b24;
 }
 .action-dialog::backdrop {
   background: #243c3330;
@@ -1395,6 +1414,7 @@ textarea::placeholder {
   border: 1px solid var(--line);
   border-radius: 9px;
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 .schedule-table th,
 .schedule-table td {
@@ -1544,8 +1564,11 @@ textarea::placeholder {
 
 /* Review priorities and source inspection */
 .brand {
-  font-size: 21px;
+  font-size: 20px;
   letter-spacing: -0.6px;
+}
+.brand > span:last-child {
+  white-space: nowrap;
 }
 .issues-section.has-issues {
   border: 1px solid #d69b22;
@@ -1656,8 +1679,9 @@ textarea::placeholder {
   gap: 22px;
   padding: 28px;
   border: 1px solid #bccdc2;
-  border-radius: 8px;
+  border-radius: 12px;
   background: white;
+  box-shadow: var(--shadow-sm);
 }
 .case-description {
   flex: 1;
@@ -1772,13 +1796,17 @@ textarea::placeholder {
 .issues-list-panel {
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 12px;
   background: white;
+  box-shadow: var(--shadow-sm);
 }
 .issues-list-panel .finding-link {
   padding: 16px 18px;
   border-top-color: var(--line);
   color: var(--ink);
+}
+.issues-list-panel .finding-link > span:nth-child(2) {
+  font-weight: 550;
 }
 .issues-list-panel .finding-link:first-child {
   border-top: 0;
@@ -1788,6 +1816,15 @@ textarea::placeholder {
 }
 .issues-list-panel .finding-link small {
   color: #754000;
+  font-weight: 650;
+}
+.finding-arrow {
+  flex-shrink: 0;
+  color: var(--green);
+  transition: transform 0.15s ease;
+}
+.finding-link:hover .finding-arrow {
+  transform: translateX(2px);
 }
 .issue-context {
   padding: 14px;
@@ -1809,8 +1846,9 @@ textarea::placeholder {
   margin-top: 42px;
   padding: 26px;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 12px;
   background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 .additional-records h3 {
   margin-top: 6px;
@@ -1959,8 +1997,9 @@ textarea::placeholder {
   margin: 18px 0;
   padding: 16px;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 11px;
   background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 .document-filters label {
   display: grid;
