@@ -1,5 +1,9 @@
 # Implementation decisions and roadmap
 
+This is the canonical, living decision log for this repository. Record important product and technical decisions here as work proceeds, including the reason, alternatives, tradeoffs, and implementation status. Preserve earlier decisions when direction changes: mark them superseded and link to the replacement rather than erasing the reasoning. A proposal is not an implemented feature or an approved requirement.
+
+The sections below describe the current implementation. The dated decision records at the end preserve the reasoning and pending proposals.
+
 ## Current product model
 
 **Tax workpaper** opens on Cases. The delivered packet contains one reviewable household; related returns without their own packet are not invented as available cases. The issue count uses the latest supplied engine version plus saved review events. Reloading returns to Cases without discarding those events.
@@ -52,3 +56,97 @@ Development and testing remain local. Meaningful milestones are committed and pu
 5. Engine-result import to reconcile correction proposals; stronger final approval dependencies and separation of duties.
 6. Client authorization, e-signatures, filing freezes, amendments, notice packages, and carryforward planning.
 7. Hosted submission link, applicant-recorded walkthrough video, and final review.
+
+## Dated decision records
+
+The initial entries were reconstructed from the project conversation on 2026-10-17. Commit references identify implementation milestones where available, not the exact time every preference was first expressed.
+
+### D01 — Preserve the delivered data and distinguish review from calculation
+
+- **Recorded:** 2026-10-17. **Status:** Implemented; ongoing constraint.
+- **Decision:** Preserve the original JSON. Display its supplied figures and versions, and store authored review actions separately. Do not copy sample figures from reference screenshots, create fictional extra cases, or imply the engine can recompute the return.
+- **Reason:** The packet is the authoritative case input and contains intentional mistakes. Its provenance must survive CPA review.
+- **Tradeoff:** Corrections remain proposals; estimated impacts are not replacement return totals. Missing information stays missing.
+- **Alternative rejected:** Editable totals that appear to regenerate the return without an available engine.
+
+### D02 — One central, return-first workspace
+
+- **Recorded:** 2026-10-17. **Status:** Implemented; central-view preference retained. Reference: `1e4048a`.
+- **Decision:** Use Summary as the central entry point to calculations and evidence. Keep the Cases landing page and secondary Documents/History tools. Remove separate Number Explorer navigation, peer payer-schedule tabs, and the duplicated All calculations & schedules container.
+- **Reason:** The user repeatedly found multiple destinations and deep navigation disorienting. Return-first describes the starting point, not a restriction to records reachable from displayed totals.
+- **Tradeoff:** The interface must deliberately expose records without arithmetic paths to those totals. Coverage cannot depend solely on traversing the calculation graph.
+- **Alternative considered:** Topic-first, with Employment, Investments, Business, etc. as the primary navigation. That gives nonnumeric records natural homes, but changes the user's preferred starting point. Topic membership can still support the central return-first view.
+- **Accounting distinction:** Supporting schedules and source evidence have different roles, but those roles do not require separate application pages.
+
+### D03 — Review exceptions and sign off once
+
+- **Recorded:** 2026-10-17. **Status:** Implemented; deliberate departure from the employer brief.
+- **Decision:** No routine per-number verification forms. Inspection is frictionless; users record exceptions and make a final review acknowledgment.
+- **Reason:** Repeated review controls created noise and unnecessary work for figures with no identified issue.
+- **Tradeoff:** This does not fulfill the original brief's expectation to record verification for every number. Preserve legacy events. Final review remains blocked by unresolved warnings, flags, and proposals, and later review events invalidate it.
+
+### D04 — Keep evidence beside the calculation
+
+- **Recorded:** 2026-10-17. **Status:** Implemented. Resizing reference: `d8c2812`.
+- **Decision:** Source documents open in a resizable right panel, with page/field context and exact text highlighting where possible. Mobile uses a bottom panel.
+- **Reason:** The screenshots demonstrated the value of inspecting evidence without losing the surrounding schedule. The user requested adjustable panel width.
+- **Tradeoff:** Wider evidence reduces calculation space. Resizing is bounded and keyboard accessible. Simulated document text is explicitly labeled; real PDFs are not available.
+
+### D05 — Issue navigation and affected-chain highlighting
+
+- **Recorded:** 2026-10-17. **Status:** Implemented. Current reference: `1e4048a`.
+- **Decision:** The banner contains issue links only. A link reveals the actual calculation path in Summary and visibly scrolls to the source. Assignment and resolution appear beside the linked calculation. Highlight affected downstream amounts as well as the source.
+- **Reason:** Users need both the originating issue and its consequences to be apparent in the overview, without opening more content beneath the banner.
+- **Tradeoff:** Multiple totals can be highlighted by the same issue; highlighting signals dependency, not multiple independent errors. Unrelated inputs are not highlighted.
+- **Superseded direction:** Source-only highlighting was explicitly requested and implemented in `7c8bb76`. The user subsequently reversed that preference and requested full-chain highlighting. That earlier implementation is not the current design.
+- **Limit:** Nonnumeric issues link to their actual records. Never fabricate a numeric relationship to satisfy navigation.
+
+### D06 — Plain-language interface with audit details on demand
+
+- **Recorded:** 2026-10-17. **Status:** Implemented. Reference: `90ce8ee`.
+- **Decision:** Remove routine labels such as “F6251.6 · Supplied calculation · Inputs below.” Use calculation names, document names, and human-readable fields. Technical IDs remain available in audit details and the underlying model.
+- **Reason:** Implementation terminology does not help the CPA make a decision and makes the interface harder to read.
+- **Tradeoff:** Internal IDs are less immediately visible when debugging, but remain available without cluttering routine review.
+- **Related preferences:** White background, stronger text/accent contrast, left navigation, and the name Tax workpaper.
+
+### D07 — Integrate other records by subject without inventing arithmetic links
+
+- **Recorded:** 2026-10-17. **Status:** Proposed; not implemented. The current interface still has Other return records.
+- **Problem:** The existing bucket is computed from graph reachability. It groups together records that accountants would associate with different subjects. The 51-of-627 figure describes v3 coverage relative to the current summary roots; it is not a universal tax classification or proof that those records cannot affect current-year work.
+- **Proposed decision:** Attach a Related records area to relevant calculation contexts within Summary. Keep calculation inputs and related records visually distinct. Provide a compact subject index in the same workspace so records are accessible even when there is no current-year amount to select.
+- **Reason:** Records can belong to the same subject without being operands in the same formula. A future-year balance, filing answer, or supporting explanation should have a meaningful home without being added to a current-year total.
+- **Tradeoff:** Subject mappings require careful maintenance and may be many-to-many. The same record may be linked from multiple contexts, but should retain one canonical identity and review history.
+- **Alternative rejected:** Insert every record into the arithmetic chain merely to make it reachable. That would imply relationships the packet does not supply.
+- **Alternative not preferred:** Retain a miscellaneous catch-all as the primary place to find unrelated-to-total records.
+
+Examples grounded in the supplied packet:
+
+| Supplied record                                 | Proposed context                                                 | Relationship shown to the user                                                           |
+| ----------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `F8606.14` — Basis carried to 2026              | Retirement / the Form 8606 calculation behind taxable IRA income | Related retirement record; balance for next year, not an extra current-year income input |
+| `F7203.15` — Ending stock basis                 | S corporation / basis calculation                                | Related ownership-basis record; preserve its own calculation and evidence                |
+| `SchC.I` and `SchC.J` — Required-1099 questions | The one-person business calculation                              | Filing questions; not arithmetic inputs to business profit                               |
+
+Proposed implementation and acceptance criteria:
+
+1. Keep supplied `inputs` and `sources` as the arithmetic/evidence graph. Do not modify the source packet or overload those edges with subject membership.
+2. Add a separate, explicit presentation mapping to topics and display contexts, justified by supplied form, entity, reference, and record metadata. Avoid fuzzy associations based only on similar names or equal amounts. The mapping adds organization, not invented client facts or calculations.
+3. Render the selected calculation as a statement, followed by a clearly labeled Related records area. Use useful labels such as Next year or Filing questions only when supported by the record. Keep source inspection in the existing panel.
+4. Allow issue links, search, and the subject index to reach a related record directly, reveal its context, and focus it. Records with no numerical counterpart must remain first-class targets.
+5. Preserve a visible fallback for unplaced records until mapping coverage is complete. Do not remove the current bucket merely because most records have been assigned.
+6. Test every supplied version: every line remains accessible; shared records retain the same review identity; none are silently omitted or included in an invented sum. Expand this inventory to documents and client records as subject mapping is implemented; current 627-line coverage alone is not proof of full-case completeness.
+
+### D08 — Prefer flat calculation statements over deep nesting
+
+- **Recorded:** 2026-10-17. **Status:** Proposed; not implemented. Recursive breakdowns remain current behavior.
+- **Decision under consideration:** Present immediate inputs in an aligned statement with the result underneath. Reveal selected input details in the same workspace while retaining the parent statement and a short location trail. Use transaction tables for large detail, and appropriate presentations for limits, allocations, and carryforwards.
+- **Reason:** Deep indentation asks the reviewer to reconstruct arithmetic and remember their position. A flat statement makes the inputs and result easier to compare.
+- **Tradeoff:** A focused detail view must retain enough parent context and preserve automatic issue-to-source navigation. One representation will not fit every calculation.
+- **Data constraint:** Some packet rules say only “arithmetic combination.” Do not infer operators from coincidental numeric agreement. Show explicit arithmetic only where the supplied rule or other unambiguous packet information establishes it; otherwise retain the supplied explanation and labeled inputs.
+
+### D09 — Cases landing page, consistent language, and local-first delivery
+
+- **Recorded:** 2026-10-17. **Status:** Implemented; ongoing constraints.
+- **Decision:** Open on Cases, show the latest-version Issues to resolve count, and use that language consistently. Remove redundant “open items” controls. List only supplied cases. Continue meaningful commits and pushes to the authorized private repository; defer cloud hosting.
+- **Reason:** The user wants an understandable entry point, consistent terminology, and a clean employer-reviewable repository while the product is developed locally.
+- **Tradeoff:** Reloading returns to Cases rather than restoring a deep location. Browser-local persistence and simulated roles remain prototype limits.

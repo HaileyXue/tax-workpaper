@@ -75,6 +75,8 @@ npm run format:check  # Repository formatting
 
 ## Submission notes
 
+The living [decision log](docs/DECISIONS.md#dated-decision-records) records rationale, alternatives, tradeoffs, superseded choices, and proposal/implementation status.
+
 See [core idea and data model](docs/ARCHITECTURE.md), [findings](docs/FINDINGS.md), and [decisions and next steps](docs/DECISIONS.md). The applicant's recorded walkthrough and video link are still required by the case study.
 
 AI assistance: OpenAI Codex helped inspect the fixture, design and implement the prototype, write documentation, and run validation. Human review and the applicant's own explanation of tradeoffs remain essential.
