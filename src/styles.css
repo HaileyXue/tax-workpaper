@@ -632,6 +632,102 @@ nav button[aria-current='page'] .nav-count {
 .resolve button {
   font-size: 12px;
 }
+.issue-origin {
+  display: block;
+  width: fit-content;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #e6f4ed;
+  color: #056342;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.55px;
+  text-transform: uppercase;
+}
+.correction-review {
+  margin: 18px 0;
+  padding: 17px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.correction-review > p {
+  margin: 8px 0;
+  font-size: 12px;
+}
+.correction-review .section-top {
+  margin-bottom: 14px;
+}
+.proposal-status {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #fff0c2;
+  color: #754000;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.proposal-status.approve {
+  background: #dff4e7;
+  color: #056342;
+}
+.proposal-status.return,
+.proposal-status.reject {
+  background: #ffe8dd;
+  color: #8a3518;
+}
+.proposal-summary,
+.correction-preview {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.7fr) minmax(180px, 1.3fr);
+  gap: 8px 18px;
+  margin: 14px 0;
+}
+.proposal-summary div {
+  display: contents;
+}
+.proposal-summary dt,
+.correction-preview span {
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+.proposal-summary dd,
+.correction-preview strong {
+  margin: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.proposal-decision label {
+  display: grid;
+  gap: 7px;
+  margin: 14px 0 10px;
+  font-size: 12px;
+}
+.proposal-decision > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.affected-lines {
+  margin: 14px 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 12px;
+}
+.affected-lines summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.affected-lines ul {
+  columns: 2;
+  padding-left: 18px;
+}
+.affected-lines li {
+  margin: 6px 0;
+}
 .signoff {
   border: 1px solid var(--line);
   border-top: 4px solid var(--green);

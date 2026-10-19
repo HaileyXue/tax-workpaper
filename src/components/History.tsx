@@ -84,13 +84,29 @@ export default function History({
         <div className="history-row" key={e.id}>
           <div>
             <strong>
-              {e.kind} · {referenceLabel(graph, e.target)}
+              {e.kind} ·{' '}
+              {referenceLabel(
+                graph,
+                ['approve', 'return', 'reject'].includes(e.kind)
+                  ? (events.find((candidate) => candidate.id === e.target)
+                      ?.target ?? e.target)
+                  : e.target,
+              )}
             </strong>
             <p>{displayText(graph, e.note)}</p>
             {e.kind === 'adjust' && (
-              <p>
-                {money(e.original)} → {money(e.amount)} · {e.category}
-              </p>
+              <>
+                <p>
+                  Source value {money(e.original)} → {money(e.amount)} ·{' '}
+                  {e.category}
+                </p>
+                {e.proposedTaxableAmount !== undefined && (
+                  <p>
+                    Proposed taxable amount {money(e.proposedTaxableAmount)} ·
+                    change {money(e.taxableDelta)}
+                  </p>
+                )}
+              </>
             )}
             <small>
               {packet.firm.staff.find((s) => s.id === e.actor)?.name} ·{' '}

@@ -188,7 +188,7 @@ export default function App() {
   const issueItems: Finding[] = [
     ...findings,
     ...current
-      .filter((e) => e.kind === 'adjust')
+      .filter((e) => e.kind === 'adjust' && !e.findingId)
       .map((f) => ({
         id: f.id,
         title: `Correction proposal: ${referenceLabel(graph, f.target)}`,
@@ -364,6 +364,9 @@ export default function App() {
                     staff={staff}
                     save={save}
                     resolved={resolved}
+                    onPropose={(target) =>
+                      setAction({ target, kind: 'adjust' })
+                    }
                   />
                 ))
               }
@@ -691,6 +694,11 @@ export default function App() {
             kind={action.kind}
             graph={graph}
             staff={staff}
+            finding={
+              focusedIssue?.correction?.target === action.target
+                ? focusedIssue
+                : undefined
+            }
             onCancel={() => setAction(null)}
             onSave={(event) => {
               const saved = save(event);

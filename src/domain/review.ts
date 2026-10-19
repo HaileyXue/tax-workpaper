@@ -14,7 +14,10 @@ export interface ReviewEvent {
     | 'assign'
     | 'undo'
     | 'note'
-    | 'signoff';
+    | 'signoff'
+    | 'approve'
+    | 'return'
+    | 'reject';
   target: string;
   note: string;
   method?: string;
@@ -22,6 +25,12 @@ export interface ReviewEvent {
   original?: number;
   category?: string;
   reverses?: string;
+  findingId?: string;
+  evidenceRefs?: string[];
+  affectedLine?: string;
+  originalTaxableAmount?: number;
+  proposedTaxableAmount?: number;
+  taxableDelta?: number;
 }
 export const STORAGE_KEY = 'miraflores.review.v1';
 export function activeEvents(events: ReviewEvent[]) {
@@ -50,7 +59,8 @@ export function validateEvent(
   if (event.kind === 'verify' && !event.method)
     throw new Error('Select a verification method.');
   if (event.kind === 'undo') {
-    const original = activeEvents(events).find((e) => e.id === event.reverses);
+    const active = activeEvents(events);
+    const original = active.find((e) => e.id === event.reverses);
     if (
       !original ||
       original.actor !== staff.id ||
@@ -59,11 +69,82 @@ export function validateEvent(
       throw new Error(
         'Only your own active actions in this version can be undone.',
       );
+    const resolvedFinding =
+      original.findingId &&
+      active
+        .filter(
+          (candidate) =>
+            candidate.target === original.findingId &&
+            ['resolve', 'reopen'].includes(candidate.kind),
+        )
+        .at(-1)?.kind === 'resolve';
+    if (resolvedFinding && ['adjust', 'approve'].includes(original.kind))
+      throw new Error(
+        'Reopen the issue before undoing its correction or approval.',
+      );
+    if (
+      original.kind === 'adjust' &&
+      active.some(
+        (candidate) =>
+          candidate.target === original.id &&
+          ['approve', 'return', 'reject'].includes(candidate.kind),
+      )
+    )
+      throw new Error(
+        'Undo the correction review decision before undoing its proposal.',
+      );
   }
   if (event.kind === 'signoff' && !['reviewer', 'partner'].includes(staff.role))
     throw new Error('Only a reviewer or partner can sign off the return.');
   if (event.kind === 'resolve' && staff.role === 'preparer')
     throw new Error('A reviewer or partner must resolve findings.');
+  if (event.kind === 'resolve') {
+    const proposals = activeEvents(events).filter(
+      (candidate) =>
+        candidate.kind === 'adjust' && candidate.findingId === event.target,
+    );
+    const latest = proposals.at(-1);
+    if (latest && proposalDecision(events, latest.id)?.kind !== 'approve')
+      throw new Error(
+        'The correction must be approved before this issue can be resolved.',
+      );
+  }
+  if (
+    ['approve', 'return', 'reject'].includes(event.kind) &&
+    !['reviewer', 'partner'].includes(staff.role)
+  )
+    throw new Error('Only a reviewer or partner can review corrections.');
+  if (['approve', 'return', 'reject'].includes(event.kind)) {
+    const proposal = activeEvents(events).find(
+      (candidate) =>
+        candidate.id === event.target &&
+        candidate.kind === 'adjust' &&
+        candidate.version === event.version,
+    );
+    if (!proposal) throw new Error('The correction proposal is not active.');
+    const decided = activeEvents(events)
+      .filter(
+        (candidate) =>
+          candidate.target === proposal.id &&
+          ['approve', 'return', 'reject'].includes(candidate.kind),
+      )
+      .at(-1);
+    if (decided?.kind === event.kind)
+      throw new Error('This correction already has that review decision.');
+  }
+}
+
+export function proposalDecision(
+  events: ReviewEvent[],
+  proposalId: string,
+): ReviewEvent | undefined {
+  return activeEvents(events)
+    .filter(
+      (event) =>
+        event.target === proposalId &&
+        ['approve', 'return', 'reject'].includes(event.kind),
+    )
+    .at(-1);
 }
 export function estimateImpact(
   version: ReturnVersion,

@@ -31,10 +31,10 @@ npm run format:check  # Repository formatting
 
 1. Open the supplied household from **Cases**, where the badge shows its latest-version **issues to resolve**. On **Return**, compare federal and California totals in the unified summary.
 2. Select federal **Total income**, then the Corvane W-2 source link under wages. The evidence panel highlights `104,600.00` while the calculation stays visible. No verification action is required.
-3. Open **Issues** in the left navigation and select **Same bank sweep interest counted twice**. Return opens the calculation path and smoothly scrolls to the source. Both source amounts and affected totals are highlighted.
-4. Use **Decision & assignment** beside the linked calculation to record a disposition. To propose a correction, use **… → Propose correction** on the affected amount. Enter the proposed value, select a supplied tax-effect category, and add a rationale. Estimated effects appear; engine totals remain unchanged.
-5. Reload, reopen the case, and visit **History** to inspect the proposal, compare snapshots, view precomputed alternatives, or undo your own action. Export history for a portable record.
-6. Final review sign-off is available to a reviewer or partner only after blocking warnings, manual flags, and correction proposals are cleared. Subsequent review events reopen it. This is a local review acknowledgment, not an e-signature or filing approval.
+3. Switch **Viewing as** to the preparer, open **Issues**, and select the first **Lot N1 cost basis was treated as zero** finding. The independent check connects D28's blank basis stored as a high-confidence zero to D11's $19,100 supplemental basis using the supplied acquisition date.
+4. Open **Decision & assignment**, select **Propose correction**, and save the prefilled basis correction with a rationale. The workspace previews a $140 sale gain, a -$19,100 taxable change, the packet-rate estimate, and downstream lines without mutating engine totals.
+5. Reload to prove persistence, switch to the reviewer, reopen the issue, approve the proposal, and resolve the source discrepancy. A preparer cannot perform either action. **History** retains the proposal, decision, resolution, actors, timestamps, version, and rationale; export provides a portable JSON record.
+6. Final return sign-off remains blocked because other findings are unresolved and the approved proposal has not been reconciled into a new engine snapshot. This is deliberate: issue approval is not a recomputation, e-signature, or filing approval.
 
 ## What works today
 
@@ -46,7 +46,9 @@ npm run format:check  # Repository formatting
 - Evidence displayed in a resizable panel beside the calculation on desktop and in a bottom panel on mobile; other document fields and reverse usage are collapsed by default.
 - All 627 current-version lines remain reachable through summary calculations or Related return records; large input lists load in batches with filtering.
 - No routine verification forms: contextual flag, note, and correction actions open only on request. Existing verification records remain in history.
-- Engine diagnostics plus independent duplicate-interest, FX-year, and W-2 source checks; assignment and documented resolution.
+- Engine diagnostics plus independent duplicate-interest, FX-year, W-2 source, and cross-document missing-basis checks. The supplied packet produces three high-confidence RSU basis findings.
+- Typed basis-correction proposals show the original and proposed source value, proposed gain, taxable delta, packet-rate estimate, evidence set, and downstream lines. Engine snapshots stay immutable.
+- Role-gated correction review: preparers may submit; reviewers and partners may approve, return, reject, and resolve. Events survive refresh and remain visible in History.
 - Final, version-scoped review sign-off with blocker checks and conservative invalidation after any subsequent review event (including notes, assignments, and undo).
 - Browser-local persistence, append-only history, undo, and JSON export with visible save errors.
 - All three engine snapshots and five precomputed alternatives remain available.

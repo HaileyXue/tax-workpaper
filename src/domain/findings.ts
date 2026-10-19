@@ -1,4 +1,15 @@
 import { type Graph } from './packet';
+export interface SuggestedCorrection {
+  kind: 'sale_basis';
+  target: string;
+  proposedValue: number;
+  evidenceRefs: string[];
+  affectedLine: string;
+  originalTaxableAmount: number;
+  proposedTaxableAmount: number;
+  taxableDelta: number;
+  category: 'stcg' | 'ltcg';
+}
 export interface Finding {
   id: string;
   title: string;
@@ -7,6 +18,8 @@ export interface Finding {
   origin: string;
   severity: 'warning' | 'info';
   expected?: number;
+  priority?: number;
+  correction?: SuggestedCorrection;
 }
 export function findIssues(graph: Graph): Finding[] {
   const findings: Finding[] = graph.version.diagnostics.map((d) => ({
@@ -16,6 +29,7 @@ export function findIssues(graph: Graph): Finding[] {
     refs: d.refs,
     origin: 'Engine diagnostic',
     severity: d.severity === 'warning' ? 'warning' : 'info',
+    priority: d.severity === 'warning' ? 50 : 10,
   }));
   // Narrow, deterministic check against printed W-2 boxes, independent of confidence.
   for (const v of graph.values.values()) {
@@ -38,7 +52,82 @@ export function findIssues(graph: Graph): Finding[] {
         expected,
         origin: 'Independent source check',
         severity: 'warning',
+        priority: 80,
       });
+  }
+  // A blank source amount is not zero. Match high-confidence blank sale basis
+  // values to a supplemental adjusted basis using the supplied acquisition date.
+  for (const basis of graph.values.values()) {
+    if (
+      basis.value_type !== 'money' ||
+      basis.value !== 0 ||
+      basis.text_as_read.trim() ||
+      basis.confidence < 0.9 ||
+      !basis.field.endsWith('_basis') ||
+      !graph.downstream(basis.id).length
+    )
+      continue;
+    const lot = basis.field.slice(0, -'_basis'.length);
+    const acquired = [...graph.values.values()].find(
+      (value) =>
+        value.document_id === basis.document_id &&
+        value.field === `${lot}_acquired`,
+    );
+    if (!acquired || typeof acquired.value !== 'string') continue;
+    const supplementalDate = [...graph.values.values()].find(
+      (value) =>
+        value.document_id !== basis.document_id &&
+        value.field.endsWith('_acquired') &&
+        value.value === acquired.value &&
+        [...graph.values.values()].some(
+          (candidate) =>
+            candidate.document_id === value.document_id &&
+            candidate.field ===
+              `${value.field.slice(0, -'_acquired'.length)}_adjusted_basis` &&
+            typeof candidate.value === 'number',
+        ),
+    );
+    if (!supplementalDate) continue;
+    const supplementalLot = supplementalDate.field.slice(
+      0,
+      -'_acquired'.length,
+    );
+    const adjustedBasis = [...graph.values.values()].find(
+      (value) =>
+        value.document_id === supplementalDate.document_id &&
+        value.field === `${supplementalLot}_adjusted_basis` &&
+        typeof value.value === 'number',
+    );
+    const affectedLine = graph
+      .downstream(basis.id)
+      .find((id) => id.startsWith('F8949.'));
+    const line = affectedLine ? graph.lines.get(affectedLine) : undefined;
+    if (!adjustedBasis || typeof adjustedBasis.value !== 'number' || !line)
+      continue;
+    const originalTaxableAmount = Number(line.value);
+    const taxableDelta = -(adjustedBasis.value - Number(basis.value));
+    const box = affectedLine!.split('.')[1];
+    findings.push({
+      id: `missing-zero-${basis.id}`,
+      title: `${basis.label} was treated as zero`,
+      detail: `${graph.documents.get(basis.document_id)?.id} reports the basis as not reported, but the pipeline stored $0 at ${Math.round(basis.confidence * 100)}% confidence. ${graph.documents.get(adjustedBasis.document_id)?.id} supplies an adjusted basis of $${adjustedBasis.value.toLocaleString()} for the matching ${acquired.value} acquisition date.`,
+      refs: [basis.id, adjustedBasis.id, supplementalDate.id],
+      origin: 'Independent cross-document check',
+      severity: 'warning',
+      priority: 100,
+      expected: adjustedBasis.value,
+      correction: {
+        kind: 'sale_basis',
+        target: basis.id,
+        proposedValue: adjustedBasis.value,
+        evidenceRefs: [basis.id, adjustedBasis.id, supplementalDate.id],
+        affectedLine: affectedLine!,
+        originalTaxableAmount,
+        proposedTaxableAmount: originalTaxableAmount + taxableDelta,
+        taxableDelta,
+        category: ['A', 'B', 'C'].includes(box) ? 'stcg' : 'ltcg',
+      },
+    });
   }
   const sweep = ['ev-0492', 'ev-0538'];
   if (sweep.every((id) => graph.downstream(id).includes('F1040.2b')))
@@ -50,6 +139,7 @@ export function findIssues(graph: Graph): Finding[] {
       refs: sweep,
       origin: 'Independent overlap check',
       severity: 'warning',
+      priority: 75,
     });
   const swedish = graph.lines.get('SchB.1.6');
   if (swedish?.sources.includes('ref:fx.SEK.2024_average'))
@@ -66,9 +156,11 @@ export function findIssues(graph: Graph): Finding[] {
       ],
       origin: 'Independent year check',
       severity: 'warning',
+      priority: 75,
     });
   return findings.sort(
     (a, b) =>
-      Number(b.severity === 'warning') - Number(a.severity === 'warning'),
+      Number(b.severity === 'warning') - Number(a.severity === 'warning') ||
+      (b.priority ?? 0) - (a.priority ?? 0),
   );
 }

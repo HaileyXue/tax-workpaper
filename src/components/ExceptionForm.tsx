@@ -2,6 +2,7 @@ import { referenceLabel } from '../domain/presentation';
 import { useState } from 'react';
 import { money, type Graph, type Staff } from '../domain/packet';
 import { canWrite, estimateImpact, type ReviewEvent } from '../domain/review';
+import type { Finding } from '../domain/findings';
 
 export default function ExceptionForm({
   target,
@@ -10,12 +11,14 @@ export default function ExceptionForm({
   onSave,
   kind,
   onCancel,
+  finding,
 }: {
   kind: 'flag' | 'adjust' | 'note';
   onCancel: () => void;
   target: string;
   graph: Graph;
   staff: Staff;
+  finding?: Finding;
   onSave: (
     event: Omit<ReviewEvent, 'id' | 'at' | 'actor' | 'role' | 'version'>,
   ) => boolean;
@@ -23,17 +26,37 @@ export default function ExceptionForm({
   const [note, setNote] = useState('');
   const original =
     graph.values.get(target)?.value ?? graph.lines.get(target)?.value;
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
+  const suggested =
+    finding?.correction?.target === target ? finding.correction : undefined;
+  const [amount, setAmount] = useState(
+    suggested ? String(suggested.proposedValue) : '',
+  );
+  const [category, setCategory] = useState(suggested?.category ?? '');
   const numeric = typeof original === 'number';
+  const entered = Number(amount);
+  const taxableDelta =
+    suggested && Number.isFinite(entered)
+      ? -(entered - Number(original))
+      : numeric && Number.isFinite(entered)
+        ? entered - original
+        : undefined;
+  const proposedTaxableAmount =
+    suggested && taxableDelta !== undefined
+      ? suggested.originalTaxableAmount + taxableDelta
+      : undefined;
   const impact =
     kind === 'adjust' &&
     numeric &&
     amount.trim() &&
     Number.isFinite(Number(amount)) &&
     category
-      ? estimateImpact(graph.version, category, Number(amount) - original)
+      ? estimateImpact(
+          graph.version,
+          category,
+          taxableDelta ?? Number(amount) - original,
+        )
       : undefined;
+  const affected = graph.downstream(target);
   return (
     <form
       className="review-form"
@@ -46,7 +69,21 @@ export default function ExceptionForm({
             target,
             note,
             ...(kind === 'adjust' && numeric
-              ? { amount: Number(amount), original, category }
+              ? {
+                  amount: Number(amount),
+                  original,
+                  category,
+                  ...(finding ? { findingId: finding.id } : {}),
+                  ...(suggested
+                    ? {
+                        evidenceRefs: suggested.evidenceRefs,
+                        affectedLine: suggested.affectedLine,
+                        originalTaxableAmount: suggested.originalTaxableAmount,
+                        proposedTaxableAmount,
+                        taxableDelta,
+                      }
+                    : {}),
+                }
               : {}),
           })
         ) {
@@ -101,6 +138,21 @@ export default function ExceptionForm({
               apply them to foreign-currency amounts or intermediate inputs
               without conversion.
             </p>
+            {suggested && proposedTaxableAmount !== undefined && (
+              <div className="correction-preview">
+                <span>Source correction</span>
+                <strong>
+                  {money(original)} → {money(entered)} basis
+                </strong>
+                <span>Affected sale</span>
+                <strong>
+                  {money(suggested.originalTaxableAmount)} →{' '}
+                  {money(proposedTaxableAmount)} proposed gain
+                </strong>
+                <span>Estimated taxable change</span>
+                <strong>{money(taxableDelta)}</strong>
+              </div>
+            )}
             {impact && (
               <div className="estimate">
                 <strong>Estimated tax change</strong>
@@ -113,6 +165,21 @@ export default function ExceptionForm({
                   thresholds; business adjustments may also affect QBI.
                 </small>
               </div>
+            )}
+            {affected.length > 0 && (
+              <details className="affected-lines">
+                <summary>{affected.length} affected tax lines</summary>
+                <ul>
+                  {affected.slice(0, 12).map((id) => (
+                    <li key={id}>{graph.lines.get(id)?.label}</li>
+                  ))}
+                </ul>
+                {affected.length > 12 && (
+                  <p className="small muted">
+                    And {affected.length - 12} additional downstream lines.
+                  </p>
+                )}
+              </details>
             )}
           </>
         )}

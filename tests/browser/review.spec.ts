@@ -131,53 +131,78 @@ test('supports mobile evidence inspection and read-only roles', async ({
   await expect(link).toBeFocused();
 });
 
-test('final sign-off persists and reopens when a note changes the review snapshot', async ({
+test('saves a supplied correction, enforces role approval, and preserves its audit trail', async ({
   page,
 }) => {
   await openCase(page);
-  await page.getByRole('button', { name: /^Issues/ }).click();
-  const ids = await page
-    .locator('.issues-list-panel .finding-link[data-severity="warning"]')
-    .evaluateAll((els) =>
-      els.map((el) => (el as HTMLElement).dataset.findingId!),
-    );
-  for (const id of ids) {
-    await issue(page, id);
-    const context = page.locator('.issue-context');
-    const review = context.locator('.contextual-review');
-    if ((await review.getAttribute('open')) === null)
-      await review.locator(':scope > summary').click();
-    await context
-      .getByLabel('Resolution evidence')
-      .fill('Test-only documented disposition after source inspection.');
-    await context
-      .getByRole('button', { name: 'Resolve issue', exact: true })
-      .click();
-  }
-  await page.getByRole('checkbox').check();
-  await page
-    .getByRole('button', { name: 'Sign off return', exact: true })
+  await page.getByLabel('Viewing as').selectOption('st-01');
+  await issue(page, 'missing-zero-ev-0498');
+  const context = page.locator('.issue-context');
+  await expect(context).toContainText('Independent cross-document check');
+  await expect(context).toContainText(
+    'D11 supplies an adjusted basis of $19,100',
+  );
+  await context.locator('.contextual-review > summary').click();
+  await context
+    .getByRole('button', { name: 'Propose correction', exact: true })
     .click();
+  const dialog = page.getByRole('dialog');
+  await expect(
+    dialog.getByLabel('Corrected value', { exact: false }),
+  ).toHaveValue('19100');
+  await expect(dialog.locator('.correction-preview')).toContainText(
+    '$19,240 → $140 proposed gain',
+  );
+  await dialog
+    .getByLabel('Evidence and reason')
+    .fill('Matched D28 lot N1 to D11 using the supplied acquisition date.');
+  await dialog.getByRole('button', { name: 'Save proposal' }).click();
+  await expect(context.getByLabel('Correction review')).toContainText(
+    'Submitted',
+  );
+  await expect(
+    context.getByRole('button', { name: 'Approve correction' }),
+  ).toBeDisabled();
+  await expect(context).toContainText('Reviewer or partner approval required.');
+
   await page.reload();
   await page.getByRole('button', { name: 'Open case', exact: true }).click();
-  await expect(
-    page.getByRole('button', { name: 'Signed off', exact: true }),
-  ).toBeVisible();
-  await income(page);
+  await page.getByLabel('Viewing as').selectOption('st-02');
+  await issue(page, 'missing-zero-ev-0498');
+  await page.locator('.issue-context .contextual-review > summary').click();
+  const persisted = page.getByLabel('Correction review');
+  await expect(persisted).toContainText(
+    'Matched D28 lot N1 to D11 using the supplied acquisition date.',
+  );
+  await persisted
+    .getByLabel('Reviewer decision')
+    .fill('Agreed the acquisition date and adjusted basis to D11.');
+  await persisted.getByRole('button', { name: 'Approve correction' }).click();
+  await expect(persisted).toContainText('Approved');
   await page
-    .getByRole('button', { name: 'Inspect input Total wages', exact: true })
+    .locator('.issue-context')
+    .getByLabel('Resolution evidence')
+    .fill('Approved correction resolves this source discrepancy.');
+  await page
+    .locator('.issue-context')
+    .getByRole('button', { name: 'Resolve issue', exact: true })
     .click();
-  const leaf = page.locator('.schedule-breakdown [data-line="F1040.1z"]');
-  await leaf.locator('.action-menu > summary').click();
-  await leaf.getByRole('button', { name: 'Add note', exact: true }).click();
-  await page
-    .getByRole('dialog')
-    .getByLabel('Evidence and reason')
-    .fill('Additional source context recorded after approval.');
-  await page.getByRole('button', { name: 'Save note', exact: true }).click();
+  await page.getByRole('button', { name: 'History', exact: true }).click();
   await expect(
-    page.getByText('Review reopened: records changed after sign-off.'),
+    page.getByText('Agreed the acquisition date and adjusted basis to D11.', {
+      exact: true,
+    }),
   ).toBeVisible();
+  await expect(
+    page
+      .locator('.history-section')
+      .getByText('Approved correction resolves this source discrepancy.', {
+        exact: true,
+      }),
+  ).toBeVisible();
+  await expect(
+    page.locator('.history-row').filter({ hasText: 'approve ·' }),
+  ).toContainText('Lot N1 cost basis');
 });
 
 test('compares packet summary figures without filling unmapped cells', async ({
@@ -314,7 +339,7 @@ test('case count follows resolutions and reload returns to cases', async ({
   await page.goto('/');
   await expect(page.locator('.case-card')).toHaveCount(1);
   await expect(page.locator('.case-issue-badge')).toHaveText(
-    '9 issues to resolve',
+    '12 issues to resolve',
   );
   await page.getByRole('button', { name: 'Open case', exact: true }).click();
   await issue(page, 'duplicate-sweep');
@@ -325,11 +350,11 @@ test('case count follows resolutions and reload returns to cases', async ({
     .click();
   await page.getByRole('button', { name: 'All cases', exact: true }).click();
   await expect(page.locator('.case-issue-badge')).toHaveText(
-    '8 issues to resolve',
+    '11 issues to resolve',
   );
   await page.reload();
   await expect(page.locator('.case-issue-badge')).toHaveText(
-    '8 issues to resolve',
+    '11 issues to resolve',
   );
 });
 

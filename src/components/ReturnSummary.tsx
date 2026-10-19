@@ -79,6 +79,7 @@ export default function ReturnSummary({
   }, [jump, location, selected]);
   const context = issue && (
     <div className="issue-context">
+      <span className="issue-origin">{issue.origin}</span>
       <strong>{issue.title}</strong>
       <p>{displayText(graph, issue.detail)}</p>
       <div className="issue-references">

@@ -28,14 +28,14 @@ The same pattern exists for two additional supplied RSU lots:
 | Demo step | Current status | What works now | What remains |
 | --- | --- | --- | --- |
 | 1. Overview | **Partial** | Return summary, case issue count, Issues tab, and final sign-off blockers exist. | Add review progress based on defined required steps and a compact top-three priority list. Do not invent a vague percentage. |
-| 2. Open a confident discrepancy | **Missing for this discrepancy** | Supplied diagnostics and two independent checks appear in the queue. | Add an independent missing-versus-zero validator and cross-document RSU basis match. Label the origin `Independent check`. |
-| 3. Trace to source | **Mostly working** | Tax-line paths, affected-chain highlights, exact source page/field, simulated document text, and resizable evidence work. | Show D28 and corroborating D11 together as the evidence set for one finding, with the matched acquisition date visible. |
-| 4. Correct and show impact | **Partial** | A proposal records original, proposed value, actor, role, reason, version, and a rate-based estimate. Reverse graph edges identify downstream lines. | Add a typed basis correction, corrected gain preview, separate taxable-income delta, affected-line summary, and proposal approval state. Do not apply the raw basis delta as if it were taxable income. |
-| 5. Review control | **Partial** | Roles restrict writing, resolution, and return sign-off; preparers cannot resolve; reviewers/partners can. | Add approve/reject/return-for-work actions for a correction proposal. Treat this as issue-level approval. Final return sign-off must remain blocked by unrelated findings. |
-| 6. Persistence and audit | **Mostly working** | Events persist in `localStorage`, survive refresh, preserve actor/time/version, support undo, and export to JSON. | Group events into an issue timeline that reconstructs detection, proposal, review decision, resolution, and any later reopening. |
+| 2. Open a confident discrepancy | **Working** | A relationship-driven validator finds all three supplied high-confidence zero-basis mistakes and ranks them first. The issue explains the blank-to-zero error and contradictory D11 evidence. | Add a compact top-three overview presentation as part of step 1. |
+| 3. Trace to source | **Working** | The issue exposes D28, the corroborating D11 basis/date fields, its Form 8949 path, affected-chain highlights, exact simulated source page/field, and resizable evidence. | A side-by-side two-document comparison could make the match faster, but is not required for the demo. |
+| 4. Correct and show impact | **Working** | The typed proposal records original/proposed basis, evidence refs, original/proposed gain, negative taxable delta, affected lines, actor, role, reason, version, and packet-rate estimate without mutating engine totals. | Reconciliation into a newly computed engine snapshot remains unavailable because the packet has only three fixed snapshots. |
+| 5. Review control | **Working** | A preparer can submit but cannot approve or resolve the correction. A reviewer/partner can approve, return, or reject; resolution requires approval. Unrelated findings and the unrecomputed proposal continue to block final sign-off. | Production authorization would require a server; current role control is a local prototype simulation. |
+| 6. Persistence and audit | **Mostly working** | Proposal, decision, and resolution events persist in `localStorage`, survive refresh, preserve actor/time/version/evidence metadata, appear in append-only History, support undo, and export to JSON. | Group events into one issue-centered timeline rather than separate chronological rows. |
 | 7. Filing readiness and lifecycle | **Partial** | Blocker count, final sign-off gating, version comparison, and supplied season timeline exist. | Add a filing-readiness checklist and a clearly labeled read-only replay of supplied filing events. Do not present timeline events as actions performed by the prototype. |
 
-## Required implementation
+## Remaining implementation plan
 
 ### 1. Independent confident-error validation
 

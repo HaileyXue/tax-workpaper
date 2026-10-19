@@ -16,6 +16,7 @@ import {
   validateSignoff,
   activeEvents,
   estimateImpact,
+  proposalDecision,
   validateEvent,
   type ReviewEvent,
 } from '../src/domain/review';
@@ -93,6 +94,42 @@ describe('independent review checks', () => {
         ?.expected,
     ).toBe(104600);
   });
+  it('finds the supplied high-confidence zero bases by matching supplemental evidence', () => {
+    const findings = findIssues(graph).filter((finding) =>
+      finding.id.startsWith('missing-zero-'),
+    );
+    expect(findings.map((finding) => finding.id)).toEqual([
+      'missing-zero-ev-0498',
+      'missing-zero-ev-0516',
+      'missing-zero-ev-0525',
+    ]);
+    expect(findings[0]).toMatchObject({
+      refs: ['ev-0498', 'ev-0066', 'ev-0067'],
+      expected: 19100,
+      origin: 'Independent cross-document check',
+      correction: {
+        target: 'ev-0498',
+        proposedValue: 19100,
+        affectedLine: 'F8949.B.N1',
+        originalTaxableAmount: 19240,
+        proposedTaxableAmount: 140,
+        taxableDelta: -19100,
+        category: 'stcg',
+      },
+    });
+  });
+  it('does not treat a printed zero or a missing null as a blank zero mistake', () => {
+    const copy = structuredClone(packet);
+    copy.extracted_values.find(
+      (value) => value.id === 'ev-0498',
+    )!.text_as_read = '0.00';
+    copy.extracted_values.find((value) => value.id === 'ev-0516')!.value = null;
+    const ids = findIssues(createGraph(copy, 'v3')).map(
+      (finding) => finding.id,
+    );
+    expect(ids).not.toContain('missing-zero-ev-0498');
+    expect(ids).not.toContain('missing-zero-ev-0516');
+  });
 });
 
 describe('review records and estimates', () => {
@@ -142,6 +179,78 @@ describe('review records and estimates', () => {
     );
     expect(graph.version.summary.federal.total_tax).toBe(before);
     expect(() => estimateImpact(graph.version, 'invented', 1)).toThrow();
+  });
+  it('requires reviewer approval before a supplied correction can resolve its issue', () => {
+    const preparer = packet.firm.staff.find(
+      (staff) => staff.role === 'preparer',
+    )!;
+    const proposal: ReviewEvent = {
+      id: 'proposal',
+      at: '2026-10-17T00:00:00Z',
+      actor: preparer.id,
+      role: preparer.role,
+      version: 'v3',
+      kind: 'adjust',
+      target: 'ev-0498',
+      findingId: 'missing-zero-ev-0498',
+      original: 0,
+      amount: 19100,
+      category: 'stcg',
+      taxableDelta: -19100,
+      note: 'Matched D28 lot N1 to the D11 supplemental basis record.',
+    };
+    expect(() => validateEvent(proposal, preparer, [])).not.toThrow();
+    expect(() =>
+      validateEvent(
+        {
+          ...proposal,
+          id: 'preparer-approval',
+          kind: 'approve',
+          target: proposal.id,
+        },
+        preparer,
+        [proposal],
+      ),
+    ).toThrow('reviewer or partner');
+    const resolution: ReviewEvent = {
+      ...event,
+      id: 'resolution',
+      kind: 'resolve',
+      target: 'missing-zero-ev-0498',
+      note: 'Correction approved and supporting evidence reviewed.',
+    };
+    expect(() => validateEvent(resolution, reviewer, [proposal])).toThrow(
+      'approved',
+    );
+    const approval: ReviewEvent = {
+      ...event,
+      id: 'approval',
+      kind: 'approve',
+      target: proposal.id,
+      findingId: proposal.findingId,
+      note: 'Agreed acquisition date and adjusted basis to D11.',
+    };
+    expect(() => validateEvent(approval, reviewer, [proposal])).not.toThrow();
+    expect(proposalDecision([proposal, approval], proposal.id)).toEqual(
+      approval,
+    );
+    expect(() =>
+      validateEvent(resolution, reviewer, [proposal, approval]),
+    ).not.toThrow();
+    expect(() =>
+      validateEvent(
+        {
+          ...event,
+          id: 'undo-approval',
+          kind: 'undo',
+          target: approval.target,
+          reverses: approval.id,
+          note: 'Undo approval after resolution.',
+        },
+        reviewer,
+        [proposal, approval, resolution],
+      ),
+    ).toThrow('Reopen the issue');
   });
 });
 

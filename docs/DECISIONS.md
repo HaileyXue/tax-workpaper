@@ -243,10 +243,19 @@ Proposed implementation and acceptance criteria:
 
 ### D19 — Use the high-confidence RSU basis error for the primary review demo
 
-- **Recorded:** 2026-10-18. **Status:** Selected demo design; implementation pending.
+- **Recorded:** 2026-10-18. **Status:** Core workflow implemented and tested.
 - **Decision:** Demonstrate independent validation with D28 lot N1. The brokerage source says basis is not reported, `ev-0498` converts the blank to zero with 0.98 confidence, and D11 supplies a $19,100 adjusted basis for the same acquisition date. Show D28 N3/D11 RSU-2505 and D28 N4/D11 RSU-2308 as evidence that the rule generalizes within the supplied case.
 - **Reason:** This is a real high-confidence pipeline mistake with complete contradictory evidence in the packet. It demonstrates why AI confidence is not verification and lets the reviewer follow one discrepancy across source extraction, cross-document reconciliation, calculation impact, human approval, and audit history.
 - **Correction semantics:** Correcting basis from zero to $19,100 changes the proposed lot gain from $19,240 to $140. The estimated taxable delta is negative $19,100. Do not feed the positive basis delta directly into the tax-effect rate or claim that the engine totals were recomputed.
 - **Review semantics:** Add issue-level correction approval for the role-switch demonstration. Approval of this proposal is not final return sign-off. Other unresolved findings continue to block the return.
 - **Simulation boundary:** Filing history and future events may be replayed only as supplied scenario data. The prototype does not send messages, call a tax engine, collect signatures, or transmit a return.
 - **Detailed acceptance criteria:** [`docs/DEMO_READINESS.md`](DEMO_READINESS.md).
+
+### D20 — Persist an append-only correction workflow with simulated role control
+
+- **Recorded:** 2026-10-18. **Status:** Implemented.
+- **Decision:** Save correction proposals, reviewer decisions, issue resolutions, and their evidence metadata as append-only browser-local events. Use the packet's staff records for the role switcher. Preparers may propose; only reviewers or partners may approve, return, reject, resolve, or sign off.
+- **Reason:** The case-study demo needs one action to survive refresh and retain who did what, why, and against which return snapshot. An event record preserves the original extracted value and immutable supplied engine result instead of overwriting either one.
+- **Correction boundary:** Approval records a human decision but does not alter the supplied return snapshot. The active proposal therefore continues to block final return sign-off until a recomputed engine snapshot could reconcile it. This prototype cannot perform that recomputation.
+- **Security boundary:** The role switcher demonstrates workflow behavior. It is not authentication or secure authorization because all controls and persistence are client-side.
+- **Tradeoff:** `localStorage` makes the workflow complete and easily demonstrable without a backend, but it does not provide cross-device sync, concurrent edits, durable firm retention, or tamper resistance. JSON export preserves a portable copy of the event record.
