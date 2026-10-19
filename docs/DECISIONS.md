@@ -240,3 +240,13 @@ Proposed implementation and acceptance criteria:
 - **Simulation boundary:** The app may replay the exact supplied timeline event and switch to the supplied v3 snapshot. It must not claim to send a client message, run an AI model, invoke a tax engine, or compute a new result.
 - **Completion rule:** Resolving the K-1 workflow does not make the whole return ready. Unrelated issues remain open and continue to block final sign-off. This is evidence that controls work, not an incomplete demo ending.
 - **Submission gate:** After this lifecycle is stable, produce the hosted link and applicant-recorded video before expanding every D17 follow-on. A local-only app or missing video would leave explicit hand-in requirements unmet regardless of feature breadth.
+
+### D19 — Use the high-confidence RSU basis error for the primary review demo
+
+- **Recorded:** 2026-10-18. **Status:** Selected demo design; implementation pending.
+- **Decision:** Demonstrate independent validation with D28 lot N1. The brokerage source says basis is not reported, `ev-0498` converts the blank to zero with 0.98 confidence, and D11 supplies a $19,100 adjusted basis for the same acquisition date. Show D28 N3/D11 RSU-2505 and D28 N4/D11 RSU-2308 as evidence that the rule generalizes within the supplied case.
+- **Reason:** This is a real high-confidence pipeline mistake with complete contradictory evidence in the packet. It demonstrates why AI confidence is not verification and lets the reviewer follow one discrepancy across source extraction, cross-document reconciliation, calculation impact, human approval, and audit history.
+- **Correction semantics:** Correcting basis from zero to $19,100 changes the proposed lot gain from $19,240 to $140. The estimated taxable delta is negative $19,100. Do not feed the positive basis delta directly into the tax-effect rate or claim that the engine totals were recomputed.
+- **Review semantics:** Add issue-level correction approval for the role-switch demonstration. Approval of this proposal is not final return sign-off. Other unresolved findings continue to block the return.
+- **Simulation boundary:** Filing history and future events may be replayed only as supplied scenario data. The prototype does not send messages, call a tax engine, collect signatures, or transmit a return.
+- **Detailed acceptance criteria:** [`docs/DEMO_READINESS.md`](DEMO_READINESS.md).
