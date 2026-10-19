@@ -136,7 +136,28 @@ Trying to implement every missing item would produce many shallow screens and we
 3. Does it demonstrate a hard product problem rather than routine administration?
 4. Can it become a complete, testable workflow before the submission is finalized?
 
-Using those tests, the following four product improvements have the highest priority.
+For the hiring submission, one outcome has priority over the four area improvements below.
+
+### Priority 0 — Complete one source-to-resolution lifecycle
+
+Demonstrate a real supplied case transition from an open issue through new evidence, a new engine snapshot, explained calculation changes, reviewer disposition, and updated sign-off state. Use the late K-1 transition from v2 to v3 because the packet supplies both snapshots and the triggering documents.
+
+The workflow should:
+
+- start in v2 with the missing K-1 and incomplete S-corporation basis diagnostics;
+- show the affected records and what evidence is missing;
+- replay the supplied document-arrival event without pretending to contact a client or run a tax engine;
+- advance to the immutable supplied v3 snapshot and record that handoff in review history;
+- group the 89 changed lines into new direct inputs, downstream calculations, payments, and return totals;
+- show that the missing-K-1 and incomplete-basis diagnostics cleared while unrelated issues remain open;
+- trace the new values to their exact supplied source documents;
+- preserve an honest final state: the reviewed issue is complete, but remaining blockers still prevent return sign-off.
+
+**Why this comes first:** it proves that lineage, documents, issues, versions, people, and audit history operate as one system. It also demonstrates the core engineering idea—using a provenance graph to explain the impact of new evidence—more clearly than another standalone screen.
+
+The transition must be labeled as a replay of supplied scenario data. No client message, AI conclusion, engine execution, or tax result may be invented.
+
+After that lifecycle works, the following four product improvements have the highest priority.
 
 ### Priority 1 — Investment sales review workpaper
 
@@ -196,9 +217,9 @@ The workpaper should:
 
 **Why fourth:** the California-to-Texas move is one of the case's defining complexities. This workpaper demonstrates that the design can present jurisdiction-specific reasoning rather than only federal totals, while remaining fully grounded in supplied data.
 
-### Submission work after those priorities
+### Submission work after the end-to-end lifecycle
 
-After the selected product scope is stable, deploy the private preview, record the walkthrough, and add the video link. The video should lead with the sales review, completeness sign-off, calculation trace, and state allocation rather than touring every screen.
+Once the source-to-resolution lifecycle is stable, deploy the private preview, record the walkthrough, and add the video link. These are mandatory deliverables and should not wait for all four follow-on improvements. The video should lead with the end-to-end lifecycle, then show the strongest completed follow-on work rather than touring every screen.
 
 ## Intentionally deferred requirements
 

@@ -230,3 +230,13 @@ Proposed implementation and acceptance criteria:
 - **Tradeoff:** Many legitimate production requirements remain documented but unimplemented. The prototype will not claim arbitrary recalculation, multi-user security, filing, signatures, firm operations, or a custom workpaper for every tax area.
 - **Selection rule:** A remaining feature must help determine whether this return is supportable, have adequate packet data, demonstrate a difficult product problem, and be finishable as a tested end-to-end workflow. Routine administration and features that require unavailable engines or external services are deferred.
 - **Data constraint:** Specialized views may group or calculate only relationships supported by the packet. Missing operands remain missing; no tax fact, allocation rule, transaction attribute, or client answer may be invented.
+
+### D18 — Optimize the hiring submission around one complete outcome
+
+- **Recorded:** 2026-10-18. **Status:** Adopted priority; implementation pending. Supplements D17 by changing its execution order.
+- **Decision:** Build one source-to-resolution lifecycle before the four specialized improvements in D17. Use the supplied v2-to-v3 late-K-1 transition: open diagnostics, missing evidence, supplied document arrival, immutable engine snapshot change, grouped downstream impact, cleared diagnostics, reviewer history, and honest remaining blockers.
+- **Reason:** MiraFlores publicly emphasizes an end-to-end system, source-linked workpapers, tie-outs, edge cases surfaced for review, and features that solve an outcome rather than merely ship. A connected workflow demonstrates product judgment and graph/reliability engineering more strongly than several independent screens.
+- **Technical signal:** The workflow must explain how new evidence changes direct lines and downstream totals through the existing provenance graph. It should group 89 changed lines into reviewable causes and effects instead of presenting an undifferentiated diff.
+- **Simulation boundary:** The app may replay the exact supplied timeline event and switch to the supplied v3 snapshot. It must not claim to send a client message, run an AI model, invoke a tax engine, or compute a new result.
+- **Completion rule:** Resolving the K-1 workflow does not make the whole return ready. Unrelated issues remain open and continue to block final sign-off. This is evidence that controls work, not an incomplete demo ending.
+- **Submission gate:** After this lifecycle is stable, produce the hosted link and applicant-recorded video before expanding every D17 follow-on. A local-only app or missing video would leave explicit hand-in requirements unmet regardless of feature breadth.
