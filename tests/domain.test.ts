@@ -1,5 +1,6 @@
 import {
   amountIssue,
+  findingReviewLine,
   summaryLocation,
   additionalRecords,
   referencePath,
@@ -388,6 +389,12 @@ describe('issue locations', () => {
     expect(amountIssue(graph, issues, 'F1040.11')?.kind).toBe('upstream');
     expect(amountIssue(graph, [], 'ev-0538')).toBeUndefined();
     expect(amountIssue(graph, issues, 'ev-0016')).toBeUndefined();
+  });
+  it('places a source-backed lot issue at its containing review total', () => {
+    const finding = findIssues(graph).find(
+      (candidate) => candidate.id === 'missing-zero-ev-0498',
+    )!;
+    expect(findingReviewLine(graph, finding)).toBe('F8949.B.total');
   });
 });
 

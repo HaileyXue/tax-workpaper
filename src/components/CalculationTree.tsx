@@ -1,21 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  ArrowRight,
-  ChevronRight,
-  FileText,
-  MoreHorizontal,
-} from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ChevronRight, FileText, MoreHorizontal } from 'lucide-react';
 import { money, sourceAmount, type Graph } from '../domain/packet';
 import {
   calculationPresentation,
   referenceLabel,
   displayText,
 } from '../domain/presentation';
-import {
-  additionalRecords,
-  amountIssue,
-  relevantFindings,
-} from '../domain/schedules';
+import { additionalRecords, amountIssue } from '../domain/schedules';
 import type { Finding } from '../domain/findings';
 import type { ReviewEvent } from '../domain/review';
 
@@ -31,8 +22,9 @@ export interface TreeProps {
   events: ReviewEvent[];
   writable: boolean;
   issueFindings?: Finding[];
-  activeIssueId?: string;
-  onIssue?: (finding: Finding) => void;
+  issueContent?: ReactNode;
+  issueLineId?: string;
+  onLineChange?: (lineIds: string[]) => void;
   revealPath?: string[];
 }
 export function EvidenceLink({
@@ -100,8 +92,6 @@ export default function CalculationTree({
   const [mounted, setMounted] = useState(initiallyExpanded);
   const [limit, setLimit] = useState(20);
   const [query, setQuery] = useState('');
-  const [showAllIssues, setShowAllIssues] = useState(false);
-  useEffect(() => setShowAllIssues(false), [lineId]);
   useEffect(() => {
     if (!props.revealPath) return;
     const calculations = props.revealPath.filter((id) => graph.lines.has(id));
@@ -120,6 +110,14 @@ export default function CalculationTree({
     setLimit(Math.max(20, index + 1));
   }, [props.revealPath, graph]);
   const line = graph.lines.get(lineId);
+  const presentation = line
+    ? calculationPresentation(graph, lineId)
+    : undefined;
+  useEffect(
+    () =>
+      props.onLineChange?.(presentation?.chain.map((item) => item.key) ?? []),
+    [lineId],
+  );
   if (!line) return <p className="callout">Missing calculation input.</p>;
   if (path.includes(lineId))
     return (
@@ -127,11 +125,7 @@ export default function CalculationTree({
         A circular calculation reference needs investigation.
       </p>
     );
-  const {
-    chain,
-    detail: sourceLine,
-    expandable,
-  } = calculationPresentation(graph, lineId);
+  const { chain, detail: sourceLine, expandable } = presentation!;
   const detail = sourceLine!;
   const context = [...path, ...trail, ...chain.map((item) => item.key)];
   const relatedRecords = additionalRecords(graph).filter(
@@ -154,9 +148,6 @@ export default function CalculationTree({
       ['flag', 'adjust', 'note'].includes(e.kind),
   );
   const issue = amountIssue(graph, props.issueFindings ?? [], lineId);
-  const contextualIssues = relevantFindings(graph, props.issueFindings ?? [], [
-    lineId,
-  ]).filter((finding) => finding.id !== props.activeIssueId);
   const renderedAmount = (
     <strong
       className={issue ? `amount-issue amount-issue-${issue.kind}` : undefined}
@@ -271,58 +262,8 @@ export default function CalculationTree({
           hidden={expandable && !expanded}
           className={expandable ? 'calculation-body' : 'leaf-evidence'}
         >
-          {contextualIssues.length > 0 && (
-            <section
-              className="calculation-issues"
-              aria-label="Issues in this calculation"
-            >
-              <div>
-                <strong>
-                  {contextualIssues.length}{' '}
-                  {contextualIssues.length === 1 ? 'issue' : 'issues'} in this
-                  calculation
-                </strong>
-                <span>Review while you follow the numbers.</span>
-              </div>
-              <div className="calculation-issue-list">
-                {(showAllIssues
-                  ? contextualIssues
-                  : contextualIssues.slice(0, 3)
-                ).map((finding) => {
-                  const direct = finding.refs.includes(lineId);
-                  return (
-                    <button
-                      key={finding.id}
-                      data-finding-id={finding.id}
-                      onClick={() => props.onIssue?.(finding)}
-                    >
-                      <span>
-                        <small>
-                          {direct
-                            ? 'Issue at this amount'
-                            : 'Affects this amount'}
-                        </small>
-                        <strong>{finding.title}</strong>
-                      </span>
-                      <span>
-                        Review issue <ArrowRight size={14} aria-hidden="true" />
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              {contextualIssues.length > 3 && (
-                <button
-                  className="text-button"
-                  onClick={() => setShowAllIssues(!showAllIssues)}
-                >
-                  {showAllIssues
-                    ? 'Show fewer issues'
-                    : `Show ${contextualIssues.length - 3} more issues`}
-                </button>
-              )}
-            </section>
-          )}
+          {chain.some((item) => item.key === props.issueLineId) &&
+            props.issueContent}
           {expandable && (
             <div className="calculation-explanation">
               <strong>How this is calculated</strong>

@@ -11,6 +11,7 @@ import { money, sourceAmount } from '../domain/packet';
 import {
   additionalRecords,
   amountIssue,
+  findingReviewLine,
   summaryLocation,
   summaryRows,
 } from '../domain/schedules';
@@ -24,12 +25,14 @@ export default function ReturnSummary({
   jump,
   issue,
   issuePanel,
+  onIssueEncounter,
   onReference,
   ...tree
 }: TreeProps & {
   jump: { ref: string; sequence: number } | null;
   issue: Finding | null;
   issuePanel?: ReactNode;
+  onIssueEncounter: (finding: Finding) => void;
   onReference: (ref: string) => void;
 }) {
   const { graph } = tree;
@@ -77,8 +80,14 @@ export default function ReturnSummary({
     frame = requestAnimationFrame(scroll);
     return () => cancelAnimationFrame(frame);
   }, [jump, location, selected]);
+  const issueLineId = issue ? findingReviewLine(graph, issue) : undefined;
   const context = issue && (
     <div className="issue-context">
+      {issueLineId && (
+        <p className="issue-location">
+          <strong>Review point</strong> · {referenceLabel(graph, issueLineId)}
+        </p>
+      )}
       <span className="issue-origin">{issue.origin}</span>
       <strong>{issue.title}</strong>
       <p>{displayText(graph, issue.detail)}</p>
@@ -87,7 +96,14 @@ export default function ReturnSummary({
           <button
             key={ref}
             aria-pressed={jump?.ref === ref}
-            onClick={() => onReference(ref)}
+            onClick={() =>
+              graph.values.has(ref)
+                ? tree.onEvidence({
+                    ref,
+                    path: ['Return summary', issue.title],
+                  })
+                : onReference(ref)
+            }
           >
             {referenceLabel(graph, ref)}
           </button>
@@ -96,6 +112,21 @@ export default function ReturnSummary({
       {issuePanel}
     </div>
   );
+  const issueDisplay = {
+    issueContent: context,
+    issueLineId,
+  };
+  const issueBindings = {
+    ...issueDisplay,
+    onLineChange: (lineIds: string[]) => {
+      if (issueLineId && lineIds.includes(issueLineId)) return;
+      const encountered = tree.issueFindings?.find((finding) =>
+        lineIds.includes(findingReviewLine(graph, finding) ?? ''),
+      );
+      if (encountered && encountered.id !== issue?.id)
+        onIssueEncounter(encountered);
+    },
+  };
   const calculation = (ref: string) => (
     <CalculationTree
       key={`${graph.version.version}-${ref}`}
@@ -103,6 +134,7 @@ export default function ReturnSummary({
       lineId={ref}
       initiallyExpanded
       revealPath={location?.root === ref ? location.path : undefined}
+      {...issueBindings}
     />
   );
   const amount = (ref: string | undefined, label: string) => {
@@ -177,7 +209,6 @@ export default function ReturnSummary({
                               Close calculation
                             </button>
                           </div>
-                          {location?.root === selected && context}
                           {calculation(selected)}
                         </td>
                       </tr>
@@ -244,9 +275,9 @@ export default function ReturnSummary({
                 .filter((l) => l.form === form)
                 .map((line) => (
                   <div key={line.key}>
-                    {location?.root === line.key && context}
                     <CalculationTree
                       {...tree}
+                      {...issueDisplay}
                       lineId={line.key}
                       revealPath={
                         location?.root === line.key ? location.path : undefined

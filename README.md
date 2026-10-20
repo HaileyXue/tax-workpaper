@@ -43,7 +43,7 @@ npm run format:check  # Repository formatting
 - One white-background Return workspace with selective calculation breakdowns; Documents and History are secondary tools in the left sidebar.
 - Focused calculation statements with aligned inputs and results. Selecting an input replaces the detail in place; a review trail returns to earlier contexts. Same-form related records stay separate from arithmetic inputs.
 - The Issues tab contains direct links only. Selecting an issue switches to Return, reveals its real dependency path, focuses the source, and scrolls smoothly (or instantly with reduced motion). Highlighting follows the affected chain without flagging unrelated inputs. Assignment and resolution are contextual, beside the linked calculation.
-- Inspecting a highlighted amount also shows unresolved issues within that calculation. Drilling into inputs narrows the list, and selecting an issue opens the same evidence, decision, and resolution workflow without requiring a trip through the Issues tab.
+- The Issues queue and manual calculation review converge on the same interface. An issue appears with its evidence and resolution controls only when the reviewer reaches its canonical calculation level; there is no second issue list inside Return.
 - Evidence displayed in a resizable panel beside the calculation on desktop and in a bottom panel on mobile; other document fields and reverse usage are collapsed by default.
 - All 627 current-version lines remain reachable through summary calculations or Related return records; large input lists load in batches with filtering.
 - No routine verification forms: contextual flag, note, and correction actions open only on request. Existing verification records remain in history.

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { createGraph, packet, resolveReference } from './domain/packet';
 import { findIssues, type Finding } from './domain/findings';
+import { findingReviewLine } from './domain/schedules';
 import {
   activeEvents,
   canWrite,
@@ -135,7 +136,10 @@ export default function App() {
     setEvidence(null);
     setFocusedIssue({ ...finding });
     setSearch('');
-    setSummaryJump({ ref: finding.refs[0], sequence: performance.now() });
+    setSummaryJump({
+      ref: findingReviewLine(graph, finding) ?? finding.refs[0],
+      sequence: performance.now(),
+    });
   };
   const tree: TreeProps = {
     graph,
@@ -154,10 +158,8 @@ export default function App() {
         })),
     ],
     writable: canWrite(staff),
-    activeIssueId: focusedIssue?.id,
     onEvidence: openEvidence,
     onAction: (target, kind) => setAction({ target, kind }),
-    onIssue: navigateIssue,
   };
   const exportRecords = () => {
     const url = URL.createObjectURL(
@@ -346,6 +348,10 @@ export default function App() {
               {...tree}
               jump={summaryJump}
               issue={focusedIssue}
+              onIssueEncounter={(finding) => {
+                if (finding.id !== focusedIssue?.id)
+                  setFocusedIssue({ ...finding });
+              }}
               onReference={(ref) =>
                 setSummaryJump({ ref, sequence: performance.now() })
               }

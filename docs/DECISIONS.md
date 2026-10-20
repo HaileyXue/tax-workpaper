@@ -260,10 +260,10 @@ Proposed implementation and acceptance criteria:
 - **Security boundary:** The role switcher demonstrates workflow behavior. It is not authentication or secure authorization because all controls and persistence are client-side.
 - **Tradeoff:** `localStorage` makes the workflow complete and easily demonstrable without a backend, but it does not provide cross-device sync, concurrent edits, durable firm retention, or tamper resistance. JSON export preserves a portable copy of the event record.
 
-### D21 — Surface the issue queue inside calculation review
+### D21 — Converge issue and calculation navigation on one review state
 
-- **Recorded:** 2026-10-19. **Status:** Implemented.
-- **Decision:** The Issues tab remains the prioritized return-wide queue, and each inspected calculation also lists unresolved findings that originate in or affect that amount. Selecting one opens the same source-focused decision and resolution workflow in Return.
-- **Reason:** Reviewers often discover problems by following a return number rather than starting from a queue. Hiding findings in a separate tab makes a highlighted amount explain that something is wrong without giving the reviewer the finding or a way to act on it.
-- **Interaction:** The contextual list follows the selected calculation. A high-level total can show several downstream findings; drilling into an input narrows the list. The currently open finding is removed from the contextual list to avoid showing it twice beside its full review controls.
-- **Tradeoff:** High-level totals may have several related findings. The list stays compact and shows titles rather than full evidence and controls; one selection opens the canonical finding context, preserving a single status and audit history.
+- **Recorded:** 2026-10-19. **Status:** Implemented after correcting the initial interpretation.
+- **Decision:** Keep one issue interface at the issue's canonical calculation level. Selecting an item in the Issues queue navigates to that level and reveals the full issue, evidence, and decision controls. Manually following the return calculation to the same level reveals the identical interface automatically.
+- **Reason:** The Issues queue and Return are two ways to reach one review state, not two different issue experiences. A separate contextual issue list duplicated navigation and added noise without helping the reviewer understand where the issue belongs.
+- **Placement rule:** A diagnostic attached to a calculation stays on that calculation. When a source-backed detail row rolls into a review total, place the issue on its immediate containing total. For the RSU basis error, that is the Form 8949 Box B total containing the affected lot. The source remains available from the issue's evidence links.
+- **Tradeoff:** A high-level total remains highlighted but does not enumerate every downstream issue. The reviewer sees the issue only after reaching the level where it can be understood and acted on. This reduces noise and preserves a single canonical status and audit history.

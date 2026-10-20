@@ -52,49 +52,38 @@ test('one summary traces income to evidence without a separate explorer or sched
   ).toHaveCount(0);
 });
 
-test('surfaces issues while inspecting return calculations without using the issue queue', async ({
+test('shows the canonical issue UI only when manual review reaches its calculation level', async ({
   page,
 }) => {
   await openCase(page);
   await income(page);
-  const contextual = page.getByRole('region', {
-    name: 'Issues in this calculation',
-  });
-  await expect(contextual).toBeVisible();
-  await expect(contextual).toContainText(
-    'Review while you follow the numbers.',
-  );
-  await contextual
-    .getByRole('button', { name: /Show \d+ more issues/ })
-    .click();
-  await contextual.locator('[data-finding-id="duplicate-sweep"]').click();
-  await expect(
-    page.getByRole('button', { name: 'Return', exact: true }),
-  ).toHaveAttribute('aria-current', 'page');
-  await expect(page.locator('.issue-context')).toContainText(
-    'Same bank sweep interest counted twice',
-  );
-  await page.locator('.contextual-review > summary').click();
+  await expect(page.locator('.issue-context')).toHaveCount(0);
   await page
-    .locator('.issue-context')
-    .getByLabel('Resolution evidence')
-    .fill('Confirmed and documented while reviewing the return calculation.');
-  await page
-    .locator('.issue-context')
-    .getByRole('button', { name: 'Resolve issue', exact: true })
+    .getByRole('button', {
+      name: 'Inspect input Capital gain or (loss)',
+      exact: true,
+    })
     .click();
-  await expect(
-    page
-      .locator('.issue-context')
-      .getByRole('button', { name: 'Reopen issue', exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.locator('.calculation-issues [data-finding-id="duplicate-sweep"]'),
-  ).toHaveCount(0);
-  await page.getByRole('button', { name: /^Issues/ }).click();
-  await expect(
-    page.locator('[data-finding-id="duplicate-sweep"]'),
-  ).toHaveAttribute('data-resolved', 'true');
+  await expect(page.locator('.issue-context')).toHaveCount(0);
+  await page
+    .getByRole('button', {
+      name: 'Inspect input Net short-term gain or (loss)',
+      exact: true,
+    })
+    .click();
+  await expect(page.locator('.issue-context')).toHaveCount(0);
+  await page
+    .getByRole('button', {
+      name: 'Inspect input Short-term from Form 8949 box B',
+      exact: true,
+    })
+    .click();
+  const context = page.locator('.issue-context');
+  await expect(context).toContainText('Lot N1 cost basis was treated as zero');
+  await expect(context).toContainText('Independent cross-document check');
+  await expect(context).toContainText('Review point');
+  await expect(context).toContainText('Box B totals');
+  await expect(context.locator('.contextual-review')).toBeVisible();
 });
 
 test('records a correction proposal and persists it independently of engine totals', async ({
@@ -102,9 +91,8 @@ test('records a correction proposal and persists it independently of engine tota
 }) => {
   await openCase(page);
   await issue(page, 'duplicate-sweep');
-  await page.locator('.issue-references button').nth(1).click();
   const result = page.locator('.schedule-breakdown');
-  await result.locator('[data-line="SchB.1.2"] .action-menu > summary').click();
+  await result.locator('[data-line="SchB.2"] .action-menu > summary').click();
   await result
     .getByRole('button', { name: 'Propose correction', exact: true })
     .click();
@@ -332,10 +320,14 @@ test('issue tab contains links only, opens the return chain and scrolls to its s
   await expect(
     page.getByRole('button', { name: 'Return', exact: true }),
   ).toHaveAttribute('aria-current', 'page');
-  const source = page.locator('.schedule-breakdown [data-reference="ev-0492"]');
-  await expect(source).toBeFocused();
-  await expect(source).toBeInViewport();
-  await expect(source.locator('.amount-issue')).toContainText('1,840');
+  const reviewLevel = page.locator(
+    '.schedule-breakdown [data-aliases~="SchB.2"]',
+  );
+  await expect(reviewLevel).toBeFocused();
+  await expect(reviewLevel).toBeInViewport();
+  await expect(page.locator('.issue-context')).toContainText(
+    'Same bank sweep interest counted twice',
+  );
   await expect(
     page.locator('.calculation-trail .amount-issue').first(),
   ).toBeVisible();
@@ -346,12 +338,9 @@ test('issue tab contains links only, opens the return chain and scrolls to its s
     0,
   );
   await page.locator('.issue-references button').nth(1).click();
-  await expect(
-    page.locator('.schedule-breakdown [data-reference="ev-0538"]'),
-  ).toBeFocused();
-  await expect(
-    page.locator('.schedule-breakdown [data-reference="ev-0538"]'),
-  ).toBeInViewport();
+  const evidence = page.getByRole('complementary', { name: 'Source evidence' });
+  await expect(evidence.getByRole('heading', { name: /^D29/ })).toBeVisible();
+  await expect(evidence.locator('mark')).toContainText('1,840');
 });
 
 test('handles deep sources and nonnumeric issues without inventing a numeric link', async ({
@@ -359,16 +348,15 @@ test('handles deep sources and nonnumeric issues without inventing a numeric lin
 }) => {
   await openCase(page);
   await issue(page, 'DIGITAL_ASSET_BASIS_MISSING');
-  await expect(
-    page.locator('.schedule-breakdown [data-reference="ev-0879"]'),
-  ).toBeFocused();
+  await expect(page.locator('.issue-context')).toContainText(
+    'digital asset basis missing',
+  );
+  await page.locator('.issue-references button').first().click();
+  const evidence = page.getByRole('complementary', { name: 'Source evidence' });
+  await expect(evidence.getByRole('heading', { name: /^D34/ })).toBeVisible();
   await page.locator('.issue-references button').last().click();
-  await expect(
-    page.locator('.schedule-breakdown [data-reference="ev-0919"]'),
-  ).toBeFocused();
-  await expect(
-    page.locator('.schedule-breakdown [data-reference="ev-0919"]'),
-  ).toBeInViewport();
+  await expect(evidence.getByRole('heading', { name: /^D35/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Close evidence' }).click();
   await issue(page, 'QUESTIONNAIRE_SALES_CONFLICT');
   const record = page.locator('.standalone-record');
   await expect(record).toBeFocused();

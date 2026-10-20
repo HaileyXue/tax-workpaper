@@ -123,3 +123,23 @@ export function summaryLocation(graph: Graph, target: string) {
   }
   return { root: target, path: [target], additional: true };
 }
+
+/** Place an issue at the calculation level where a reviewer encounters it.
+ * A source-backed detail row is reviewed within its immediate rollup, while a
+ * diagnostic attached directly to a calculation stays on that calculation. */
+export function findingReviewLine(graph: Graph, finding: Finding) {
+  for (const ref of finding.refs) {
+    const location = summaryLocation(graph, ref);
+    const calculations = location.path.filter((id) => graph.lines.has(id));
+    const direct = calculations.at(-1);
+    if (!direct) continue;
+    const line = graph.lines.get(direct)!;
+    if (
+      line.inputs.length === 0 &&
+      line.sources.length > 0 &&
+      calculations.length > 1
+    )
+      return calculations.at(-2);
+    return direct;
+  }
+}
