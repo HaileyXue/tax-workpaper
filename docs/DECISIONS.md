@@ -259,3 +259,11 @@ Proposed implementation and acceptance criteria:
 - **Correction boundary:** Approval records a human decision but does not alter the supplied return snapshot. The active proposal therefore continues to block final return sign-off until a recomputed engine snapshot could reconcile it. This prototype cannot perform that recomputation.
 - **Security boundary:** The role switcher demonstrates workflow behavior. It is not authentication or secure authorization because all controls and persistence are client-side.
 - **Tradeoff:** `localStorage` makes the workflow complete and easily demonstrable without a backend, but it does not provide cross-device sync, concurrent edits, durable firm retention, or tamper resistance. JSON export preserves a portable copy of the event record.
+
+### D21 — Surface the issue queue inside calculation review
+
+- **Recorded:** 2026-10-19. **Status:** Implemented.
+- **Decision:** The Issues tab remains the prioritized return-wide queue, and each inspected calculation also lists unresolved findings that originate in or affect that amount. Selecting one opens the same source-focused decision and resolution workflow in Return.
+- **Reason:** Reviewers often discover problems by following a return number rather than starting from a queue. Hiding findings in a separate tab makes a highlighted amount explain that something is wrong without giving the reviewer the finding or a way to act on it.
+- **Interaction:** The contextual list follows the selected calculation. A high-level total can show several downstream findings; drilling into an input narrows the list. The currently open finding is removed from the contextual list to avoid showing it twice beside its full review controls.
+- **Tradeoff:** High-level totals may have several related findings. The list stays compact and shows titles rather than full evidence and controls; one selection opens the canonical finding context, preserving a single status and audit history.

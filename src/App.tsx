@@ -130,6 +130,13 @@ export default function App() {
     setEvidence(null);
     evidenceTrigger.current?.focus();
   };
+  const navigateIssue = (finding: Finding) => {
+    setTab('Return');
+    setEvidence(null);
+    setFocusedIssue({ ...finding });
+    setSearch('');
+    setSummaryJump({ ref: finding.refs[0], sequence: performance.now() });
+  };
   const tree: TreeProps = {
     graph,
     events: current,
@@ -147,15 +154,10 @@ export default function App() {
         })),
     ],
     writable: canWrite(staff),
+    activeIssueId: focusedIssue?.id,
     onEvidence: openEvidence,
     onAction: (target, kind) => setAction({ target, kind }),
-  };
-  const navigateIssue = (finding: Finding) => {
-    setTab('Return');
-    setEvidence(null);
-    setFocusedIssue({ ...finding });
-    setSearch('');
-    setSummaryJump({ ref: finding.refs[0], sequence: performance.now() });
+    onIssue: navigateIssue,
   };
   const exportRecords = () => {
     const url = URL.createObjectURL(

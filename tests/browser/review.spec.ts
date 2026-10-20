@@ -52,6 +52,51 @@ test('one summary traces income to evidence without a separate explorer or sched
   ).toHaveCount(0);
 });
 
+test('surfaces issues while inspecting return calculations without using the issue queue', async ({
+  page,
+}) => {
+  await openCase(page);
+  await income(page);
+  const contextual = page.getByRole('region', {
+    name: 'Issues in this calculation',
+  });
+  await expect(contextual).toBeVisible();
+  await expect(contextual).toContainText(
+    'Review while you follow the numbers.',
+  );
+  await contextual
+    .getByRole('button', { name: /Show \d+ more issues/ })
+    .click();
+  await contextual.locator('[data-finding-id="duplicate-sweep"]').click();
+  await expect(
+    page.getByRole('button', { name: 'Return', exact: true }),
+  ).toHaveAttribute('aria-current', 'page');
+  await expect(page.locator('.issue-context')).toContainText(
+    'Same bank sweep interest counted twice',
+  );
+  await page.locator('.contextual-review > summary').click();
+  await page
+    .locator('.issue-context')
+    .getByLabel('Resolution evidence')
+    .fill('Confirmed and documented while reviewing the return calculation.');
+  await page
+    .locator('.issue-context')
+    .getByRole('button', { name: 'Resolve issue', exact: true })
+    .click();
+  await expect(
+    page
+      .locator('.issue-context')
+      .getByRole('button', { name: 'Reopen issue', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.locator('.calculation-issues [data-finding-id="duplicate-sweep"]'),
+  ).toHaveCount(0);
+  await page.getByRole('button', { name: /^Issues/ }).click();
+  await expect(
+    page.locator('[data-finding-id="duplicate-sweep"]'),
+  ).toHaveAttribute('data-resolved', 'true');
+});
+
 test('records a correction proposal and persists it independently of engine totals', async ({
   page,
 }) => {
