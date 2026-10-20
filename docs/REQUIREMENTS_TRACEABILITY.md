@@ -54,7 +54,7 @@ The current product is a strong review prototype, but it does **not** yet meet t
 | Requirement | Status | How the app satisfies it today | Function needed to close the gap |
 | --- | --- | --- | --- |
 | Flag swings from last year | **Not implemented** | Prior-year references can be resolved, but the app does not calculate or prioritize year-over-year variances. | Add a `PriorYearVarianceCheck` with absolute and percentage thresholds, materiality policy, explanations, and links to both years' evidence. |
-| Record judgment calls, elections, due diligence, and penalty decisions | **Partial** | Notes, flags, assignments, and issue resolutions capture free-text judgment with actor and time. Supplied due-diligence diagnostics are retained. These are not structured records and do not distinguish an election from a penalty decision. | Add typed `JudgmentRecord` templates with decision, alternatives, authority/evidence, preparer, approver, effective years, revocability, and affected return lines. |
+| Record judgment calls, elections, due diligence, and penalty decisions | **Partial** | Notes, flags, assignments, correction proposals, and approvals capture free-text judgment with actor and time. Supplied due-diligence diagnostics are retained. These are not structured records and do not distinguish an election from a penalty decision. | Add typed `JudgmentRecord` templates with decision, alternatives, authority/evidence, preparer, approver, effective years, revocability, and affected return lines. |
 | Prove every document was considered | **Partial** | All 74 documents are indexed; use, supersession, reverse usage, and no-usage states are visible. Unused documents do not yet require final disposition. | Add a document completeness ledger that prevents final sign-off until every document has a reviewed disposition. |
 | Prove every return area was considered | **Not implemented** | Every calculation line is reachable, but there is no area-level applicability checklist or required review standard. | Add an `AreaCompletenessChecklist` generated from household facts, packet contents, and firm standards, with applicable/not-applicable decisions and evidence. |
 | Identify every outside filing | **Not implemented** | Some filing questions exist among Related return records, but no outside-filing inventory or disposition workflow exists. | Add an `OutsideFilingRegister` for FBAR, information returns, state/local filings, extensions, responsible person, due date, status, and evidence. |
@@ -138,7 +138,7 @@ Trying to implement every missing item would produce many shallow screens and we
 
 For the hiring submission, one outcome has priority over the four area improvements below.
 
-### Priority 0 — Complete one source-to-resolution lifecycle
+### Priority 0 — Complete one source-to-decision lifecycle
 
 Demonstrate a real supplied case transition from an open issue through new evidence, a new engine snapshot, explained calculation changes, reviewer disposition, and updated sign-off state. Use the late K-1 transition from v2 to v3 because the packet supplies both snapshots and the triggering documents.
 
@@ -219,7 +219,7 @@ The workpaper should:
 
 ### Submission work after the end-to-end lifecycle
 
-Once the source-to-resolution lifecycle is stable, deploy the private preview, record the walkthrough, and add the video link. These are mandatory deliverables and should not wait for all four follow-on improvements. The video should lead with the end-to-end lifecycle, then show the strongest completed follow-on work rather than touring every screen.
+Once the source-to-decision lifecycle is stable, deploy the private preview, record the walkthrough, and add the video link. These are mandatory deliverables and should not wait for all four follow-on improvements. The video should lead with the end-to-end lifecycle, then show the strongest completed follow-on work rather than touring every screen.
 
 ## Intentionally deferred requirements
 

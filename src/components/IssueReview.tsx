@@ -15,7 +15,6 @@ export default function IssueReview({
   events,
   staff,
   save,
-  resolved,
   onPropose,
 }: {
   finding: Finding;
@@ -23,7 +22,6 @@ export default function IssueReview({
   events: ReviewEvent[];
   staff: Staff;
   save: SaveEvent;
-  resolved: (id: string) => boolean;
   onPropose: (target: string) => void;
 }) {
   const [reviewNote, setReviewNote] = useState('');
@@ -246,42 +244,12 @@ export default function IssueReview({
           </p>
         </section>
       )}
-      <div className="resolve">
-        <button
-          onClick={() =>
-            save({
-              kind: resolved(f.id) ? 'reopen' : 'resolve',
-              target: f.id,
-              note: resolved(f.id)
-                ? 'Reopened for further review.'
-                : `Resolved using the approved correction: ${proposal?.note ?? ''}`,
-            })
-          }
-          disabled={
-            !canWrite(staff) ||
-            (!resolved(f.id) && staff.role === 'preparer') ||
-            (!resolved(f.id) && !approved)
-          }
-        >
-          {resolved(f.id) ? 'Reopen issue' : 'Resolve issue'}
-        </button>
-      </div>
-      {!resolved(f.id) && !approved && (
-        <p className="small muted">
-          Submit a correction and obtain reviewer or partner approval before
-          resolving this issue.
+      {approved && (
+        <p className="approval-complete">
+          Approved · this issue is complete for review. The correction remains a
+          filing blocker until it is incorporated into a recomputed return.
         </p>
       )}
-      {events
-        .filter(
-          (e) => e.target === f.id && ['resolve', 'reopen'].includes(e.kind),
-        )
-        .slice(-1)
-        .map((e) => (
-          <p className="item-note" key={e.id}>
-            {e.note}
-          </p>
-        ))}
     </details>
   );
 }

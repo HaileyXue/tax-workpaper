@@ -1,10 +1,19 @@
-import { referenceLabel, displayText } from '../domain/presentation';
+import { displayText } from '../domain/presentation';
 import { useState } from 'react';
 import { money, packet, type Graph, type Staff } from '../domain/packet';
-import { activeEvents, canWrite, type ReviewEvent } from '../domain/review';
+import {
+  activeEvents,
+  canWrite,
+  findingIdForEvent,
+  findingResolved,
+  type ReviewEvent,
+} from '../domain/review';
 import { findIssues } from '../domain/findings';
 import type { SaveEvent } from './Exceptions';
 import CalculationTree, { type TreeProps } from './CalculationTree';
+
+type HistoryView = 'review' | 'versions' | 'timeline';
+
 export default function History({
   graph,
   events,
@@ -18,12 +27,17 @@ export default function History({
   save: SaveEvent;
   tree: TreeProps;
 }) {
+  const [view, setView] = useState<HistoryView>('review');
   const [baseId, setBaseId] = useState('v2');
-  const base = packet.return_versions.find((v) => v.version === baseId)!;
+  const base = packet.return_versions.find(
+    (version) => version.version === baseId,
+  )!;
   const changed = graph.version.lines.filter(
-    (l) => base.lines.find((b) => b.key === l.key)?.value !== l.value,
+    (line) =>
+      base.lines.find((candidate) => candidate.key === line.key)?.value !==
+      line.value,
   );
-  const removed = base.lines.filter((l) => !graph.lines.has(l.key));
+  const removed = base.lines.filter((line) => !graph.lines.has(line.key));
   const findings = findIssues(graph);
   const currentSnapshotAt = Math.max(
     ...packet.return_versions.map((version) =>
@@ -36,16 +50,6 @@ export default function History({
   const scenarioTimeline = packet.timeline.filter(
     (event) => new Date(event.at).getTime() > currentSnapshotAt,
   );
-  const targetLabel = (event: ReviewEvent) => {
-    const proposal = ['approve', 'return', 'reject'].includes(event.kind)
-      ? events.find((candidate) => candidate.id === event.target)
-      : undefined;
-    const findingId = event.findingId ?? proposal?.findingId ?? event.target;
-    return (
-      findings.find((finding) => finding.id === findingId)?.title ??
-      referenceLabel(graph, proposal?.target ?? event.target)
-    );
-  };
   const actionLabel = (event: ReviewEvent) =>
     ({
       assign: `Assigned to ${event.note}`,
@@ -53,7 +57,7 @@ export default function History({
       approve: 'Approved correction',
       return: 'Returned correction',
       reject: 'Rejected correction',
-      resolve: 'Resolved issue',
+      resolve: 'Completed issue',
       reopen: 'Reopened issue',
       flag: 'Flagged issue',
       note: 'Added note',
@@ -61,6 +65,58 @@ export default function History({
       undo: 'Undid action',
       verify: 'Verified value',
     })[event.kind] ?? event.kind;
+  const eventRow = (event: ReviewEvent) => (
+    <div className="review-event" key={event.id}>
+      <span className="review-event-dot" aria-hidden="true" />
+      <div>
+        <strong>{actionLabel(event)}</strong>
+        {event.kind !== 'assign' && <p>{displayText(graph, event.note)}</p>}
+        {event.kind === 'adjust' && event.amount !== undefined && (
+          <p>
+            {money(event.original)} → {money(event.amount)}
+            {event.proposedTaxableAmount !== undefined &&
+              ` · proposed taxable amount ${money(event.proposedTaxableAmount)}`}
+          </p>
+        )}
+        <small>
+          {packet.firm.staff.find((person) => person.id === event.actor)
+            ?.name ?? 'System'}{' '}
+          · {event.version} · {new Date(event.at).toLocaleString()}
+        </small>
+      </div>
+      {event.kind !== 'undo' &&
+        activeEvents(events).some((active) => active.id === event.id) && (
+          <button
+            disabled={
+              event.actor !== staff.id ||
+              event.version !== graph.version.version ||
+              !canWrite(staff)
+            }
+            onClick={() =>
+              save({
+                kind: 'undo',
+                target: event.target,
+                note: `Undo ${event.kind}: ${event.note}`,
+                reverses: event.id,
+              })
+            }
+          >
+            Undo
+          </button>
+        )}
+    </div>
+  );
+  const issueThreads = findings
+    .map((finding) => ({
+      finding,
+      activity: events.filter(
+        (event) => findingIdForEvent(events, event) === finding.id,
+      ),
+    }))
+    .filter((thread) => thread.activity.length);
+  const otherEvents = events.filter(
+    (event) => !findingIdForEvent(events, event),
+  );
   const timelineRows = (items: typeof packet.timeline) =>
     items.map((event) => (
       <div className="history-row" key={event.id}>
@@ -68,131 +124,174 @@ export default function History({
         <span>{event.event.replaceAll('_', ' ')}</span>
       </div>
     ));
+
   return (
     <section className="workspace-section history-section">
       <header className="section-heading">
         <div>
           <span className="section-kicker">Audit trail</span>
           <h2>History</h2>
-          <p>Compare supplied snapshots and review recorded work.</p>
+          <p>
+            Reconstruct review decisions, return changes, and supplied case
+            events.
+          </p>
         </div>
       </header>
-      <details className="utility-section">
-        <summary>Compare return snapshots</summary>
-        <label>
-          Compare {graph.version.version} with{' '}
-          <select value={baseId} onChange={(e) => setBaseId(e.target.value)}>
-            {packet.return_versions.map((v) => (
-              <option key={v.version}>{v.version}</option>
-            ))}
-          </select>
-        </label>
-        <p className="muted">
-          {changed.length} added or changed · {removed.length} removed. Supplied
-          snapshots exclude review proposals.
-        </p>
-        {changed.map((l) => (
-          <div key={l.key}>
-            <p className="small muted">
-              Previously {money(base.lines.find((b) => b.key === l.key)?.value)}
-            </p>
-            <CalculationTree {...tree} lineId={l.key} />
+      <nav className="history-view-switcher" aria-label="History views">
+        {[
+          ['review', 'Review history'],
+          ['versions', 'Return versions'],
+          ['timeline', 'Case timeline'],
+        ].map(([id, label]) => (
+          <button
+            key={id}
+            aria-pressed={view === id}
+            onClick={() => setView(id as HistoryView)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {view === 'review' && (
+        <section aria-label="Review history">
+          <div className="history-view-heading">
+            <h3>Review history</h3>
+            <p>Assignment, correction, and approval are grouped by issue.</p>
           </div>
-        ))}
-        {removed.map((l) => (
-          <p key={l.key}>
-            {l.label} · {money(l.value)} · Removed
-          </p>
-        ))}
-      </details>
-      <details className="utility-section">
-        <summary>Precomputed alternatives</summary>
-        {packet.what_if.alternatives.map((a) => (
-          <div className="history-row" key={a.id}>
-            <strong>{a.description}</strong>
-            <p>
-              Federal tax change {money(a.federal.total_tax_change)} ·
-              California {money(a.california.total_tax_change)}
+          {!events.length && (
+            <p className="muted">
+              No review activity recorded. Inspecting a number does not create
+              an action.
             </p>
-            <small>Supplied scenario · base {a.base_version}</small>
-          </div>
-        ))}
-      </details>
-      <h3 className="subsection-heading">Review activity</h3>
-      {!events.length && (
-        <p className="muted">
-          No exceptions or sign-offs recorded. Inspecting a number does not
-          require a review action.
-        </p>
+          )}
+          {issueThreads.map(({ finding, activity }) => (
+            <article className="issue-history-thread" key={finding.id}>
+              <header>
+                <div>
+                  <span className="section-kicker">Issue</span>
+                  <h4>{finding.title}</h4>
+                </div>
+                <span
+                  className={`thread-status ${findingResolved(events, finding.id) ? 'approved' : ''}`}
+                >
+                  {findingResolved(events, finding.id)
+                    ? 'Approved'
+                    : 'In progress'}
+                </span>
+              </header>
+              <div className="review-event-list">{activity.map(eventRow)}</div>
+            </article>
+          ))}
+          {otherEvents.length > 0 && (
+            <article className="issue-history-thread">
+              <header>
+                <h4>Other return activity</h4>
+              </header>
+              <div className="review-event-list">
+                {otherEvents.map(eventRow)}
+              </div>
+            </article>
+          )}
+        </section>
       )}
-      {[...events].reverse().map((e) => (
-        <div className="history-row" key={e.id}>
-          <div>
-            <strong>
-              {actionLabel(e)} · {targetLabel(e)}
-            </strong>
-            {e.kind !== 'assign' && <p>{displayText(graph, e.note)}</p>}
-            {e.kind === 'adjust' && (
-              <>
-                <p>
-                  Source value {money(e.original)} → {money(e.amount)} ·{' '}
-                  {e.category}
-                </p>
-                {e.proposedTaxableAmount !== undefined && (
-                  <p>
-                    Proposed taxable amount {money(e.proposedTaxableAmount)} ·
-                    change {money(e.taxableDelta)}
-                  </p>
-                )}
-              </>
-            )}
-            <small>
-              {e.kind === 'assign' ? 'Assigned by ' : ''}
-              {packet.firm.staff.find((s) => s.id === e.actor)?.name} ·{' '}
-              {e.version} · {new Date(e.at).toLocaleString()}
-            </small>
+
+      {view === 'versions' && (
+        <section aria-label="Return versions">
+          <div className="history-view-heading">
+            <h3>Return versions</h3>
+            <p>
+              Supplied engine snapshots and the reason each snapshot was
+              created.
+            </p>
           </div>
-          {e.kind !== 'undo' &&
-            activeEvents(events).some((a) => a.id === e.id) && (
-              <button
-                disabled={
-                  e.actor !== staff.id ||
-                  e.version !== graph.version.version ||
-                  !canWrite(staff)
-                }
-                onClick={() =>
-                  save({
-                    kind: 'undo',
-                    target: e.target,
-                    note: `Undo ${e.kind}: ${e.note}`,
-                    reverses: e.id,
-                  })
-                }
+          <div className="version-cards">
+            {packet.return_versions.map((version) => (
+              <article key={version.version}>
+                <strong>{version.version}</strong>
+                <span>{version.trigger.replaceAll('_', ' ')}</span>
+                <small>
+                  {new Date(version.computed_at).toLocaleString()} ·{' '}
+                  {version.changes_from_previous.length} recorded changes
+                </small>
+              </article>
+            ))}
+          </div>
+          <div className="version-compare-control">
+            <label>
+              Compare {graph.version.version} with{' '}
+              <select
+                value={baseId}
+                onChange={(event) => setBaseId(event.target.value)}
               >
-                Undo
-              </button>
-            )}
-        </div>
-      ))}
-      <details className="utility-section">
-        <summary>Supplied season timeline</summary>
-        <p className="small muted">
-          {recordedTimeline.length} events supplied in the packet through the
-          current v3 snapshot. The app does not create or infer these events.
-        </p>
-        {timelineRows(recordedTimeline)}
-        <details className="scenario-timeline">
-          <summary>
-            Supplied scenario replay · {scenarioTimeline.length} future events
-          </summary>
-          <p className="callout">
-            The packet explicitly marks events after June 23, 2026 as scripted
-            for replay. They are hidden by default and do not represent actions
-            performed by this app.
-          </p>
-          {timelineRows(scenarioTimeline)}
-        </details>
-      </details>
+                {packet.return_versions.map((version) => (
+                  <option key={version.version}>{version.version}</option>
+                ))}
+              </select>
+            </label>
+            <p className="muted">
+              {changed.length} added or changed · {removed.length} removed.
+              Supplied snapshots exclude review proposals.
+            </p>
+          </div>
+          {changed.map((line) => (
+            <div key={line.key}>
+              <p className="small muted">
+                Previously{' '}
+                {money(
+                  base.lines.find((candidate) => candidate.key === line.key)
+                    ?.value,
+                )}
+              </p>
+              <CalculationTree {...tree} lineId={line.key} />
+            </div>
+          ))}
+          {removed.map((line) => (
+            <p key={line.key}>
+              {line.label} · {money(line.value)} · Removed
+            </p>
+          ))}
+          <details className="utility-section">
+            <summary>Precomputed alternatives</summary>
+            {packet.what_if.alternatives.map((alternative) => (
+              <div className="history-row" key={alternative.id}>
+                <strong>{alternative.description}</strong>
+                <p>
+                  Federal tax change{' '}
+                  {money(alternative.federal.total_tax_change)} · California{' '}
+                  {money(alternative.california.total_tax_change)}
+                </p>
+                <small>
+                  Supplied scenario · base {alternative.base_version}
+                </small>
+              </div>
+            ))}
+          </details>
+        </section>
+      )}
+
+      {view === 'timeline' && (
+        <section aria-label="Case timeline">
+          <div className="history-view-heading">
+            <h3>Case timeline</h3>
+            <p>
+              {recordedTimeline.length} events supplied through the current v3
+              snapshot. The app does not create or infer these events.
+            </p>
+          </div>
+          {timelineRows(recordedTimeline)}
+          <details className="scenario-timeline">
+            <summary>
+              Supplied scenario replay · {scenarioTimeline.length} future events
+            </summary>
+            <p className="callout">
+              The packet explicitly marks events after June 23, 2026 as scripted
+              for replay. They do not represent actions performed by this app.
+            </p>
+            {timelineRows(scenarioTimeline)}
+          </details>
+        </section>
+      )}
     </section>
   );
 }

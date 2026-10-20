@@ -33,7 +33,7 @@ npm run format:check  # Repository formatting
 2. Select federal **Total income**, then the Corvane W-2 source link under wages. The evidence panel highlights `104,600.00` while the calculation stays visible. No verification action is required.
 3. Switch **Viewing as** to the preparer, open **Issues**, and select the first **Lot N1 cost basis was treated as zero** finding. The independent check connects D28's blank basis stored as a high-confidence zero to D11's $19,100 supplemental basis using the supplied acquisition date.
 4. Open **Decision & assignment**, select **Propose correction**, and save the prefilled basis correction with a rationale. The workspace previews a $140 sale gain, a -$19,100 taxable change, the packet-rate estimate, and downstream lines without mutating engine totals.
-5. Reload to prove persistence, switch to the reviewer, reopen the issue, approve the proposal, and resolve the source discrepancy. A preparer cannot perform either action. **History** retains the proposal, decision, resolution, actors, timestamps, version, and rationale; export provides a portable JSON record.
+5. Reload to prove persistence, switch to the reviewer, reopen the issue, and approve the proposal. A preparer cannot approve it. **History** retains the assignment, proposal, approval, actors, timestamps, version, and rationale; export provides a portable JSON record.
 6. Final return sign-off remains blocked because other findings are unresolved and the approved proposal has not been reconciled into a new engine snapshot. This is deliberate: issue approval is not a recomputation, e-signature, or filing approval.
 
 ## What works today
@@ -42,14 +42,14 @@ npm run format:check  # Repository formatting
 - A Cases landing page with live issue counts for the supplied household and an All cases navigation link.
 - One white-background Return workspace with selective calculation breakdowns; Documents and History are secondary tools in the left sidebar.
 - Focused calculation statements with aligned inputs and results. Selecting an input replaces the detail in place; a review trail returns to earlier contexts. Same-form related records stay separate from arithmetic inputs.
-- The Issues tab contains direct links only. Selecting an issue switches to Return, reveals its real dependency path, focuses the source, and scrolls smoothly (or instantly with reduced motion). Highlighting follows the affected chain without flagging unrelated inputs. Assignment and resolution are contextual, beside the linked calculation.
-- The Issues queue and manual calculation review converge on the same interface. An issue appears with its evidence and resolution controls only when the reviewer reaches its canonical calculation level; there is no second issue list inside Return.
+- The Issues tab contains direct links with each issue's recent review activity. Selecting an issue switches to Return, reveals its real dependency path, focuses the source, and scrolls smoothly (or instantly with reduced motion). Highlighting follows the affected chain without flagging unrelated inputs. Assignment and correction controls are contextual, beside the linked calculation.
+- The Issues queue and manual calculation review converge on the same interface. An issue appears with its evidence and decision controls only when the reviewer reaches its canonical calculation level; there is no second issue list inside Return.
 - Evidence displayed in a resizable panel beside the calculation on desktop and in a bottom panel on mobile; other document fields and reverse usage are collapsed by default.
 - All 627 current-version lines remain reachable through summary calculations or Related return records; large input lists load in batches with filtering.
 - No routine verification forms: contextual flag, note, and correction actions open only on request. Existing verification records remain in history.
 - Engine diagnostics plus independent duplicate-interest, FX-year, W-2 source, and cross-document missing-basis checks. The supplied packet produces three high-confidence RSU basis findings.
 - Typed basis-correction proposals show the original and proposed source value, proposed gain, taxable delta, packet-rate estimate, evidence set, and downstream lines. Engine snapshots stay immutable.
-- Role-gated correction review: preparers may submit; reviewers and partners may approve, return, reject, and resolve. Events survive refresh and remain visible in History.
+- Role-gated correction review: preparers may submit; reviewers and partners may approve, return, or reject. Approval completes issue review while the unrecomputed correction remains a filing blocker. Events survive refresh and remain visible in issue-grouped History.
 - Final, version-scoped review sign-off with blocker checks and conservative invalidation after any subsequent review event (including notes, assignments, and undo).
 - Browser-local persistence, append-only history, undo, and JSON export with visible save errors.
 - All three engine snapshots and five precomputed alternatives remain available.

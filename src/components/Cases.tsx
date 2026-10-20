@@ -1,7 +1,11 @@
 import { ArrowRight, FileCheck2, FolderOpen } from 'lucide-react';
 import { createGraph, packet } from '../domain/packet';
 import { findIssues } from '../domain/findings';
-import { activeEvents, type ReviewEvent } from '../domain/review';
+import {
+  activeEvents,
+  findingResolved,
+  type ReviewEvent,
+} from '../domain/review';
 
 export default function Cases({
   events,
@@ -53,15 +57,9 @@ export default function Cases({
                 (e) => e.version === version,
               );
               const warnings = findIssues(graph).filter(
-                (f) =>
-                  f.severity === 'warning' &&
-                  current
-                    .filter(
-                      (e) =>
-                        e.target === f.id &&
-                        ['resolve', 'reopen'].includes(e.kind),
-                    )
-                    .at(-1)?.kind !== 'resolve',
+                (finding) =>
+                  finding.severity === 'warning' &&
+                  !findingResolved(current, finding.id),
               ).length;
               // The badge reports unresolved issues. Approved correction
               // proposals can still block final sign-off until a recomputed

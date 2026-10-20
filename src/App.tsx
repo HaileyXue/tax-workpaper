@@ -24,6 +24,7 @@ import { findingReviewLine } from './domain/schedules';
 import {
   activeEvents,
   canWrite,
+  findingResolved,
   loadReviews,
   STORAGE_KEY,
   validateEvent,
@@ -89,10 +90,7 @@ export default function App() {
   const findings = useMemo(() => findIssues(graph), [graph]);
   const staff = packet.firm.staff.find((s) => s.id === staffId)!;
   const current = activeEvents(events).filter((e) => e.version === version);
-  const resolved = (id: string) =>
-    current
-      .filter((e) => e.target === id && ['resolve', 'reopen'].includes(e.kind))
-      .at(-1)?.kind === 'resolve';
+  const resolved = (id: string) => findingResolved(current, id);
   const warnings = findings.filter(
     (f) => f.severity === 'warning' && !resolved(f.id),
   ).length;
@@ -273,12 +271,12 @@ export default function App() {
                 <HistoryIcon size={17} />
               )}
               <span>{name}</span>
-              {name === 'Issues' && approval.blockers > 0 && (
+              {name === 'Issues' && warnings > 0 && (
                 <span
                   className="nav-count"
-                  aria-label={`${approval.blockers} issues to resolve`}
+                  aria-label={`${warnings} issues to resolve`}
                 >
-                  {approval.blockers}
+                  {warnings}
                 </span>
               )}
             </button>
@@ -373,7 +371,6 @@ export default function App() {
                     events={current}
                     staff={staff}
                     save={save}
-                    resolved={resolved}
                     onPropose={(target) =>
                       setAction({
                         target,
@@ -445,7 +442,7 @@ export default function App() {
               </form>
               <p className="small muted">
                 {approval.blockers > 0
-                  ? `${approval.blockers} ${approval.blockers === 1 ? 'issue' : 'issues'} to resolve. `
+                  ? `${approval.blockers} ${approval.blockers === 1 ? 'filing blocker' : 'filing blockers'}. `
                   : ''}
                 Reviewer or partner required. Review sign-off does not file the
                 return or certify a recomputed tax result.
@@ -464,17 +461,17 @@ export default function App() {
                   </p>
                 </div>
                 <span
-                  className={`issue-total ${approval.blockers > 0 ? 'has-issues' : ''}`}
+                  className={`issue-total ${warnings > 0 ? 'has-issues' : ''}`}
                   role="status"
                 >
-                  {approval.blockers}{' '}
-                  {approval.blockers === 1 ? 'issue' : 'issues'} to resolve
+                  {warnings} {warnings === 1 ? 'issue' : 'issues'} to resolve
                 </span>
               </header>
               <div className="issues-list-panel">
                 <Exceptions
                   findings={issueItems}
                   resolved={resolved}
+                  events={current}
                   onNavigate={navigateIssue}
                 />
               </div>

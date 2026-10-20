@@ -20,6 +20,7 @@ import {
   validateSignoff,
   activeEvents,
   canAssign,
+  findingResolved,
   estimateImpact,
   proposalDecision,
   validateEvent,
@@ -216,7 +217,7 @@ describe('review records and estimates', () => {
     expect(graph.version.summary.federal.total_tax).toBe(before);
     expect(() => estimateImpact(graph.version, 'invented', 1)).toThrow();
   });
-  it('requires reviewer approval before a supplied correction can resolve its issue', () => {
+  it('treats reviewer approval as the terminal issue decision', () => {
     const preparer = packet.firm.staff.find(
       (staff) => staff.role === 'preparer',
     )!;
@@ -248,16 +249,7 @@ describe('review records and estimates', () => {
         [proposal],
       ),
     ).toThrow('reviewer or partner');
-    const resolution: ReviewEvent = {
-      ...event,
-      id: 'resolution',
-      kind: 'resolve',
-      target: 'missing-zero-ev-0498',
-      note: 'Correction approved and supporting evidence reviewed.',
-    };
-    expect(() => validateEvent(resolution, reviewer, [proposal])).toThrow(
-      'approved',
-    );
+    expect(findingResolved([proposal], 'missing-zero-ev-0498')).toBe(false);
     const approval: ReviewEvent = {
       ...event,
       id: 'approval',
@@ -270,23 +262,23 @@ describe('review records and estimates', () => {
     expect(proposalDecision([proposal, approval], proposal.id)).toEqual(
       approval,
     );
+    expect(findingResolved([proposal, approval], 'missing-zero-ev-0498')).toBe(
+      true,
+    );
+    const undo: ReviewEvent = {
+      ...event,
+      id: 'undo-approval',
+      kind: 'undo',
+      target: approval.target,
+      reverses: approval.id,
+      note: 'Undo approval for additional review.',
+    };
     expect(() =>
-      validateEvent(resolution, reviewer, [proposal, approval]),
+      validateEvent(undo, reviewer, [proposal, approval]),
     ).not.toThrow();
-    expect(() =>
-      validateEvent(
-        {
-          ...event,
-          id: 'undo-approval',
-          kind: 'undo',
-          target: approval.target,
-          reverses: approval.id,
-          note: 'Undo approval after resolution.',
-        },
-        reviewer,
-        [proposal, approval, resolution],
-      ),
-    ).toThrow('Reopen the issue');
+    expect(
+      findingResolved([proposal, approval, undo], 'missing-zero-ev-0498'),
+    ).toBe(false);
   });
 });
 

@@ -54,6 +54,7 @@ export interface ReturnVersion {
   documents_used: string[];
   documents_superseded: string[];
   diagnostics: Diagnostic[];
+  changes_from_previous: Record<string, unknown>[];
   summary: Record<string, Record<string, number>>;
   tax_effect_rates: Record<
     string,

@@ -10,7 +10,7 @@ The sections below describe the current implementation. The dated decision recor
 
 Return contains one unified summary: federal/California totals, focused supporting calculations and related return records. Documents and History remain secondary tools in the left sidebar. The canvas is white with dark text, green controls, and amber issues. Source evidence stays beside the calculation in a resizable panel on desktop and a full-width bottom panel on mobile.
 
-The Issues tab contains direct links, not nested calculations or forms. Clicking an issue switches to Return, finds its actual dependency path, reveals the path within Summary, and smoothly scrolls to the source. Reduced-motion preferences use immediate scrolling. Assignment and resolution are available beside that calculation. Correction proposals remain proposals and link to History for withdrawal; they cannot be resolved into an invented engine result.
+The Issues tab contains direct links with recent activity, not nested calculations or forms. Clicking an issue switches to Return, finds its actual dependency path, reveals the path within Summary, and smoothly scrolls to the source. Reduced-motion preferences use immediate scrolling. Assignment and correction review are available beside that calculation. Approved proposals remain separate from the immutable engine result until a recomputed snapshot is supplied.
 
 Highlights follow the source and affected downstream amounts. Unrelated inputs remain unhighlighted. Highlighting indicates a dependency on an unresolved issue, not proof that every highlighted value is incorrect. Resolved findings are excluded, while active reviewer flags remain included.
 
@@ -95,7 +95,7 @@ The initial entries were reconstructed from the project conversation on 2026-10-
 ### D05 — Issue navigation and affected-chain highlighting
 
 - **Recorded:** 2026-10-17. **Status:** Implemented. Current reference: `1e4048a`.
-- **Decision:** Issue links reveal the actual calculation path in Summary and visibly scroll to the source. Assignment and resolution appear beside the linked calculation. Highlight affected downstream amounts as well as the source. The original banner placement was superseded by D15.
+- **Decision:** Issue links reveal the actual calculation path in Summary and visibly scroll to the source. Assignment and correction review appear beside the linked calculation. Highlight affected downstream amounts as well as the source. The original banner placement was superseded by D15.
 - **Reason:** Users need both the originating issue and its consequences to be apparent in the overview, without opening more content beneath the banner.
 - **Tradeoff:** Multiple totals can be highlighted by the same issue; highlighting signals dependency, not multiple independent errors. Unrelated inputs are not highlighted.
 - **Superseded direction:** Source-only highlighting was explicitly requested and implemented in `7c8bb76`. The user subsequently reversed that preference and requested full-chain highlighting. That earlier implementation is not the current design.
@@ -234,7 +234,7 @@ Proposed implementation and acceptance criteria:
 ### D18 — Optimize the hiring submission around one complete outcome
 
 - **Recorded:** 2026-10-18. **Status:** Adopted priority; implementation pending. Supplements D17 by changing its execution order.
-- **Decision:** Build one source-to-resolution lifecycle before the four specialized improvements in D17. Use the supplied v2-to-v3 late-K-1 transition: open diagnostics, missing evidence, supplied document arrival, immutable engine snapshot change, grouped downstream impact, cleared diagnostics, reviewer history, and honest remaining blockers.
+- **Decision:** Build one source-to-decision lifecycle before the four specialized improvements in D17. Use the supplied v2-to-v3 late-K-1 transition: open diagnostics, missing evidence, supplied document arrival, immutable engine snapshot change, grouped downstream impact, cleared diagnostics, reviewer history, and honest remaining blockers.
 - **Reason:** MiraFlores publicly emphasizes an end-to-end system, source-linked workpapers, tie-outs, edge cases surfaced for review, and features that solve an outcome rather than merely ship. A connected workflow demonstrates product judgment and graph/reliability engineering more strongly than several independent screens.
 - **Technical signal:** The workflow must explain how new evidence changes direct lines and downstream totals through the existing provenance graph. It should group 89 changed lines into reviewable causes and effects instead of presenting an undifferentiated diff.
 - **Simulation boundary:** The app may replay the exact supplied timeline event and switch to the supplied v3 snapshot. It must not claim to send a client message, run an AI model, invoke a tax engine, or compute a new result.
@@ -254,7 +254,7 @@ Proposed implementation and acceptance criteria:
 ### D20 — Persist an append-only correction workflow with simulated role control
 
 - **Recorded:** 2026-10-18. **Status:** Implemented.
-- **Decision:** Save correction proposals, reviewer decisions, issue resolutions, and their evidence metadata as append-only browser-local events. Use the packet's staff records for the role switcher. Preparers may propose; only reviewers or partners may approve, return, reject, resolve, or sign off.
+- **Decision:** Save assignments, correction proposals, and reviewer decisions with their evidence metadata as append-only browser-local events. Use the packet's staff records for the role switcher. Preparers may propose; only reviewers or partners may assign, approve, return, reject, or sign off. Legacy resolution events remain readable for backward compatibility.
 - **Reason:** The case-study demo needs one action to survive refresh and retain who did what, why, and against which return snapshot. An event record preserves the original extracted value and immutable supplied engine result instead of overwriting either one.
 - **Correction boundary:** Approval records a human decision but does not alter the supplied return snapshot. The active proposal therefore continues to block final return sign-off until a recomputed engine snapshot could reconcile it. This prototype cannot perform that recomputation.
 - **Security boundary:** The role switcher demonstrates workflow behavior. It is not authentication or secure authorization because all controls and persistence are client-side.
@@ -280,8 +280,8 @@ Proposed implementation and acceptance criteria:
 - **Recorded:** 2026-10-19. **Status:** Implemented.
 - **Decision:** Present issue evidence as a compact list using shortened titles derived from the supplied document titles. Every issue offers **Propose correction**. Numeric issues accept a corrected value; nonnumeric issues accept a documented corrective action.
 - **Reason:** Evidence cards consumed space and made several sources look like separate workflows. The previous resolution-evidence field also asked the reviewer to repeat the explanation already stored with the correction proposal.
-- **Control:** The proposal's **Evidence and reason** remains the supporting resolution record. A reviewer or partner must approve the proposal before the issue can be resolved. Resolution records cite the approved proposal instead of collecting a second narrative.
-- **Tradeoff:** Nonnumeric proposals do not estimate tax effects because the supplied packet provides no numeric change. Approved proposals continue to block final sign-off until a recomputed return snapshot incorporates them, even after the underlying issue is resolved.
+- **Control:** The proposal's **Evidence and reason** remains the supporting review record. A reviewer or partner must approve the proposal to complete the issue review, so no second narrative is collected.
+- **Tradeoff:** Nonnumeric proposals do not estimate tax effects because the supplied packet provides no numeric change. Approved proposals continue to block final sign-off until a recomputed return snapshot incorporates them.
 
 ### D24 — Put assignment beside correction and restrict assignment authority
 
@@ -296,3 +296,11 @@ Proposed implementation and acceptance criteria:
 - **Decision:** Show the 17 packet events through the current v3 computation by default. Put the 12 later packet events in a collapsed **Supplied scenario replay** section.
 - **Reason:** Every displayed timeline row comes directly from `timeline[]`, but the packet explicitly marks events after the 2026-06-23 v3 computation as scripted for replay. Separating them prevents a viewer from assuming that the prototype filed returns, collected signatures, or received later agency events.
 - **Boundary:** The app invents no timeline entries. The entire household and packet are fictional case-study data; “current” means supplied as of the latest engine snapshot, not a real taxpayer event.
+
+### D26 — Make approval the terminal issue decision and group history by purpose
+
+- **Recorded:** 2026-10-19. **Status:** Implemented.
+- **Decision:** Remove the separate **Resolve issue** action. An approved correction completes the issue for review; returned or rejected corrections leave it open. Preserve older resolve/reopen records only for backward-compatible history display.
+- **Reason:** In this prototype every issue is handled through a correction proposal. Asking the same reviewer to approve the proposal and then resolve the issue added a second state transition without adding evidence or authority.
+- **Filing boundary:** Approval removes the item from the issue count, but the proposal remains a filing blocker until a supplied recomputed return snapshot incorporates it. Approval therefore means “review decision complete,” not “engine totals updated.”
+- **History design:** History opens to issue-grouped review threads, with separate **Return versions** and **Case timeline** views. The Issues queue also shows the latest assignment, proposal, and approval events beneath each issue.

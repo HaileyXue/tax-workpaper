@@ -154,6 +154,37 @@ export function proposalDecision(
     )
     .at(-1);
 }
+
+export function findingIdForEvent(
+  events: ReviewEvent[],
+  event: ReviewEvent,
+): string | undefined {
+  if (event.findingId) return event.findingId;
+  if (['assign', 'resolve', 'reopen'].includes(event.kind)) return event.target;
+  if (['approve', 'return', 'reject'].includes(event.kind))
+    return events.find((candidate) => candidate.id === event.target)?.findingId;
+  return event.kind === 'flag' ? event.id : undefined;
+}
+
+/** An approved correction is the terminal issue decision in this prototype.
+ * Explicit resolve/reopen events remain readable for older saved histories. */
+export function findingResolved(events: ReviewEvent[], findingId: string) {
+  const active = activeEvents(events);
+  const explicit = active
+    .filter(
+      (event) =>
+        event.target === findingId &&
+        ['resolve', 'reopen'].includes(event.kind),
+    )
+    .at(-1);
+  if (explicit) return explicit.kind === 'resolve';
+  const proposal = active
+    .filter((event) => event.kind === 'adjust' && event.findingId === findingId)
+    .at(-1);
+  return Boolean(
+    proposal && proposalDecision(active, proposal.id)?.kind === 'approve',
+  );
+}
 export function estimateImpact(
   version: ReturnVersion,
   category: string,
@@ -208,13 +239,7 @@ export function signoffState(
     latest &&
     relevant.slice(signatureIndex + 1).some((e) => e.kind !== 'signoff');
   const flags = active.filter(
-    (e) =>
-      e.kind === 'flag' &&
-      active
-        .filter(
-          (a) => a.target === e.id && ['resolve', 'reopen'].includes(a.kind),
-        )
-        .at(-1)?.kind !== 'resolve',
+    (event) => event.kind === 'flag' && !findingResolved(active, event.id),
   ).length;
   const proposals = active.filter((e) => e.kind === 'adjust').length;
   const blockers = openWarnings + flags + proposals;

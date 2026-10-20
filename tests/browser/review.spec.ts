@@ -131,7 +131,7 @@ test('records a correction proposal and persists it independently of engine tota
   ).toBeVisible();
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
   await expect(
-    page.locator('.history-row').filter({ hasText: 'Undid action ·' }),
+    page.locator('.review-event').filter({ hasText: 'Undid action' }),
   ).toBeVisible();
 });
 
@@ -180,13 +180,18 @@ test('shows assignment beside correction and enforces assignment authority', asy
   await page.getByLabel('Viewing as').selectOption('st-02');
   await expect(assignment).toBeEnabled();
   await assignment.selectOption({ label: 'Priya Raman' });
+  await page.getByRole('button', { name: /^Issues/ }).click();
+  const issueRow = page
+    .locator('.finding-list-item')
+    .filter({ hasText: 'Lot N1 cost basis was treated as zero' });
+  await expect(issueRow.locator('.finding-history')).toContainText(
+    'Assigned to Priya Raman',
+  );
   await page.getByRole('button', { name: 'History', exact: true }).click();
-  await expect(
-    page.getByText(
-      'Assigned to Priya Raman · Lot N1 cost basis was treated as zero',
-      { exact: true },
-    ),
-  ).toBeVisible();
+  const thread = page
+    .locator('.issue-history-thread')
+    .filter({ hasText: 'Lot N1 cost basis was treated as zero' });
+  await expect(thread).toContainText('Assigned to Priya Raman');
 });
 
 test('saves a supplied correction, enforces role approval, and preserves its audit trail', async ({
@@ -237,27 +242,21 @@ test('saves a supplied correction, enforces role approval, and preserves its aud
     .fill('Agreed the acquisition date and adjusted basis to D11.');
   await persisted.getByRole('button', { name: 'Approve correction' }).click();
   await expect(persisted).toContainText('Approved');
-  await page
-    .locator('.issue-context')
-    .getByRole('button', { name: 'Resolve issue', exact: true })
-    .click();
+  await expect(context.locator('.approval-complete')).toContainText(
+    'this issue is complete for review',
+  );
+  await expect(page.getByLabel('11 issues to resolve')).toBeVisible();
   await page.getByRole('button', { name: 'History', exact: true }).click();
   await expect(
     page.getByText('Agreed the acquisition date and adjusted basis to D11.', {
       exact: true,
     }),
   ).toBeVisible();
-  await expect(
-    page
-      .locator('.history-section')
-      .getByText(
-        'Resolved using the approved correction: Matched D28 lot N1 to D11 using the supplied acquisition date.',
-        { exact: true },
-      ),
-  ).toBeVisible();
-  await expect(
-    page.locator('.history-row').filter({ hasText: 'Approved correction ·' }),
-  ).toContainText('Lot N1 cost basis');
+  const approvedThread = page
+    .locator('.issue-history-thread')
+    .filter({ hasText: 'Lot N1 cost basis' });
+  await expect(approvedThread).toContainText('Approved correction');
+  await expect(approvedThread).toContainText('Approved');
 });
 
 test('compares packet summary figures without filling unmapped cells', async ({
@@ -405,7 +404,7 @@ test('handles deep sources and nonnumeric issues without inventing a numeric lin
   await dialog.getByRole('button', { name: 'Cancel' }).click();
 });
 
-test('case count follows resolutions and reload returns to cases', async ({
+test('case count follows approvals and reload returns to cases', async ({
   page,
 }) => {
   await page.goto('/');
@@ -428,9 +427,6 @@ test('case count follows resolutions and reload returns to cases', async ({
     .getByLabel('Reviewer decision')
     .fill('Confirmed the duplicate using both supplied documents.');
   await page.getByRole('button', { name: 'Approve correction' }).click();
-  await page
-    .getByRole('button', { name: 'Resolve issue', exact: true })
-    .click();
   await page.getByRole('button', { name: 'All cases', exact: true }).click();
   await expect(page.locator('.case-issue-badge')).toHaveText(
     '11 issues to resolve',
@@ -613,10 +609,13 @@ test('separates supplied current timeline events from supplied scenario replay',
 }) => {
   await openCase(page);
   await page.getByRole('button', { name: 'History', exact: true }).click();
-  await page.getByText('Supplied season timeline', { exact: true }).click();
   await expect(
-    page.getByText(/17 events supplied in the packet/),
+    page.getByRole('region', { name: 'Review history' }),
   ).toBeVisible();
+  await page.getByRole('button', { name: 'Return versions' }).click();
+  await expect(page.locator('.version-cards article')).toHaveCount(3);
+  await page.getByRole('button', { name: 'Case timeline' }).click();
+  await expect(page.getByText(/17 events supplied through/)).toBeVisible();
   const scenario = page.locator('.scenario-timeline');
   await expect(scenario.locator('summary')).toContainText('12 future events');
   await expect(scenario.getByText('efile rejected')).not.toBeVisible();

@@ -859,6 +859,149 @@ nav button[aria-current='page'] .nav-count {
 .history-row button {
   font-size: 12px;
 }
+.history-view-switcher {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  margin: 0 0 28px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.history-view-switcher button {
+  flex: 1;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+}
+.history-view-switcher button[aria-pressed='true'] {
+  color: white;
+  background: var(--green);
+  box-shadow: var(--shadow-sm);
+}
+.history-view-heading {
+  margin-bottom: 20px;
+}
+.history-view-heading h3 {
+  margin-bottom: 5px;
+}
+.history-view-heading p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+.issue-history-thread {
+  margin-bottom: 18px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: white;
+}
+.issue-history-thread > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.issue-history-thread h4 {
+  margin: 3px 0 0;
+}
+.thread-status {
+  padding: 5px 9px;
+  border-radius: 999px;
+  color: #754000;
+  background: #fff0c2;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.thread-status.approved {
+  color: #056342;
+  background: #dff4e7;
+}
+.review-event {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 15px 0;
+  border-bottom: 1px solid #edf0ed;
+  font-size: 12px;
+}
+.review-event:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.review-event-dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 4px;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 1px var(--green);
+}
+.review-event p {
+  margin: 5px 0;
+}
+.review-event small {
+  display: block;
+  margin-top: 5px;
+  color: var(--ink-soft);
+}
+.review-event button {
+  align-self: start;
+  padding: 6px 9px;
+  font-size: 11px;
+}
+.version-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.version-cards article {
+  display: grid;
+  gap: 7px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: white;
+}
+.version-cards article > span {
+  text-transform: capitalize;
+}
+.version-cards small {
+  color: var(--ink-soft);
+}
+.version-compare-control {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+}
+.approval-complete {
+  margin-top: 14px !important;
+  padding: 11px 13px;
+  border-left: 3px solid var(--green);
+  color: #075b35;
+  background: #eaf7ee;
+  font-weight: 600;
+}
+@media (max-width: 800px) {
+  .history-view-switcher {
+    flex-direction: column;
+  }
+  .version-cards {
+    grid-template-columns: 1fr;
+  }
+  .finding-history p {
+    display: grid;
+    gap: 2px;
+  }
+}
 footer {
   display: flex;
   align-items: center;
@@ -1921,6 +2064,35 @@ textarea::placeholder {
 }
 .finding-link:hover {
   background: #ffe8a7;
+}
+.finding-list-item {
+  border-top: 1px solid #d8b668;
+}
+.finding-list-item:first-child {
+  border-top: 0;
+}
+.finding-list-item .finding-link {
+  border-top: 0;
+}
+.finding-history {
+  margin: -3px 34px 11px;
+  padding-left: 14px;
+  border-left: 2px solid #e3c985;
+}
+.finding-history p {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0;
+  padding: 4px 0;
+  color: #5d4a27;
+  font-size: 11px;
+}
+.finding-history p span {
+  font-weight: 650;
+}
+.finding-history p small {
+  color: #6a6253;
 }
 .issues-workspace .section-heading {
   padding-bottom: 20px;
