@@ -62,21 +62,27 @@ export default function ExceptionForm({
       className="review-form"
       onSubmit={(e) => {
         e.preventDefault();
-        if (kind === 'adjust' && (!amount.trim() || !category)) return;
+        if (kind === 'adjust' && numeric && (!amount.trim() || !category))
+          return;
         if (
           onSave({
             kind,
             target,
             note,
-            ...(kind === 'adjust' && numeric
+            ...(kind === 'adjust'
               ? {
-                  amount: Number(amount),
-                  original,
-                  category,
-                  ...(finding ? { findingId: finding.id } : {}),
-                  ...(suggested
+                  ...(numeric
                     ? {
-                        evidenceRefs: suggested.evidenceRefs,
+                        amount: Number(amount),
+                        original,
+                        category,
+                      }
+                    : {}),
+                  ...(finding
+                    ? { findingId: finding.id, evidenceRefs: finding.refs }
+                    : {}),
+                  ...(suggested && numeric
+                    ? {
                         affectedLine: suggested.affectedLine,
                         originalTaxableAmount: suggested.originalTaxableAmount,
                         proposedTaxableAmount,
@@ -103,7 +109,7 @@ export default function ExceptionForm({
         {referenceLabel(graph, target)} · {graph.version.version} · {staff.name}
       </p>
       <fieldset disabled={!canWrite(staff)}>
-        {kind === 'adjust' && (
+        {kind === 'adjust' && numeric && (
           <>
             <label>
               Corrected value (original: {money(original)})
@@ -182,6 +188,12 @@ export default function ExceptionForm({
               </details>
             )}
           </>
+        )}
+        {kind === 'adjust' && !numeric && (
+          <p className="callout">
+            This issue does not point to one editable number. Describe the
+            corrective action and cite the evidence supporting it.
+          </p>
         )}
         <label>
           Evidence and reason

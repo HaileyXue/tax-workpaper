@@ -1,4 +1,4 @@
-import type { Graph, TaxLine } from './packet';
+import type { Graph, SourceDocument, TaxLine } from './packet';
 
 /** Collapse only explicit, unchanged carry/sum links. Preserve every skipped line
  * in the presentation trail; do not infer equivalence from equal amounts alone. */
@@ -63,5 +63,27 @@ export function displayText(graph: Graph, text: string): string {
   return text.replace(
     /\b(?:F\d+[A-Za-z]*|Sch[A-Za-z0-9_-]+)\.[A-Za-z0-9_.-]+/g,
     (ref) => referenceLabel(graph, ref),
+  );
+}
+
+/** Compact document names for dense evidence lists. The supplied document ID
+ * remains visible, while repeated year and taxpayer qualifiers are omitted. */
+export function shortDocumentTitle(document: SourceDocument): string {
+  return document.title
+    .replace(/\s*\([^)]*\)\s*$/, '')
+    .replace(new RegExp(`\\b${document.tax_year}\\b`, 'g'), '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function issueOriginLabel(origin: string): string {
+  return (
+    {
+      'Engine diagnostic': 'Return engine check',
+      'Independent source check': 'Source comparison',
+      'Independent cross-document check': 'Cross-document comparison',
+      'Independent overlap check': 'Duplicate-source check',
+      'Independent year check': 'Date consistency check',
+    }[origin] ?? origin
   );
 }

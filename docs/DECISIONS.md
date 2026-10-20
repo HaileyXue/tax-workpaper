@@ -274,3 +274,11 @@ Proposed implementation and acceptance criteria:
 - **Decision:** When consecutive calculation records have the same label and unchanged amount, show one breadcrumb level. Preserve every supplied record and graph edge in the data model and calculation detail.
 - **Reason:** Form 1040 taxable interest and Schedule B taxable interest are separate accounting records, but both are labeled `Taxable interest` and carry the same amount in this snapshot. Rendering both as adjacent, identical breadcrumb labels looks like accidental duplication and does not help navigation.
 - **Boundary:** This is presentation-only compression. A label is removed only when it is consecutive and its amount is unchanged. Differently labeled totals such as `Taxable interest` and `Total interest`, or repeated labels with different amounts, remain visible.
+
+### D23 — Use one evidence-backed correction record for every issue
+
+- **Recorded:** 2026-10-19. **Status:** Implemented.
+- **Decision:** Present issue evidence as a compact list using shortened titles derived from the supplied document titles. Every issue offers **Propose correction**. Numeric issues accept a corrected value; nonnumeric issues accept a documented corrective action.
+- **Reason:** Evidence cards consumed space and made several sources look like separate workflows. The previous resolution-evidence field also asked the reviewer to repeat the explanation already stored with the correction proposal.
+- **Control:** The proposal's **Evidence and reason** remains the supporting resolution record. A reviewer or partner must approve the proposal before the issue can be resolved. Resolution records cite the approved proposal instead of collecting a second narrative.
+- **Tradeoff:** Nonnumeric proposals do not estimate tax effects because the supplied packet provides no numeric change. Approved proposals continue to block final sign-off until a recomputed return snapshot incorporates them, even after the underlying issue is resolved.

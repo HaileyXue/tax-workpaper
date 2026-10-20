@@ -53,6 +53,7 @@ export function validateEvent(
     throw new Error('A reason or evidence note is required.');
   if (
     event.kind === 'adjust' &&
+    (event.amount !== undefined || event.original !== undefined) &&
     (!Number.isFinite(event.amount) || !Number.isFinite(event.original))
   )
     throw new Error('Enter a valid numeric adjustment.');
@@ -104,6 +105,8 @@ export function validateEvent(
         candidate.kind === 'adjust' && candidate.findingId === event.target,
     );
     const latest = proposals.at(-1);
+    if (!latest)
+      throw new Error('Document a correction before resolving this issue.');
     if (latest && proposalDecision(events, latest.id)?.kind !== 'approve')
       throw new Error(
         'The correction must be approved before this issue can be resolved.',

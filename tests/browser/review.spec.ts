@@ -80,7 +80,7 @@ test('shows the canonical issue UI only when manual review reaches its calculati
     .click();
   const context = page.locator('.issue-context');
   await expect(context).toContainText('Lot N1 cost basis was treated as zero');
-  await expect(context).toContainText('Independent cross-document check');
+  await expect(context).toContainText('Cross-document comparison');
   await expect(context).toContainText('Review point');
   await expect(context).toContainText('Box B totals');
   await expect(context.locator('.contextual-review')).toBeVisible();
@@ -171,9 +171,9 @@ test('saves a supplied correction, enforces role approval, and preserves its aud
   await page.getByLabel('Viewing as').selectOption('st-01');
   await issue(page, 'missing-zero-ev-0498');
   const context = page.locator('.issue-context');
-  await expect(context).toContainText('Independent cross-document check');
+  await expect(context).toContainText('Cross-document comparison');
   await expect(context).toContainText(
-    'D11 supplies an adjusted basis of $19,100',
+    'A second supplied statement reports an adjusted basis of $19,100',
   );
   await context.locator('.contextual-review > summary').click();
   await context
@@ -214,10 +214,6 @@ test('saves a supplied correction, enforces role approval, and preserves its aud
   await expect(persisted).toContainText('Approved');
   await page
     .locator('.issue-context')
-    .getByLabel('Resolution evidence')
-    .fill('Approved correction resolves this source discrepancy.');
-  await page
-    .locator('.issue-context')
     .getByRole('button', { name: 'Resolve issue', exact: true })
     .click();
   await page.getByRole('button', { name: 'History', exact: true }).click();
@@ -229,9 +225,10 @@ test('saves a supplied correction, enforces role approval, and preserves its aud
   await expect(
     page
       .locator('.history-section')
-      .getByText('Approved correction resolves this source discrepancy.', {
-        exact: true,
-      }),
+      .getByText(
+        'Resolved using the approved correction: Matched D28 lot N1 to D11 using the supplied acquisition date.',
+        { exact: true },
+      ),
   ).toBeVisible();
   await expect(
     page.locator('.history-row').filter({ hasText: 'approve ·' }),
@@ -369,6 +366,18 @@ test('handles deep sources and nonnumeric issues without inventing a numeric lin
     'This issue concerns a record rather than a calculated number.',
   );
   await expect(record.locator('.amount-issue')).toHaveCount(0);
+  await page.locator('.contextual-review > summary').click();
+  await page.getByRole('button', { name: 'Propose correction' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(
+    dialog.getByText('This issue does not point to one editable number.', {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await expect(
+    dialog.getByLabel('Corrected value', { exact: false }),
+  ).toHaveCount(0);
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
 });
 
 test('case count follows resolutions and reload returns to cases', async ({
@@ -382,7 +391,18 @@ test('case count follows resolutions and reload returns to cases', async ({
   await page.getByRole('button', { name: 'Open case', exact: true }).click();
   await issue(page, 'duplicate-sweep');
   await page.locator('.contextual-review > summary').click();
-  await page.getByLabel('Resolution evidence').fill('Test-only disposition.');
+  await page.getByRole('button', { name: 'Propose correction' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Corrected value', { exact: false }).fill('0');
+  await dialog.getByLabel('Tax-effect category').selectOption('interest');
+  await dialog
+    .getByLabel('Evidence and reason')
+    .fill('Confirmed both records describe the same sweep interest.');
+  await dialog.getByRole('button', { name: 'Save proposal' }).click();
+  await page
+    .getByLabel('Reviewer decision')
+    .fill('Confirmed the duplicate using both supplied documents.');
+  await page.getByRole('button', { name: 'Approve correction' }).click();
   await page
     .getByRole('button', { name: 'Resolve issue', exact: true })
     .click();

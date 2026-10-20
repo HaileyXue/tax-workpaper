@@ -1,7 +1,7 @@
 import { ArrowRight, FileCheck2, FolderOpen } from 'lucide-react';
 import { createGraph, packet } from '../domain/packet';
 import { findIssues } from '../domain/findings';
-import { activeEvents, signoffState, type ReviewEvent } from '../domain/review';
+import { activeEvents, type ReviewEvent } from '../domain/review';
 
 export default function Cases({
   events,
@@ -63,7 +63,10 @@ export default function Cases({
                     )
                     .at(-1)?.kind !== 'resolve',
               ).length;
-              const count = signoffState(events, version, warnings).blockers;
+              // The badge reports unresolved issues. Approved correction
+              // proposals can still block final sign-off until a recomputed
+              // return arrives, but they are not an additional issue.
+              const count = warnings;
               return (
                 <article className="case-card" key={data.packet.client_id}>
                   <div className="case-description">

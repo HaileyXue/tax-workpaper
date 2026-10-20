@@ -1,4 +1,9 @@
-import { referenceLabel, displayText } from '../domain/presentation';
+import {
+  referenceLabel,
+  displayText,
+  issueOriginLabel,
+  shortDocumentTitle,
+} from '../domain/presentation';
 import {
   Fragment,
   useEffect,
@@ -88,27 +93,48 @@ export default function ReturnSummary({
           <strong>Review point</strong> · {referenceLabel(graph, issueLineId)}
         </p>
       )}
-      <span className="issue-origin">{issue.origin}</span>
-      <strong>{issue.title}</strong>
-      <p>{displayText(graph, issue.detail)}</p>
-      <div className="issue-references">
+      <span className="issue-origin">{issueOriginLabel(issue.origin)}</span>
+      <h4>{issue.title}</h4>
+      <p className="issue-explanation">{displayText(graph, issue.detail)}</p>
+      <strong className="evidence-heading-label">Evidence to review</strong>
+      <ul className="issue-references" aria-label="Evidence to review">
         {issue.refs.map((ref) => (
-          <button
-            key={ref}
-            aria-pressed={jump?.ref === ref}
-            onClick={() =>
-              graph.values.has(ref)
-                ? tree.onEvidence({
-                    ref,
-                    path: ['Return summary', issue.title],
-                  })
-                : onReference(ref)
-            }
-          >
-            {referenceLabel(graph, ref)}
-          </button>
+          <li key={ref}>
+            <button
+              aria-pressed={jump?.ref === ref}
+              onClick={() =>
+                graph.values.has(ref)
+                  ? tree.onEvidence({
+                      ref,
+                      path: ['Return summary', issue.title],
+                    })
+                  : onReference(ref)
+              }
+            >
+              {(() => {
+                const value = graph.values.get(ref);
+                const document = value
+                  ? graph.documents.get(value.document_id)
+                  : graph.documents.get(ref);
+                return document ? (
+                  <>
+                    <span>
+                      {document.id} · {shortDocumentTitle(document)}
+                    </span>
+                    <small>
+                      {value
+                        ? `${value.label} · page ${value.page}`
+                        : 'Source document'}
+                    </small>
+                  </>
+                ) : (
+                  <span>{referenceLabel(graph, ref)}</span>
+                );
+              })()}
+            </button>
+          </li>
         ))}
-      </div>
+      </ul>
       {issuePanel}
     </div>
   );

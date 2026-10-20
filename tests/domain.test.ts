@@ -143,6 +143,21 @@ describe('review records and estimates', () => {
       'reason',
     );
   });
+  it('allows a documented nonnumeric correction proposal', () => {
+    expect(() =>
+      validateEvent(
+        {
+          ...event,
+          kind: 'adjust',
+          target: 'qa-14',
+          findingId: 'QUESTIONNAIRE_SALES_CONFLICT',
+          note: 'Obtain and document a corrected client response.',
+        },
+        reviewer,
+        [],
+      ),
+    ).not.toThrow();
+  });
   it('prevents administrator writes and preparer resolution', () => {
     const admin = packet.firm.staff.find(
       (s) => s.role === 'firm_administrator',

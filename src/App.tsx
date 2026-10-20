@@ -77,6 +77,7 @@ export default function App() {
   const [action, setAction] = useState<{
     target: string;
     kind: ExceptionAction;
+    finding?: Finding;
   } | null>(null);
   const [focusedIssue, setFocusedIssue] = useState<Finding | null>(null);
   const [summaryJump, setSummaryJump] = useState<{
@@ -368,12 +369,17 @@ export default function App() {
                   <IssueReview
                     key={focusedIssue.id}
                     finding={focusedIssue}
+                    graph={graph}
                     events={current}
                     staff={staff}
                     save={save}
                     resolved={resolved}
                     onPropose={(target) =>
-                      setAction({ target, kind: 'adjust' })
+                      setAction({
+                        target,
+                        kind: 'adjust',
+                        finding: focusedIssue,
+                      })
                     }
                   />
                 ))
@@ -702,11 +708,7 @@ export default function App() {
             kind={action.kind}
             graph={graph}
             staff={staff}
-            finding={
-              focusedIssue?.correction?.target === action.target
-                ? focusedIssue
-                : undefined
-            }
+            finding={action.finding}
             onCancel={() => setAction(null)}
             onSave={(event) => {
               const saved = save(event);

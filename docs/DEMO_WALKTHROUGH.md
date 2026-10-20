@@ -93,7 +93,7 @@ As Priya, show that approval and resolution are disabled. The submitted proposal
 
 Refresh the browser, reopen the case, select **Daniel Ortiz · reviewer**, and return to the same issue. The proposal remains saved.
 
-Enter `Agreed the acquisition date and adjusted basis to D11.` under **Reviewer decision**, approve the correction, enter `Approved correction resolves this source discrepancy.` as resolution evidence, and resolve the issue.
+Enter `Agreed the acquisition date and adjusted basis to D11.` under **Reviewer decision**, approve the correction, and resolve the issue. The app reuses the proposal's **Evidence and reason** as the resolution support, so it does not ask for the same explanation twice.
 
 ![Reviewer approved and resolved](images/demo-07-reviewer-approved-and-resolved.png)
 
@@ -109,7 +109,7 @@ Show the three separate events:
 
 1. Priya proposed the adjustment.
 2. Daniel approved it.
-3. Daniel resolved the finding.
+3. Daniel resolved the finding using the approved proposal and its evidence record.
 
 The history preserves the actors, timestamps, return version, original and proposed values, taxable change, and rationale. **Export history** downloads the same review record as JSON.
 

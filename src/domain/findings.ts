@@ -110,7 +110,7 @@ export function findIssues(graph: Graph): Finding[] {
     findings.push({
       id: `missing-zero-${basis.id}`,
       title: `${basis.label} was treated as zero`,
-      detail: `${graph.documents.get(basis.document_id)?.id} reports the basis as not reported, but the pipeline stored $0 at ${Math.round(basis.confidence * 100)}% confidence. ${graph.documents.get(adjustedBasis.document_id)?.id} supplies an adjusted basis of $${adjustedBasis.value.toLocaleString()} for the matching ${acquired.value} acquisition date.`,
+      detail: `The brokerage left this basis blank because it was not reported, but the return treated the blank as $0. A second supplied statement reports an adjusted basis of $${adjustedBasis.value.toLocaleString()} for a lot with the same ${acquired.value} acquisition date. Compare both documents before correcting the return.`,
       refs: [basis.id, adjustedBasis.id, supplementalDate.id],
       origin: 'Independent cross-document check',
       severity: 'warning',
@@ -135,7 +135,7 @@ export function findIssues(graph: Graph): Finding[] {
       id: 'duplicate-sweep',
       title: 'Same bank sweep interest counted twice',
       detail:
-        'D28 and D29 both report $1,840 for the Northlake Bank sweep account. Both flow to taxable interest. Confirm a single income event before adjusting.',
+        'Two supplied documents each report $1,840 of interest for the same Northlake Bank sweep account, and both amounts were included in taxable interest. Confirm whether they describe one payment before removing either amount.',
       refs: sweep,
       origin: 'Independent overlap check',
       severity: 'warning',
@@ -147,7 +147,7 @@ export function findIssues(graph: Graph): Finding[] {
       id: 'fx-year',
       title: '2025 interest uses the 2024 exchange rate',
       detail:
-        'The Swedish interest line uses 10.56 SEK/USD (2024), while the packet supplies 9.86 for 2025. Review the conversion and document the chosen rate.',
+        'The 2025 Swedish interest calculation uses the supplied 2024 exchange rate of 10.56 SEK per USD. The packet also supplies a 2025 rate of 9.86. Review which rate should apply before changing the converted interest.',
       refs: [
         'SchB.1.6',
         'ev-0960',

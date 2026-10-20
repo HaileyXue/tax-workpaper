@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { money, packet, type Staff } from '../domain/packet';
+import { money, packet, type Graph, type Staff } from '../domain/packet';
 import {
   canWrite,
   estimateImpact,
@@ -10,6 +10,7 @@ import type { Finding } from '../domain/findings';
 import type { SaveEvent } from './Exceptions';
 export default function IssueReview({
   finding: f,
+  graph,
   events,
   staff,
   save,
@@ -17,6 +18,7 @@ export default function IssueReview({
   onPropose,
 }: {
   finding: Finding;
+  graph: Graph;
   events: ReviewEvent[];
   staff: Staff;
   save: SaveEvent;
@@ -29,6 +31,15 @@ export default function IssueReview({
     .at(-1);
   const decision = proposal && proposalDecision(events, proposal.id);
   const approved = decision?.kind === 'approve';
+  const correctionTarget =
+    f.correction?.target ??
+    f.refs.find(
+      (ref) =>
+        typeof graph.values.get(ref)?.value === 'number' ||
+        typeof graph.lines.get(ref)?.value === 'number',
+    ) ??
+    f.refs[0] ??
+    f.id;
   const reviewer = ['reviewer', 'partner'].includes(staff.role);
   const impact =
     proposal?.category && proposal.taxableDelta !== undefined
@@ -78,18 +89,25 @@ export default function IssueReview({
             ))}
         </select>
       </label>
-      {f.correction && !proposal && (
+      {!proposal && (
         <div className="correction-review">
-          <strong>Suggested correction</strong>
-          <p>
-            Replace {money(0)} basis with {money(f.correction.proposedValue)}{' '}
-            from the corroborating source. The proposed sale gain becomes{' '}
-            {money(f.correction.proposedTaxableAmount)}.
-          </p>
+          <strong>Correct this issue</strong>
+          {f.correction ? (
+            <p>
+              The evidence suggests replacing {money(0)} basis with{' '}
+              {money(f.correction.proposedValue)}. Review and edit the value
+              before submitting it.
+            </p>
+          ) : (
+            <p>
+              Propose a corrected value when the issue affects a number, or
+              document the action needed to correct a nonnumeric issue.
+            </p>
+          )}
           <button
             className="primary"
             disabled={!canWrite(staff)}
-            onClick={() => onPropose(f.correction!.target)}
+            onClick={() => onPropose(correctionTarget)}
           >
             Propose correction
           </button>
@@ -112,12 +130,14 @@ export default function IssueReview({
             </span>
           </div>
           <dl className="proposal-summary">
-            <div>
-              <dt>Source value</dt>
-              <dd>
-                {money(proposal.original)} → {money(proposal.amount)}
-              </dd>
-            </div>
+            {proposal.amount !== undefined && (
+              <div>
+                <dt>Source value</dt>
+                <dd>
+                  {money(proposal.original)} → {money(proposal.amount)}
+                </dd>
+              </div>
+            )}
             {proposal.proposedTaxableAmount !== undefined && (
               <div>
                 <dt>Proposed sale gain</dt>
@@ -202,44 +222,30 @@ export default function IssueReview({
           </p>
         </section>
       )}
-      <form
-        className="resolve"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const form = e.currentTarget;
-          if (
+      <div className="resolve">
+        <button
+          onClick={() =>
             save({
               kind: resolved(f.id) ? 'reopen' : 'resolve',
               target: f.id,
-              note: String(new FormData(form).get('reason')),
+              note: resolved(f.id)
+                ? 'Reopened for further review.'
+                : `Resolved using the approved correction: ${proposal?.note ?? ''}`,
             })
-          )
-            form.reset();
-        }}
-      >
-        <label>
-          Resolution evidence
-          <textarea
-            name="reason"
-            required
-            placeholder="Explain the decision and supporting evidence."
-            disabled={!canWrite(staff)}
-          />
-        </label>
-        <button
+          }
           disabled={
             !canWrite(staff) ||
             (!resolved(f.id) && staff.role === 'preparer') ||
-            (!resolved(f.id) && Boolean(f.correction) && !approved)
+            (!resolved(f.id) && !approved)
           }
         >
           {resolved(f.id) ? 'Reopen issue' : 'Resolve issue'}
         </button>
-      </form>
-      {!resolved(f.id) && f.correction && !approved && (
+      </div>
+      {!resolved(f.id) && !approved && (
         <p className="small muted">
-          An approved correction decision is required before this issue can be
-          resolved.
+          Submit a correction and obtain reviewer or partner approval before
+          resolving this issue.
         </p>
       )}
       {events
