@@ -608,7 +608,7 @@ nav button[aria-current='page'] .nav-count {
   align-items: center;
   gap: 10px;
   font-size: 12px;
-  margin: 18px 0;
+  margin: 0;
 }
 .owner select {
   font-size: 12px;
@@ -658,6 +658,33 @@ nav button[aria-current='page'] .nav-count {
 }
 .correction-review .section-top {
   margin-bottom: 14px;
+}
+.issue-actions {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 14px;
+}
+.issue-actions .assignment-help {
+  flex-basis: 100%;
+  margin: 0;
+}
+.proposal-assignment {
+  margin: 14px 0;
+}
+.proposal-assignment .assignment-help {
+  margin: 5px 0 0;
+}
+.scenario-timeline {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+.scenario-timeline > summary {
+  color: #075b35;
+  font-weight: 650;
+  cursor: pointer;
 }
 .proposal-status {
   padding: 4px 8px;

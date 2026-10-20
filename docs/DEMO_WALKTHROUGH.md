@@ -89,7 +89,7 @@ Enter: `Matched D28 lot N1 to D11 using the supplied acquisition date.` Then cli
 
 ![Preparer cannot approve](images/demo-06-preparer-cannot-approve.png)
 
-As Priya, show that approval and resolution are disabled. The submitted proposal temporarily adds a blocker because the original issue is still open and the proposal has not been reconciled.
+As Priya, show that assignment, approval, and resolution are disabled. The interface explains that a reviewer or partner must assign work. The submitted proposal temporarily adds a blocker because the original issue is still open and the proposal has not been reconciled.
 
 Refresh the browser, reopen the case, select **Daniel Ortiz · reviewer**, and return to the same issue. The proposal remains saved.
 
@@ -120,6 +120,8 @@ Return to **Return** and scroll to **Final review sign-off**.
 ![Filing readiness](images/demo-09-filing-readiness.png)
 
 Explain that unrelated findings remain unresolved and the approved proposal has not been incorporated into a recomputed return snapshot. Final sign-off therefore remains blocked. This is the intended control behavior.
+
+In **History**, the supplied season timeline initially shows only the 17 packet events through the current v3 snapshot. The 12 later events are available under **Supplied scenario replay** and are explicitly identified as scripted packet data rather than actions performed by this app.
 
 ## Corrected taxable-interest path
 

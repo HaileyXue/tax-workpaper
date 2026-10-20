@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { money, packet, type Graph, type Staff } from '../domain/packet';
 import {
+  canAssign,
   canWrite,
   estimateImpact,
   proposalDecision,
@@ -41,6 +42,11 @@ export default function IssueReview({
     f.refs[0] ??
     f.id;
   const reviewer = ['reviewer', 'partner'].includes(staff.role);
+  const assignmentAllowed = canAssign(staff);
+  const owner =
+    events
+      .filter((event) => event.target === f.id && event.kind === 'assign')
+      .at(-1)?.note ?? 'Unassigned';
   const impact =
     proposal?.category && proposal.taxableDelta !== undefined
       ? estimateImpact(
@@ -63,32 +69,44 @@ export default function IssueReview({
     )
       setReviewNote('');
   };
-  return (
-    <details className="contextual-review">
-      <summary>Decision & assignment</summary>{' '}
+  const assignmentControl = (
+    <>
       <label className="owner">
-        Owner
+        Assign to
         <select
-          disabled={!canWrite(staff)}
-          value={
-            events
-              .filter((e) => e.target === f.id && e.kind === 'assign')
-              .at(-1)?.note ?? ''
-          }
-          onChange={(e) =>
-            save({ kind: 'assign', target: f.id, note: e.target.value })
+          aria-label="Assign issue to"
+          disabled={!assignmentAllowed}
+          value={owner}
+          onChange={(event) =>
+            save({
+              kind: 'assign',
+              target: f.id,
+              note: event.target.value,
+            })
           }
         >
           <option value="Unassigned">Unassigned</option>
           {packet.firm.staff
-            .filter((s) => ['preparer', 'reviewer', 'partner'].includes(s.role))
-            .map((s) => (
-              <option key={s.id} value={s.name}>
-                {s.name}
+            .filter((person) =>
+              ['preparer', 'reviewer', 'partner'].includes(person.role),
+            )
+            .map((person) => (
+              <option key={person.id} value={person.name}>
+                {person.name}
               </option>
             ))}
         </select>
       </label>
+      {!assignmentAllowed && (
+        <p className="small muted assignment-help">
+          Reviewer or partner permission is required to assign work.
+        </p>
+      )}
+    </>
+  );
+  return (
+    <details className="contextual-review">
+      <summary>Correction & assignment</summary>{' '}
       {!proposal && (
         <div className="correction-review">
           <strong>Correct this issue</strong>
@@ -104,14 +122,20 @@ export default function IssueReview({
               document the action needed to correct a nonnumeric issue.
             </p>
           )}
-          <button
-            className="primary"
-            disabled={!canWrite(staff)}
-            onClick={() => onPropose(correctionTarget)}
-          >
-            Propose correction
-          </button>
+          <div className="issue-actions">
+            <button
+              className="primary"
+              disabled={!canWrite(staff)}
+              onClick={() => onPropose(correctionTarget)}
+            >
+              Propose correction
+            </button>
+            {assignmentControl}
+          </div>
         </div>
+      )}
+      {proposal && (
+        <div className="proposal-assignment">{assignmentControl}</div>
       )}
       {proposal && (
         <section className="correction-review" aria-label="Correction review">

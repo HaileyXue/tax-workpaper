@@ -282,3 +282,17 @@ Proposed implementation and acceptance criteria:
 - **Reason:** Evidence cards consumed space and made several sources look like separate workflows. The previous resolution-evidence field also asked the reviewer to repeat the explanation already stored with the correction proposal.
 - **Control:** The proposal's **Evidence and reason** remains the supporting resolution record. A reviewer or partner must approve the proposal before the issue can be resolved. Resolution records cite the approved proposal instead of collecting a second narrative.
 - **Tradeoff:** Nonnumeric proposals do not estimate tax effects because the supplied packet provides no numeric change. Approved proposals continue to block final sign-off until a recomputed return snapshot incorporates them, even after the underlying issue is resolved.
+
+### D24 — Put assignment beside correction and restrict assignment authority
+
+- **Recorded:** 2026-10-19. **Status:** Implemented.
+- **Decision:** Show **Assign to** beside **Propose correction** in each issue workflow. Reviewers and partners may change the owner. Preparers and read-only roles see the selected owner and a disabled control explaining the required authority.
+- **Reason:** Assignment is part of deciding how an issue will be handled and should not be hidden in a separate form. Allowing preparers to reassign review work would also weaken responsibility controls.
+- **Audit presentation:** Assignment history resolves the issue ID to its plain-language title and identifies the assignee separately from the person who made the assignment.
+
+### D25 — Separate the current supplied timeline from scenario replay
+
+- **Recorded:** 2026-10-19. **Status:** Implemented.
+- **Decision:** Show the 17 packet events through the current v3 computation by default. Put the 12 later packet events in a collapsed **Supplied scenario replay** section.
+- **Reason:** Every displayed timeline row comes directly from `timeline[]`, but the packet explicitly marks events after the 2026-06-23 v3 computation as scripted for replay. Separating them prevents a viewer from assuming that the prototype filed returns, collected signatures, or received later agency events.
+- **Boundary:** The app invents no timeline entries. The entire household and packet are fictional case-study data; “current” means supplied as of the latest engine snapshot, not a real taxpayer event.

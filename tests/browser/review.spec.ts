@@ -131,7 +131,7 @@ test('records a correction proposal and persists it independently of engine tota
   ).toBeVisible();
   await page.getByRole('button', { name: 'Undo', exact: true }).click();
   await expect(
-    page.locator('.history-row').filter({ hasText: 'undo ·' }),
+    page.locator('.history-row').filter({ hasText: 'Undid action ·' }),
   ).toBeVisible();
 });
 
@@ -162,6 +162,31 @@ test('supports mobile evidence inspection and read-only roles', async ({
   ).toBe(true);
   await page.getByRole('button', { name: 'Close evidence' }).click();
   await expect(link).toBeFocused();
+});
+
+test('shows assignment beside correction and enforces assignment authority', async ({
+  page,
+}) => {
+  await openCase(page);
+  await page.getByLabel('Viewing as').selectOption('st-01');
+  await issue(page, 'missing-zero-ev-0498');
+  const context = page.locator('.issue-context');
+  await context.locator('.contextual-review > summary').click();
+  const assignment = context.getByLabel('Assign issue to');
+  await expect(assignment).toBeDisabled();
+  await expect(context).toContainText(
+    'Reviewer or partner permission is required to assign work.',
+  );
+  await page.getByLabel('Viewing as').selectOption('st-02');
+  await expect(assignment).toBeEnabled();
+  await assignment.selectOption({ label: 'Priya Raman' });
+  await page.getByRole('button', { name: 'History', exact: true }).click();
+  await expect(
+    page.getByText(
+      'Assigned to Priya Raman · Lot N1 cost basis was treated as zero',
+      { exact: true },
+    ),
+  ).toBeVisible();
 });
 
 test('saves a supplied correction, enforces role approval, and preserves its audit trail', async ({
@@ -231,7 +256,7 @@ test('saves a supplied correction, enforces role approval, and preserves its aud
       ),
   ).toBeVisible();
   await expect(
-    page.locator('.history-row').filter({ hasText: 'approve ·' }),
+    page.locator('.history-row').filter({ hasText: 'Approved correction ·' }),
   ).toContainText('Lot N1 cost basis');
 });
 
@@ -581,4 +606,20 @@ test('return snapshot changes document use and superseded labels', async ({
   await expect(page.locator('.document-row')).not.toContainText(
     'Not used in this snapshot',
   );
+});
+
+test('separates supplied current timeline events from supplied scenario replay', async ({
+  page,
+}) => {
+  await openCase(page);
+  await page.getByRole('button', { name: 'History', exact: true }).click();
+  await page.getByText('Supplied season timeline', { exact: true }).click();
+  await expect(
+    page.getByText(/17 events supplied in the packet/),
+  ).toBeVisible();
+  const scenario = page.locator('.scenario-timeline');
+  await expect(scenario.locator('summary')).toContainText('12 future events');
+  await expect(scenario.getByText('efile rejected')).not.toBeVisible();
+  await scenario.locator('summary').click();
+  await expect(scenario.getByText('efile rejected')).toBeVisible();
 });

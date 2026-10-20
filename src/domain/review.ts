@@ -42,6 +42,9 @@ export function activeEvents(events: ReviewEvent[]) {
 export function canWrite(staff: Staff) {
   return ['preparer', 'reviewer', 'partner'].includes(staff.role);
 }
+export function canAssign(staff: Staff) {
+  return ['reviewer', 'partner'].includes(staff.role);
+}
 export function validateEvent(
   event: ReviewEvent,
   staff: Staff,
@@ -49,6 +52,8 @@ export function validateEvent(
 ) {
   if (!canWrite(staff) || event.actor !== staff.id || event.role !== staff.role)
     throw new Error('This role cannot change review records.');
+  if (event.kind === 'assign' && !canAssign(staff))
+    throw new Error('Only a reviewer or partner can assign issues.');
   if (!event.note.trim())
     throw new Error('A reason or evidence note is required.');
   if (

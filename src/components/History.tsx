@@ -2,6 +2,7 @@ import { referenceLabel, displayText } from '../domain/presentation';
 import { useState } from 'react';
 import { money, packet, type Graph, type Staff } from '../domain/packet';
 import { activeEvents, canWrite, type ReviewEvent } from '../domain/review';
+import { findIssues } from '../domain/findings';
 import type { SaveEvent } from './Exceptions';
 import CalculationTree, { type TreeProps } from './CalculationTree';
 export default function History({
@@ -23,6 +24,50 @@ export default function History({
     (l) => base.lines.find((b) => b.key === l.key)?.value !== l.value,
   );
   const removed = base.lines.filter((l) => !graph.lines.has(l.key));
+  const findings = findIssues(graph);
+  const currentSnapshotAt = Math.max(
+    ...packet.return_versions.map((version) =>
+      new Date(version.computed_at).getTime(),
+    ),
+  );
+  const recordedTimeline = packet.timeline.filter(
+    (event) => new Date(event.at).getTime() <= currentSnapshotAt,
+  );
+  const scenarioTimeline = packet.timeline.filter(
+    (event) => new Date(event.at).getTime() > currentSnapshotAt,
+  );
+  const targetLabel = (event: ReviewEvent) => {
+    const proposal = ['approve', 'return', 'reject'].includes(event.kind)
+      ? events.find((candidate) => candidate.id === event.target)
+      : undefined;
+    const findingId = event.findingId ?? proposal?.findingId ?? event.target;
+    return (
+      findings.find((finding) => finding.id === findingId)?.title ??
+      referenceLabel(graph, proposal?.target ?? event.target)
+    );
+  };
+  const actionLabel = (event: ReviewEvent) =>
+    ({
+      assign: `Assigned to ${event.note}`,
+      adjust: 'Proposed correction',
+      approve: 'Approved correction',
+      return: 'Returned correction',
+      reject: 'Rejected correction',
+      resolve: 'Resolved issue',
+      reopen: 'Reopened issue',
+      flag: 'Flagged issue',
+      note: 'Added note',
+      signoff: 'Signed off return',
+      undo: 'Undid action',
+      verify: 'Verified value',
+    })[event.kind] ?? event.kind;
+  const timelineRows = (items: typeof packet.timeline) =>
+    items.map((event) => (
+      <div className="history-row" key={event.id}>
+        <time>{event.at.slice(0, 10)}</time>
+        <span>{event.event.replaceAll('_', ' ')}</span>
+      </div>
+    ));
   return (
     <section className="workspace-section history-section">
       <header className="section-heading">
@@ -84,16 +129,9 @@ export default function History({
         <div className="history-row" key={e.id}>
           <div>
             <strong>
-              {e.kind} ·{' '}
-              {referenceLabel(
-                graph,
-                ['approve', 'return', 'reject'].includes(e.kind)
-                  ? (events.find((candidate) => candidate.id === e.target)
-                      ?.target ?? e.target)
-                  : e.target,
-              )}
+              {actionLabel(e)} · {targetLabel(e)}
             </strong>
-            <p>{displayText(graph, e.note)}</p>
+            {e.kind !== 'assign' && <p>{displayText(graph, e.note)}</p>}
             {e.kind === 'adjust' && (
               <>
                 <p>
@@ -109,6 +147,7 @@ export default function History({
               </>
             )}
             <small>
+              {e.kind === 'assign' ? 'Assigned by ' : ''}
               {packet.firm.staff.find((s) => s.id === e.actor)?.name} ·{' '}
               {e.version} · {new Date(e.at).toLocaleString()}
             </small>
@@ -137,16 +176,22 @@ export default function History({
       ))}
       <details className="utility-section">
         <summary>Supplied season timeline</summary>
-        <p className="callout">
-          Events after June 23, 2026 are scripted scenario data. This workspace
-          does not file returns or obtain e-signatures.
+        <p className="small muted">
+          {recordedTimeline.length} events supplied in the packet through the
+          current v3 snapshot. The app does not create or infer these events.
         </p>
-        {packet.timeline.map((t) => (
-          <div className="history-row" key={t.id}>
-            <time>{t.at.slice(0, 10)}</time>
-            <span>{t.event.replaceAll('_', ' ')}</span>
-          </div>
-        ))}
+        {timelineRows(recordedTimeline)}
+        <details className="scenario-timeline">
+          <summary>
+            Supplied scenario replay · {scenarioTimeline.length} future events
+          </summary>
+          <p className="callout">
+            The packet explicitly marks events after June 23, 2026 as scripted
+            for replay. They are hidden by default and do not represent actions
+            performed by this app.
+          </p>
+          {timelineRows(scenarioTimeline)}
+        </details>
       </details>
     </section>
   );

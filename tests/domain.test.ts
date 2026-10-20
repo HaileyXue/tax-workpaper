@@ -19,6 +19,7 @@ import {
   signoffState,
   validateSignoff,
   activeEvents,
+  canAssign,
   estimateImpact,
   proposalDecision,
   validateEvent,
@@ -171,6 +172,22 @@ describe('review records and estimates', () => {
         [],
       ),
     ).toThrow('reviewer or partner');
+    expect(canAssign(preparer)).toBe(false);
+    expect(() =>
+      validateEvent(
+        {
+          ...event,
+          actor: preparer.id,
+          role: preparer.role,
+          kind: 'assign',
+          target: 'duplicate-sweep',
+          note: reviewer.name,
+        },
+        preparer,
+        [],
+      ),
+    ).toThrow('reviewer or partner');
+    expect(canAssign(reviewer)).toBe(true);
   });
   it('undo retains the original event and permits only its author', () => {
     const undo: ReviewEvent = {
