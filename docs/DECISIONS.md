@@ -267,3 +267,10 @@ Proposed implementation and acceptance criteria:
 - **Reason:** The Issues queue and Return are two ways to reach one review state, not two different issue experiences. A separate contextual issue list duplicated navigation and added noise without helping the reviewer understand where the issue belongs.
 - **Placement rule:** A diagnostic attached to a calculation stays on that calculation. When a source-backed detail row rolls into a review total, place the issue on its immediate containing total. For the RSU basis error, that is the Form 8949 Box B total containing the affected lot. The source remains available from the issue's evidence links.
 - **Tradeoff:** A high-level total remains highlighted but does not enumerate every downstream issue. The reviewer sees the issue only after reaching the level where it can be understood and acted on. This reduces noise and preserves a single canonical status and audit history.
+
+### D22 — Collapse duplicate carry labels in the visible review path
+
+- **Recorded:** 2026-10-19. **Status:** Implemented.
+- **Decision:** When consecutive calculation records have the same label and unchanged amount, show one breadcrumb level. Preserve every supplied record and graph edge in the data model and calculation detail.
+- **Reason:** Form 1040 taxable interest and Schedule B taxable interest are separate accounting records, but both are labeled `Taxable interest` and carry the same amount in this snapshot. Rendering both as adjacent, identical breadcrumb labels looks like accidental duplication and does not help navigation.
+- **Boundary:** This is presentation-only compression. A label is removed only when it is consecutive and its amount is unchanged. Differently labeled totals such as `Taxable interest` and `Total interest`, or repeated labels with different amounts, remain visible.

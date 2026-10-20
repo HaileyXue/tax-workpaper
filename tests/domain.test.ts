@@ -8,7 +8,10 @@ import {
   summaryRows,
   relevantFindings,
 } from '../src/domain/schedules';
-import { calculationPresentation } from '../src/domain/presentation';
+import {
+  calculationPresentation,
+  reviewPath,
+} from '../src/domain/presentation';
 import { describe, expect, it } from 'vitest';
 import { createGraph, packet, resolveReference } from '../src/domain/packet';
 import { findIssues } from '../src/domain/findings';
@@ -332,6 +335,18 @@ describe('selective calculation disclosure', () => {
     expect(
       calculationPresentation(createGraph(copy, 'v3'), 'F1040.1z').chain,
     ).toHaveLength(2);
+  });
+  it('hides only consecutive unchanged duplicate labels from the visible review path', () => {
+    expect(
+      reviewPath(graph, [
+        'F1040.9',
+        'F1040.2b',
+        'SchB.4',
+        'SchB.2',
+        'SchB.1.1',
+      ]),
+    ).toEqual(['F1040.9', 'F1040.2b', 'SchB.2', 'SchB.1.1']);
+    expect(graph.lines.has('SchB.4')).toBe(true);
   });
 });
 

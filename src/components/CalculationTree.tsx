@@ -5,6 +5,7 @@ import {
   calculationPresentation,
   referenceLabel,
   displayText,
+  reviewPath,
 } from '../domain/presentation';
 import { additionalRecords, amountIssue } from '../domain/schedules';
 import type { Finding } from '../domain/findings';
@@ -94,7 +95,7 @@ export default function CalculationTree({
   const [query, setQuery] = useState('');
   useEffect(() => {
     if (!props.revealPath) return;
-    const calculations = props.revealPath.filter((id) => graph.lines.has(id));
+    const calculations = reviewPath(graph, props.revealPath);
     if (!calculations.length) return;
     setTrail(calculations);
     setExpanded(true);

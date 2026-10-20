@@ -27,6 +27,18 @@ export function calculationPresentation(graph: Graph, key: string) {
   return { chain, detail, expandable };
 }
 
+/** Keep the audit graph intact while removing visually duplicate carry levels
+ * from the breadcrumb shown to reviewers. */
+export function reviewPath(graph: Graph, path: string[]) {
+  const calculations = path.filter((id) => graph.lines.has(id));
+  return calculations.filter((id, index) => {
+    if (index === 0) return true;
+    const current = graph.lines.get(id)!;
+    const previous = graph.lines.get(calculations[index - 1])!;
+    return current.label !== previous.label || current.value !== previous.value;
+  });
+}
+
 /** Human labels only; internal graph references remain in the data layer. */
 export function referenceLabel(graph: Graph, ref: string): string {
   return (

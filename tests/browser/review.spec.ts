@@ -329,6 +329,11 @@ test('issue tab contains links only, opens the return chain and scrolls to its s
     'Same bank sweep interest counted twice',
   );
   await expect(
+    page
+      .getByRole('navigation', { name: 'Review path' })
+      .getByRole('button', { name: 'Taxable interest', exact: true }),
+  ).toHaveCount(1);
+  await expect(
     page.locator('.calculation-trail .amount-issue').first(),
   ).toBeVisible();
   await expect(
