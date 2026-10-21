@@ -48,10 +48,15 @@ An issue belongs at the lowest calculation level where a reviewer can understand
 
 Assignments, correction proposals, approvals, and undo actions are stored as append-only events. This preserves the original value and reconstructs who did what, why, and against which return version. Role controls demonstrate separation of duties: a preparer can propose a correction, while a reviewer or partner must assign and approve it. For the prototype these controls and saves are browser-local; production authorization and durable audit storage would belong on a server.
 
-### Be explicit about prototype boundaries
+### Own the review lifecycle and stop at its boundary
 
-The app displays only facts contained in the packet. Simulated documents use supplied printed text, and estimated tax effects use supplied rates and are labeled as estimates. Missing values remain missing rather than becoming zero. Filing, e-signature, secure multi-user access, and engine recomputation are not claimed. I also omitted the packet’s future scripted events because showing them as a timeline would suggest a filing lifecycle that the prototype does not implement.
+For this prototype, I chose to make one workflow complete: detect a discrepancy, trace it to evidence, assign it, propose a correction, approve the decision, preserve the history, and show whether the return is ready for final review. The app displays only facts contained in the packet. Simulated documents use supplied printed text, estimated tax effects use supplied rates, and missing values remain missing rather than becoming zero.
 
-## AI use
+I deliberately left out the parts of the tax lifecycle that the app cannot perform credibly yet:
 
-I used OpenAI Codex to inspect the packet, test data relationships, implement and refactor the application, and maintain documentation and automated checks. I reviewed the product decisions, validation logic, scope boundaries, and final behavior. The application uses deterministic local rules at runtime; it does not call an AI model or invent taxpayer data.
+- **Engine recomputation:** an approved correction does not replace supplied return totals. It remains a filing blocker until a new engine snapshot incorporates it.
+- **Production collaboration and security:** saves and role controls are browser-local demonstrations. Real use would require authenticated users, server-enforced permissions, concurrent editing, durable audit storage, and evidence access logs.
+- **Client authorization and filing:** the app does not collect signatures, transmit extensions or returns, process rejections, or produce a filed client copy.
+- **Post-filing work:** amendments, notices, carryforward creation, and next-year planning need their own states, evidence, and approvals.
+
+The packet includes scripted future events, but I omitted them from the interface. Displaying those events as a timeline would suggest that the product owns filing and post-filing work when it currently owns only the review decision. This narrower scope makes the working review flow trustworthy and leaves clear extension points for the rest of the lifecycle.
