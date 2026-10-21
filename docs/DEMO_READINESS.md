@@ -33,7 +33,7 @@ The same pattern exists for two additional supplied RSU lots:
 | 4. Correct and show impact | **Working** | The typed proposal records original/proposed basis, evidence refs, original/proposed gain, negative taxable delta, affected lines, actor, role, reason, version, and packet-rate estimate without mutating engine totals. | Reconciliation into a newly computed engine snapshot remains unavailable because the packet has only three fixed snapshots. |
 | 5. Review control | **Working** | A reviewer/partner can assign work and approve, return, or reject a submitted correction. A preparer can propose but cannot approve. Approval completes issue review; unrelated findings and the unrecomputed proposal continue to block final sign-off. | Production authorization would require a server; current role control is a local prototype simulation. |
 | 6. Persistence and audit | **Working** | Assignment, proposal, and approval events persist in `localStorage`, survive refresh, preserve actor/time/version/evidence metadata, appear as one issue-grouped thread in History, support undo, and export to JSON. | Durable multi-user storage remains a production concern. |
-| 7. Filing readiness and lifecycle | **Partial** | Blocker count, final sign-off gating, version comparison, and supplied season timeline exist. | Add a filing-readiness checklist and a clearly labeled read-only replay of supplied filing events. Do not present timeline events as actions performed by the prototype. |
+| 7. Filing readiness and lifecycle | **Partial** | Blocker count, final sign-off gating, version comparison, and the timeline through the current v3 snapshot exist. | Add a filing state machine before presenting later scripted filing and post-filing events. Do not present packet events as actions performed by the prototype. |
 
 ## Remaining implementation plan
 
@@ -144,7 +144,7 @@ Add an audit view grouped by finding or correction, while retaining the append-o
 
 Refreshing must preserve the same state. The export should include proposal state transitions and evidence references.
 
-### 7. Filing readiness and supplied lifecycle replay
+### 7. Filing readiness and lifecycle
 
 Add a readiness panel with explicit gates:
 
@@ -152,9 +152,9 @@ Add a readiness panel with explicit gates:
 - correction proposals reconciled or withdrawn;
 - required completeness steps finished;
 - valid reviewer/partner final sign-off;
-- client approval/signature status when replaying the supplied scenario.
+- client approval/signature status when that workflow is implemented.
 
-The later extension, client approval, rejection, acceptance, payment, refund, and notice events already exist in the packet. Present them as `Supplied scenario replay`, with their supplied dates and references. The prototype must not claim it transmitted a return or collected a signature.
+The later extension, client approval, rejection, acceptance, payment, refund, and notice events already exist in the packet, but the interface intentionally omits them. Expose them only after a filing state machine can connect each event to its prior state, resulting state, responsible actor, evidence, and immutable artifact. The prototype must not claim it transmitted a return or collected a signature.
 
 ## Suggested demo timing
 
@@ -167,7 +167,7 @@ The later extension, client approval, rejection, acceptance, payment, refund, an
 | 2:00–2:45 | Propose `$19,100` basis, show `$140` proposed gain and the estimated tax effect from a `-$19,100` taxable delta. |
 | 2:45–3:30 | Switch roles, demonstrate denial, and approve as reviewer while the return remains blocked pending recomputation. |
 | 3:30–4:15 | Refresh, open the grouped audit history, and reconstruct the actions. |
-| 4:15–5:00 | Show remaining filing gates, snapshot comparison, and the supplied lifecycle replay. |
+| 4:15–5:00 | Show remaining filing gates, snapshot comparison, and the current Case timeline. Explain that filing lifecycle work is deliberately out of scope. |
 
 ## Definition of done
 
@@ -177,6 +177,6 @@ The later extension, client approval, rejection, acceptance, payment, refund, an
 - Assignment and proposal approval enforce role rules.
 - Final return sign-off remains blocked by unrelated open findings.
 - Refresh and export preserve the complete audit trail.
-- Filing events are visibly labeled as supplied scenario replay.
+- The Case timeline excludes events after the latest supplied return snapshot.
 - Domain tests cover the validator, false-positive guard, cross-document match, impact direction, permissions, and event state machine.
 - A browser test executes the complete demo path from a clean storage state through refresh.

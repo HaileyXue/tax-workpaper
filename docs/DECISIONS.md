@@ -22,18 +22,18 @@ Earlier iterations used those payer tables and a separate full calculation index
 
 ## Technical decisions and limits
 
-| Decision                                            | Reason and tradeoff                                                                                                                                                                             |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| React + TypeScript + Vite                           | Small local application with isolated domain logic and reproducible builds.                                                                                                                     |
-| Immutable supplied JSON                             | Every financial figure and dependency comes from the packet. Missing figures remain absent, not zero.                                                                                           |
-| Engine snapshots remain read-only                   | The engine cannot be rerun; corrections and estimated impacts do not replace return totals.                                                                                                     |
-| Browser-local append-only review log                | Reproducible persistence, attribution, and undo; not secure multiuser storage.                                                                                                                  |
-| Source text instead of invented PDFs                | The packet supplies printed page text. Only unique exact matches receive source highlights; ambiguous locations remain explicit.                                                                |
-| Client-side role switcher                           | Demonstrates permissions, but is not a production authorization boundary.                                                                                                                       |
-| Focused calculation statements                      | One breakdown at a time, with a review trail and aligned inputs/result. This sacrifices simultaneous visibility of every depth for readability.                                                 |
-| No routine per-value verification                   | User-requested exception-driven review with one final acknowledgment. This deliberately departs from the employer brief's per-number verification requirement; legacy records remain preserved. |
-| Conservative sign-off invalidation                  | Any later review event reopens sign-off. Filing approval, e-signatures, and production retention are not implemented.                                                                           |
-| Scripted timeline distinguished from actual actions | Supplied future filing events are scenario data, not evidence that the prototype filed a return.                                                                                                |
+| Decision                                      | Reason and tradeoff                                                                                                                                                                             |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| React + TypeScript + Vite                     | Small local application with isolated domain logic and reproducible builds.                                                                                                                     |
+| Immutable supplied JSON                       | Every financial figure and dependency comes from the packet. Missing figures remain absent, not zero.                                                                                           |
+| Engine snapshots remain read-only             | The engine cannot be rerun; corrections and estimated impacts do not replace return totals.                                                                                                     |
+| Browser-local append-only review log          | Reproducible persistence, attribution, and undo; not secure multiuser storage.                                                                                                                  |
+| Source text instead of invented PDFs          | The packet supplies printed page text. Only unique exact matches receive source highlights; ambiguous locations remain explicit.                                                                |
+| Client-side role switcher                     | Demonstrates permissions, but is not a production authorization boundary.                                                                                                                       |
+| Focused calculation statements                | One breakdown at a time, with a review trail and aligned inputs/result. This sacrifices simultaneous visibility of every depth for readability.                                                 |
+| No routine per-value verification             | User-requested exception-driven review with one final acknowledgment. This deliberately departs from the employer brief's per-number verification requirement; legacy records remain preserved. |
+| Conservative sign-off invalidation            | Any later review event reopens sign-off. Filing approval, e-signatures, and production retention are not implemented.                                                                           |
+| Timeline stops at the current return snapshot | Later scripted filing events remain in the packet but stay out of the interface until the product implements their lifecycle.                                                                   |
 
 Internal calculation IDs and engine-reference rule text are not rendered in the interface, including action menus, dialogs, history targets, and accessible labels. Document IDs remain prominent as requested. The focused breakdown shows supplied inputs and amounts without inventing operations. Rules remain internal; professionally worded explanations of complex limits and allocations remain a future improvement.
 
@@ -248,7 +248,7 @@ Proposed implementation and acceptance criteria:
 - **Reason:** This is a real high-confidence pipeline mistake with complete contradictory evidence in the packet. It demonstrates why AI confidence is not verification and lets the reviewer follow one discrepancy across source extraction, cross-document reconciliation, calculation impact, human approval, and audit history.
 - **Correction semantics:** Correcting basis from zero to $19,100 changes the proposed lot gain from $19,240 to $140. The estimated taxable delta is negative $19,100. Do not feed the positive basis delta directly into the tax-effect rate or claim that the engine totals were recomputed.
 - **Review semantics:** Add issue-level correction approval for the role-switch demonstration. Approval of this proposal is not final return sign-off. Other unresolved findings continue to block the return.
-- **Simulation boundary:** Filing history and future events may be replayed only as supplied scenario data. The prototype does not send messages, call a tax engine, collect signatures, or transmit a return.
+- **Simulation boundary:** The prototype does not send messages, call a tax engine, collect signatures, or transmit a return. Later scripted filing events are not exposed in the current interface; see D27.
 - **Detailed acceptance criteria:** [`docs/DEMO_READINESS.md`](DEMO_READINESS.md).
 
 ### D20 — Persist an append-only correction workflow with simulated role control
@@ -292,7 +292,7 @@ Proposed implementation and acceptance criteria:
 
 ### D25 — Separate the current supplied timeline from scenario replay
 
-- **Recorded:** 2026-10-19. **Status:** Implemented.
+- **Recorded:** 2026-10-19. **Status:** Superseded by D27.
 - **Decision:** Show the 17 packet events through the current v3 computation by default. Put the 12 later packet events in a collapsed **Supplied scenario replay** section.
 - **Reason:** Every displayed timeline row comes directly from `timeline[]`, but the packet explicitly marks events after the 2026-06-23 v3 computation as scripted for replay. Separating them prevents a viewer from assuming that the prototype filed returns, collected signatures, or received later agency events.
 - **Boundary:** The app invents no timeline entries. The entire household and packet are fictional case-study data; “current” means supplied as of the latest engine snapshot, not a real taxpayer event.
@@ -304,3 +304,11 @@ Proposed implementation and acceptance criteria:
 - **Reason:** In this prototype every issue is handled through a correction proposal. Asking the same reviewer to approve the proposal and then resolve the issue added a second state transition without adding evidence or authority.
 - **Filing boundary:** Approval removes the item from the issue count, but the proposal remains a filing blocker until a supplied recomputed return snapshot incorporates it. Approval therefore means “review decision complete,” not “engine totals updated.”
 - **History design:** History opens to issue-grouped review threads, with separate **Return versions** and **Case timeline** views. The Issues queue also shows the latest assignment, proposal, and approval events beneath each issue.
+
+### D27 — Omit future events until the lifecycle exists
+
+- **Recorded:** 2026-10-20. **Status:** Implemented.
+- **Decision:** Limit the Case timeline to the 17 supplied events at or before the latest v3 computation. Keep the 12 later scripted events in the immutable packet but do not expose them in the application.
+- **Reason:** A collapsible event list is not a working filing lifecycle. Showing signatures, filing, rejection, acceptance, payments, refunds, and notices without states or artifacts overstates the prototype and distracts from its complete review workflow.
+- **Tradeoff:** The application no longer demonstrates the packet's entire season narrative. The repository still documents the missing filing and post-filing capabilities, and the source packet remains unchanged.
+- **Revisit when:** A `FilingCase` state machine connects each event to an actor, prior state, resulting state, immutable artifact, blocking rules, and evidence. At that point the later events can support a truthful read-only replay or interactive simulation.

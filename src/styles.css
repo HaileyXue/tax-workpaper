@@ -676,16 +676,6 @@ nav button[aria-current='page'] .nav-count {
 .proposal-assignment .assignment-help {
   margin: 5px 0 0;
 }
-.scenario-timeline {
-  margin-top: 16px;
-  border-top: 1px solid var(--line);
-  padding-top: 14px;
-}
-.scenario-timeline > summary {
-  color: #075b35;
-  font-weight: 650;
-  cursor: pointer;
-}
 .proposal-status {
   padding: 4px 8px;
   border-radius: 999px;

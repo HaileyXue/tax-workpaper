@@ -604,7 +604,7 @@ test('return snapshot changes document use and superseded labels', async ({
   );
 });
 
-test('separates supplied current timeline events from supplied scenario replay', async ({
+test('limits the case timeline to events through the current return snapshot', async ({
   page,
 }) => {
   await openCase(page);
@@ -616,9 +616,7 @@ test('separates supplied current timeline events from supplied scenario replay',
   await expect(page.locator('.version-cards article')).toHaveCount(3);
   await page.getByRole('button', { name: 'Case timeline' }).click();
   await expect(page.getByText(/17 events supplied through/)).toBeVisible();
-  const scenario = page.locator('.scenario-timeline');
-  await expect(scenario.locator('summary')).toContainText('12 future events');
-  await expect(scenario.getByText('efile rejected')).not.toBeVisible();
-  await scenario.locator('summary').click();
-  await expect(scenario.getByText('efile rejected')).toBeVisible();
+  await expect(page.locator('.history-row')).toHaveCount(17);
+  await expect(page.getByText('efile rejected')).toHaveCount(0);
+  await expect(page.getByText(/scenario replay/i)).toHaveCount(0);
 });

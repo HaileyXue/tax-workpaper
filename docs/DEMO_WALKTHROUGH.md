@@ -122,7 +122,7 @@ Return to **Return** and scroll to **Final review sign-off**.
 
 Explain that unrelated findings remain open and the approved proposal has not been incorporated into a recomputed return snapshot. Final sign-off therefore remains blocked. This is the intended control behavior.
 
-In **History**, the supplied season timeline initially shows only the 17 packet events through the current v3 snapshot. The 12 later events are available under **Supplied scenario replay** and are explicitly identified as scripted packet data rather than actions performed by this app.
+In **History**, the Case timeline shows only the 17 packet events through the current v3 snapshot. Later scripted packet events are intentionally omitted because this prototype does not implement filing or post-filing lifecycle states.
 
 ## Corrected taxable-interest path
 

@@ -44,11 +44,8 @@ export default function History({
       new Date(version.computed_at).getTime(),
     ),
   );
-  const recordedTimeline = packet.timeline.filter(
+  const currentTimeline = packet.timeline.filter(
     (event) => new Date(event.at).getTime() <= currentSnapshotAt,
-  );
-  const scenarioTimeline = packet.timeline.filter(
-    (event) => new Date(event.at).getTime() > currentSnapshotAt,
   );
   const actionLabel = (event: ReviewEvent) =>
     ({
@@ -275,21 +272,11 @@ export default function History({
           <div className="history-view-heading">
             <h3>Case timeline</h3>
             <p>
-              {recordedTimeline.length} events supplied through the current v3
+              {currentTimeline.length} events supplied through the current v3
               snapshot. The app does not create or infer these events.
             </p>
           </div>
-          {timelineRows(recordedTimeline)}
-          <details className="scenario-timeline">
-            <summary>
-              Supplied scenario replay · {scenarioTimeline.length} future events
-            </summary>
-            <p className="callout">
-              The packet explicitly marks events after June 23, 2026 as scripted
-              for replay. They do not represent actions performed by this app.
-            </p>
-            {timelineRows(scenarioTimeline)}
-          </details>
+          {timelineRows(currentTimeline)}
         </section>
       )}
     </section>
