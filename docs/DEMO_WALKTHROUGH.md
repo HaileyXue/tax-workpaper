@@ -7,7 +7,7 @@ This walkthrough uses the supplied `v3` return snapshot and one real discrepancy
 Start the app with `npm run dev`. Clear saved review events in the browser console so the workflow begins from a known state:
 
 ```js
-localStorage.removeItem('miraflores.review.v1');
+localStorage.removeItem('miraflores.review.v2');
 location.reload();
 ```
 
@@ -41,7 +41,7 @@ Suggested narration: “The Return page is the central workpaper. A reviewer can
 
 1. Open **Issues**.
 2. Select **Daniel Ortiz · reviewer** under **Viewing as**.
-3. Choose **Lot N1 cost basis was treated as zero**, open **Correction & assignment**, and assign it to Priya Raman.
+3. Choose **Lot N1 cost basis was treated as zero**, open **Correction & assignment**, select Priya Raman, and click **Assign**.
 4. Switch to **Priya Raman · preparer** before proposing the correction.
 
 The queue is one entry point. It navigates to the same calculation state a reviewer can reach manually through Return.

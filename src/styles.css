@@ -670,6 +670,14 @@ nav button[aria-current='page'] .nav-count {
   flex-basis: 100%;
   margin: 0;
 }
+.assignment-control {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+.assignment-control button {
+  min-height: 36px;
+}
 .proposal-assignment {
   margin: 14px 0;
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { money, packet, type Graph, type Staff } from '../domain/packet';
 import {
   canAssign,
@@ -45,6 +45,8 @@ export default function IssueReview({
     events
       .filter((event) => event.target === f.id && event.kind === 'assign')
       .at(-1)?.note ?? 'Unassigned';
+  const [selectedOwner, setSelectedOwner] = useState(owner);
+  useEffect(() => setSelectedOwner(owner), [f.id, owner]);
   const impact =
     proposal?.category && proposal.taxableDelta !== undefined
       ? estimateImpact(
@@ -69,32 +71,40 @@ export default function IssueReview({
   };
   const assignmentControl = (
     <>
-      <label className="owner">
-        Assign to
-        <select
-          aria-label="Assign issue to"
-          disabled={!assignmentAllowed}
-          value={owner}
-          onChange={(event) =>
+      <div className="assignment-control">
+        <label className="owner">
+          Assign to
+          <select
+            aria-label="Assign issue to"
+            disabled={!assignmentAllowed}
+            value={selectedOwner}
+            onChange={(event) => setSelectedOwner(event.target.value)}
+          >
+            <option value="Unassigned">Unassigned</option>
+            {packet.firm.staff
+              .filter((person) =>
+                ['preparer', 'reviewer', 'partner'].includes(person.role),
+              )
+              .map((person) => (
+                <option key={person.id} value={person.name}>
+                  {person.name}
+                </option>
+              ))}
+          </select>
+        </label>
+        <button
+          disabled={!assignmentAllowed || selectedOwner === owner}
+          onClick={() =>
             save({
               kind: 'assign',
               target: f.id,
-              note: event.target.value,
+              note: selectedOwner,
             })
           }
         >
-          <option value="Unassigned">Unassigned</option>
-          {packet.firm.staff
-            .filter((person) =>
-              ['preparer', 'reviewer', 'partner'].includes(person.role),
-            )
-            .map((person) => (
-              <option key={person.id} value={person.name}>
-                {person.name}
-              </option>
-            ))}
-        </select>
-      </label>
+          Assign
+        </button>
+      </div>
       {!assignmentAllowed && (
         <p className="small muted assignment-help">
           Reviewer or partner permission is required to assign work.

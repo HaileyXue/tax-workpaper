@@ -32,7 +32,8 @@ export interface ReviewEvent {
   proposedTaxableAmount?: number;
   taxableDelta?: number;
 }
-export const STORAGE_KEY = 'miraflores.review.v1';
+export const STORAGE_KEY = 'miraflores.review.v2';
+const OBSOLETE_STORAGE_KEYS = ['miraflores.review.v1'];
 export function activeEvents(events: ReviewEvent[]) {
   const undone = new Set(
     events.filter((e) => e.kind === 'undo').map((e) => e.reverses),
@@ -200,6 +201,7 @@ export function estimateImpact(
 }
 export function loadReviews(): { events: ReviewEvent[]; error?: string } {
   try {
+    OBSOLETE_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
     const data: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
     if (
       !Array.isArray(data) ||

@@ -19,6 +19,37 @@ async function issue(page: Page, id: string) {
   await page.locator(`[data-finding-id="${id}"]`).click();
 }
 
+test('starts clean after removing the obsolete browser review store', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'miraflores.review.v1',
+      JSON.stringify([
+        {
+          id: 'obsolete-review',
+          at: '2026-10-19T00:00:00.000Z',
+          actor: 'st-02',
+          role: 'reviewer',
+          version: 'v3',
+          kind: 'assign',
+          target: 'missing-zero-ev-0498',
+          note: 'Priya Raman',
+        },
+      ]),
+    );
+  });
+  await openCase(page);
+  await expect(page.getByRole('button', { name: /^Issues/ })).toContainText(
+    '12',
+  );
+  expect(
+    await page.evaluate(() => localStorage.getItem('miraflores.review.v1')),
+  ).toBeNull();
+  await page.getByRole('button', { name: 'History', exact: true }).click();
+  await expect(page.getByText('No review activity recorded.')).toBeVisible();
+});
+
 test('one summary traces income to evidence without a separate explorer or schedule tabs', async ({
   page,
 }) => {
@@ -173,15 +204,30 @@ test('shows assignment beside correction and enforces assignment authority', asy
   const context = page.locator('.issue-context');
   await context.locator('.contextual-review > summary').click();
   const assignment = context.getByLabel('Assign issue to');
+  const assignButton = context.getByRole('button', {
+    name: 'Assign',
+    exact: true,
+  });
   await expect(assignment).toBeDisabled();
+  await expect(assignButton).toBeDisabled();
   await expect(context).toContainText(
     'Reviewer or partner permission is required to assign work.',
   );
   await page.getByLabel('Viewing as').selectOption('st-02');
   await expect(assignment).toBeEnabled();
   await assignment.selectOption({ label: 'Priya Raman' });
+  await expect(assignButton).toBeEnabled();
   await page.getByRole('button', { name: /^Issues/ }).click();
-  const issueRow = page
+  let issueRow = page
+    .locator('.finding-list-item')
+    .filter({ hasText: 'Lot N1 cost basis was treated as zero' });
+  await expect(issueRow.locator('.finding-history')).not.toContainText(
+    'Assigned to Priya Raman',
+  );
+  await issueRow.getByText('Go to issue').click();
+  await context.getByRole('button', { name: 'Assign', exact: true }).click();
+  await page.getByRole('button', { name: /^Issues/ }).click();
+  issueRow = page
     .locator('.finding-list-item')
     .filter({ hasText: 'Lot N1 cost basis was treated as zero' });
   await expect(issueRow.locator('.finding-history')).toContainText(

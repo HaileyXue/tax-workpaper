@@ -312,3 +312,10 @@ Proposed implementation and acceptance criteria:
 - **Reason:** A collapsible event list is not a working filing lifecycle. Showing signatures, filing, rejection, acceptance, payments, refunds, and notices without states or artifacts overstates the prototype and distracts from its complete review workflow.
 - **Tradeoff:** The application no longer demonstrates the packet's entire season narrative. The repository still documents the missing filing and post-filing capabilities, and the source packet remains unchanged.
 - **Revisit when:** A `FilingCase` state machine connects each event to an actor, prior state, resulting state, immutable artifact, blocking rules, and evidence. At that point the later events can support a truthful read-only replay or interactive simulation.
+
+### D28 — Require explicit assignment submission and reset prototype state
+
+- **Recorded:** 2026-10-20. **Status:** Implemented.
+- **Decision:** Selecting an assignee only changes the pending form value. The reviewer or partner must click **Assign** before the application appends an assignment event. Rotate browser persistence from `miraflores.review.v1` to `miraflores.review.v2` and delete the obsolete key on startup.
+- **Reason:** A dropdown selection is preparation, not confirmation. Saving immediately makes accidental assignments too easy and gives the user no clear commit point. The storage reset provides a clean demo state after the workflow changed.
+- **Tradeoff:** Existing prototype review events are intentionally discarded once. Future schema changes should use explicit migrations when preserving user work matters.
