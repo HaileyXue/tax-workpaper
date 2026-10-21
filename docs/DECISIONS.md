@@ -41,11 +41,11 @@ The static prototype bundles the complete fictional packet, resulting in a large
 
 ## Validation
 
-Twenty-two domain tests cover lineage, independent checks, version isolation, review permissions, estimates, and complete summary coverage. Fourteen browser tests cover issue-to-source navigation, long paths, nonnumeric records, correction persistence/undo, contextual resolution, sign-off, resizing, mobile layout, read-only roles, and snapshot-dependent document status. TypeScript, the production build, and repository formatting checks pass. Browser workflow tests block external font requests so network latency cannot stall local navigation. This revision introduces no dependencies.
+Twenty-eight domain tests cover lineage, independent checks, version isolation, review permissions, estimates, and complete summary coverage. Eighteen browser tests cover issue-to-source navigation, long paths, nonnumeric records, correction persistence/undo, assignment confirmation, sign-off, resizing, mobile layout, read-only roles, and snapshot-dependent document status. TypeScript, the production build, and repository formatting checks pass. Browser workflow tests block external font requests so network latency cannot stall local navigation. This revision introduces no dependencies.
 
 ## Hosting and repository
 
-Development and testing remain local. Meaningful milestones are committed and pushed to the user-authorized private GitHub repository. Cloud hosting is deferred until finalization. A Sites project was previously reserved (`.openai/hosting.json`), but source synchronization was blocked and no source, packet, or build was uploaded there.
+The source repository is public and GitHub Actions deploys the compiled application to GitHub Pages. The public browser bundle includes the fictional packet required to run the static prototype. No source, packet, or build was uploaded to the previously reserved OpenAI Sites project, and its local hosting manifest has been removed.
 
 ## Remaining milestones
 
@@ -146,7 +146,7 @@ Proposed implementation and acceptance criteria:
 
 ### D09 — Cases landing page, consistent language, and local-first delivery
 
-- **Recorded:** 2026-10-17. **Status:** Implemented; ongoing constraints.
+- **Recorded:** 2026-10-17. **Status:** Product choices retained; delivery direction superseded by D29.
 - **Decision:** Open on Cases, show the latest-version Issues to resolve count, and use that language consistently. Remove redundant “open items” controls. List only supplied cases. Continue meaningful commits and pushes to the authorized private repository; defer cloud hosting.
 - **Reason:** The user wants an understandable entry point, consistent terminology, and a clean employer-reviewable repository while the product is developed locally.
 - **Tradeoff:** Reloading returns to Cases rather than restoring a deep location. Browser-local persistence and simulated roles remain prototype limits.
@@ -319,3 +319,11 @@ Proposed implementation and acceptance criteria:
 - **Decision:** Selecting an assignee only changes the pending form value. The reviewer or partner must click **Assign** before the application appends an assignment event. Rotate browser persistence from `miraflores.review.v1` to `miraflores.review.v2` and delete the obsolete key on startup.
 - **Reason:** A dropdown selection is preparation, not confirmation. Saving immediately makes accidental assignments too easy and gives the user no clear commit point. The storage reset provides a clean demo state after the workflow changed.
 - **Tradeoff:** Existing prototype review events are intentionally discarded once. Future schema changes should use explicit migrations when preserving user work matters.
+
+### D29 — Publish the source and demo through GitHub Pages
+
+- **Recorded:** 2026-10-21. **Status:** Implemented.
+- **Decision:** Rename the GitHub repository to `tax-workpaper`, make it public, and deploy the compiled static app from `main` through GitHub Actions to `https://haileyxue.github.io/tax-workpaper/`.
+- **Reason:** A public submission URL lets reviewers inspect both the working prototype and its engineering decisions. Keeping source and deployment together also makes the submitted commit reproducible.
+- **Disclosure:** The Vite bundle contains the complete fictional packet because the prototype has no backend. Publishing the site therefore publishes that fictional data. Browser-local review actions and locally saved corrections are not part of the repository or deployment.
+- **Tradeoff:** The source history and case-study materials are now public. A production system would serve authorized data from a backend rather than embedding a client packet in the browser bundle.

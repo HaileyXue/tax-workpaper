@@ -6,7 +6,9 @@ This is an actively developed case-study prototype. It is not tax preparation so
 
 ![Workspace overview](docs/images/overview.png)
 
-The private GitHub repository is the source of truth. Development and testing happen locally; cloud hosting is deferred until the user considers the app finalized.
+**Live demo:** [haileyxue.github.io/tax-workpaper](https://haileyxue.github.io/tax-workpaper/)
+
+This public repository is the source of truth. GitHub Actions validates the application and deploys the compiled site to GitHub Pages.
 
 ## Run locally
 
