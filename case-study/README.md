@@ -6,7 +6,6 @@ This directory contains the original assignment and the documents prepared speci
 
 - [`APPROACH_AND_DATA_MODEL.md`](APPROACH_AND_DATA_MODEL.md) — concise approach and data model
 - [`FINDINGS.md`](FINDINGS.md) — errors found and how the product surfaced them
-- [`DEMO_WALKTHROUGH.md`](DEMO_WALKTHROUGH.md) — recorded-demo script
 
 ## Supporting material
 

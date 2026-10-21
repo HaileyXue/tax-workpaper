@@ -63,7 +63,6 @@ The application imports [`data/okafor_lindqvist_2025_packet.json`](data/okafor_l
 The original brief and applicant deliverables are isolated from the technical codebase in [`case-study/`](case-study/). Start with:
 
 - [Approach and data model](case-study/APPROACH_AND_DATA_MODEL.md)
-- [Demo walkthrough](case-study/DEMO_WALKTHROUGH.md)
 - [Errors found](case-study/FINDINGS.md)
 - [Decision record](case-study/DECISIONS.md)
 - [Original assignment](case-study/ASSIGNMENT.md)
