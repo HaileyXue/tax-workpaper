@@ -1,6 +1,6 @@
 # Demo walkthrough script
 
-**Target length:** 8:30–9:30
+**Target length:** 8:30–9:15
 
 **Primary story:** A high-confidence extraction error is detected, traced across two documents, corrected by a preparer, approved by a reviewer, and preserved as an auditable decision.
 
@@ -22,7 +22,7 @@
 
 Do not rush through every field. Pause briefly when the source highlight, correction preview, and review history appear; those are the strongest proof points.
 
-## 0:00–0:40 — Introduce the product
+## 0:00–0:35 — Introduce the product
 
 **On screen**
 
@@ -34,17 +34,32 @@ Do not rush through every field. Pause briefly when the source highlight, correc
 
 > This is a web-native tax workpaper for a fictional 2025 joint return. The extraction and tax calculations have already happened. The job of this product is to help a CPA understand the result, trace it to evidence, resolve discrepancies, and preserve an auditable review record.
 >
-> I organized the application around the return because that is the final output the CPA is responsible for. The case currently has 12 issues to resolve, and I am viewing the latest supplied engine snapshot, v3.
+> The case currently has 12 issues to resolve, and I am viewing the latest supplied engine snapshot, v3. Before following one issue end to end, I will quickly orient you to the four parts of the workspace.
 
-## 0:40–1:35 — Trace a normal return number
+## 0:35–1:25 — Show the four-part workspace
 
 **On screen**
 
-1. On **Return**, point out the federal and California columns and the role selector.
-2. Open federal **Total income**.
-3. Select **Total wages**.
-4. Open the Corvane W-2 source for the `$104,600` wage amount.
-5. Briefly resize the evidence panel, then close it.
+1. On **Return**, point to the federal and California summary and the highlighted affected amounts.
+2. Open **Issues** and point to the prioritized queue and recent activity area under each issue.
+3. Open **Documents** and briefly show the document list, owner/uploader filters, and source preview.
+4. Open **History** and click its three views: **Review history**, **Return versions**, and **Case timeline**.
+5. Return to **Return**.
+
+**Say**
+
+> The workspace has four parts. Return is the central workpaper, where calculated amounts connect to their inputs and evidence. Issues is the prioritized work queue. Documents provides a complete evidence index with source metadata and extracted fields. History separates human review activity, immutable return versions, and the supplied case timeline.
+>
+> These are different access paths into one data model. An issue opened from the queue lands in the same calculation and review interface that a CPA reaches by inspecting the return manually.
+
+## 1:25–2:10 — Trace a normal return number
+
+**On screen**
+
+1. Open federal **Total income**.
+2. Select **Total wages**.
+3. Open the Corvane W-2 source for the `$104,600` wage amount.
+4. Briefly resize the evidence panel, then close it.
 
 **Say**
 
@@ -52,7 +67,7 @@ Do not rush through every field. Pause briefly when the source highlight, correc
 >
 > This wage amount traces to a specific extracted value and then to the exact field in the simulated source document. The panel stays beside the calculation so I do not lose context. The packet does not include PDFs, so this document is rendered from the supplied page text; the document, page, field, and extracted value are separate records so a real document viewer could replace it later.
 
-## 1:35–2:30 — Open and assign the priority issue
+## 2:10–3:00 — Open and assign the priority issue
 
 **On screen**
 
@@ -71,7 +86,7 @@ Do not rush through every field. Pause briefly when the source highlight, correc
 >
 > Daniel, the reviewer, assigns the issue to Priya. Selecting a name alone does not change the record; the explicit Assign action creates the audit event.
 
-## 2:30–4:00 — Explain the independent validation and evidence
+## 3:00–4:15 — Explain the independent validation and evidence
 
 **On screen**
 
@@ -90,7 +105,7 @@ Do not rush through every field. Pause briefly when the source highlight, correc
 >
 > The check does not silently change the return. It exposes the observed value, contradictory evidence, match key, affected calculation, and downstream impact so the CPA can make the decision.
 
-## 4:00–5:15 — Propose the correction
+## 4:15–5:20 — Propose the correction
 
 **On screen**
 
@@ -108,7 +123,7 @@ Do not rush through every field. Pause briefly when the source highlight, correc
 >
 > After Priya saves the proposal, she cannot approve her own work. That separation of duties is enforced in the workflow, although the role switcher itself is only a prototype of server-side authorization.
 
-## 5:15–6:20 — Prove persistence and approve as reviewer
+## 5:20–6:15 — Prove persistence and approve as reviewer
 
 **On screen**
 
@@ -128,7 +143,7 @@ Do not rush through every field. Pause briefly when the source highlight, correc
 >
 > Approval still does not rewrite v3. The correction must be incorporated into a future engine snapshot before the return can be filed.
 
-## 6:20–7:20 — Reconstruct the audit trail
+## 6:15–7:00 — Reconstruct the audit trail
 
 **On screen**
 
@@ -143,7 +158,7 @@ Do not rush through every field. Pause briefly when the source highlight, correc
 >
 > Each event retains its actor, role, timestamp, return version, and evidence context. Events are append-only, and undo is recorded as another event rather than deleting history. The same record can be exported as JSON.
 
-## 7:20–8:10 — Show immutable versions and the current case timeline
+## 7:00–7:40 — Show immutable versions and the current case timeline
 
 **On screen**
 
@@ -157,7 +172,7 @@ Do not rush through every field. Pause briefly when the source highlight, correc
 >
 > The Case timeline shows only supplied events through the current v3 computation. I left out the packet’s later scripted events because this prototype does not implement signatures, filing, rejections, amendments, or notice management. Showing those events without the underlying lifecycle would overstate what the product can do.
 
-## 8:10–9:05 — Show filing readiness and close
+## 7:40–8:35 — Show filing readiness and close
 
 **On screen**
 
@@ -174,7 +189,7 @@ Do not rush through every field. Pause briefly when the source highlight, correc
 >
 > I focused the prototype on making this review workflow complete and trustworthy. Production work would move persistence and authorization to a server, add real document storage and access logs, integrate engine recomputation, and then extend into signatures, filing, and post-filing work.
 
-## 9:05–9:25 — Tooling disclosure
+## 8:35–8:55 — Tooling disclosure
 
 **Say**
 
