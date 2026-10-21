@@ -1,6 +1,6 @@
 # Case study requirements traceability
 
-This document compares the requirements in [`CASE_STUDY.md`](../CASE_STUDY.md) with the behavior currently implemented in the repository. It evaluates working behavior, not visual intent or data that merely exists in the JSON packet.
+This document compares the requirements in [`ASSIGNMENT.md`](ASSIGNMENT.md) with the behavior currently implemented in the repository. It evaluates working behavior, not visual intent or data that merely exists in the JSON packet.
 
 ## Status definitions
 
@@ -122,8 +122,8 @@ The JSON may contain data related to a record below. This table marks a record a
 | Deliverable | Status | Evidence and remaining work |
 | --- | --- | --- |
 | Working web app from a link, loading the packet, saving work, with a role switcher | **Partial** | The React/TypeScript app loads the unaltered packet, runs locally, saves review events to `localStorage`, exports history, and has a role switcher. It is not hosted yet by explicit project decision, and its saves and roles are prototype-only. A private deployment is still required for submission. |
-| One page on the core idea and data model | **Satisfied** | [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) explains the evidence, immutable snapshot, and human-event model. |
-| Errors found and how the design surfaced them | **Satisfied** | [`docs/FINDINGS.md`](FINDINGS.md) separates packet findings, independent checks, supplied diagnostics, and limitations. |
+| One page on the core idea and data model | **Satisfied** | [`ARCHITECTURE.md`](ARCHITECTURE.md) explains the evidence, immutable snapshot, and human-event model. |
+| Errors found and how the design surfaced them | **Satisfied** | [`FINDINGS.md`](FINDINGS.md) separates packet findings, independent checks, supplied diagnostics, and limitations. |
 | Recorded walkthrough with technical decisions and tradeoffs; video link | **Not implemented** | No recording or video link exists. Record the final app, demonstrate the review loop, explain architecture and deliberate limits, and add the link to the README. |
 | Disclose tool use, including AI | **Satisfied** | The README states that OpenAI Codex assisted with packet inspection, design, implementation, documentation, and validation. |
 

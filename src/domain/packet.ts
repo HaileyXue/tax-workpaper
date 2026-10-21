@@ -1,4 +1,4 @@
-import rawPacket from '../../okafor_lindqvist_2025_packet.json';
+import rawPacket from '../../data/okafor_lindqvist_2025_packet.json';
 
 export type Scalar = string | number | boolean | null;
 export interface SourceValue {

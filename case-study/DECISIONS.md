@@ -249,7 +249,7 @@ Proposed implementation and acceptance criteria:
 - **Correction semantics:** Correcting basis from zero to $19,100 changes the proposed lot gain from $19,240 to $140. The estimated taxable delta is negative $19,100. Do not feed the positive basis delta directly into the tax-effect rate or claim that the engine totals were recomputed.
 - **Review semantics:** Add issue-level correction approval for the role-switch demonstration. Approval of this proposal is not final return sign-off. Other unresolved findings continue to block the return.
 - **Simulation boundary:** The prototype does not send messages, call a tax engine, collect signatures, or transmit a return. Later scripted filing events are not exposed in the current interface; see D27.
-- **Detailed acceptance criteria:** [`docs/DEMO_READINESS.md`](DEMO_READINESS.md).
+- **Detailed acceptance criteria:** [`DEMO_READINESS.md`](DEMO_READINESS.md).
 
 ### D20 — Persist an append-only correction workflow with simulated role control
 
