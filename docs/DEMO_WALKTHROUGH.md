@@ -1,135 +1,192 @@
-# Product demo walkthrough
+# Demo walkthrough script
 
-This walkthrough uses the supplied `v3` return snapshot and one real discrepancy from the packet. It is designed for a four-to-five-minute recording.
+**Target length:** 8:30–9:30
+
+**Primary story:** A high-confidence extraction error is detected, traced across two documents, corrected by a preparer, approved by a reviewer, and preserved as an auditable decision.
 
 ## Before recording
 
-Start the app with `npm run dev`. Clear saved review events in the browser console so the workflow begins from a known state:
+1. Start the app with `npm run dev`.
+2. Clear prior demo activity in the browser console:
 
-```js
-localStorage.removeItem('miraflores.review.v2');
-location.reload();
-```
+   ```js
+   localStorage.removeItem('miraflores.review.v2');
+   location.reload();
+   ```
 
-Use a desktop browser around 1440–1600 pixels wide. Keep the zoom at 100%.
+3. Use a desktop browser around 1440–1600 pixels wide at 100% zoom.
+4. Keep return snapshot `v3` selected.
+5. Have these two statements ready to paste:
+   - Proposal: `Matched D28 lot N1 to D11 using the supplied acquisition date.`
+   - Approval: `Agreed the acquisition date and adjusted basis to D11.`
 
-## Primary demo discrepancy
+Do not rush through every field. Pause briefly when the source highlight, correction preview, and review history appear; those are the strongest proof points.
 
-Use **Lot N1 cost basis was treated as zero**.
+## 0:00–0:40 — Introduce the product
 
-- D28 says the basis was not reported.
-- `ev-0498` stores that blank as `$0` at 98% extraction confidence.
-- D11 supplies a `$19,100` adjusted basis for the matching 2025-02-15 acquisition date.
-- The current Form 8949 lot gain is `$19,240`; the proposed gain is `$140`.
+**On screen**
 
-This finding demonstrates why extraction confidence is not verification and why review must reconcile evidence across documents.
+- Begin on **Cases**.
+- Point to the issue-count badge on the Okafor–Lindqvist case.
+- Click **Open case**.
 
-## 1. Orient the viewer
+**Say**
 
-![Return overview](images/demo-01-return-overview.png)
+> This is a web-native tax workpaper for a fictional 2025 joint return. The extraction and tax calculations have already happened. The job of this product is to help a CPA understand the result, trace it to evidence, resolve discrepancies, and preserve an auditable review record.
+>
+> I organized the application around the return because that is the final output the CPA is responsible for. The case currently has 12 issues to resolve, and I am viewing the latest supplied engine snapshot, v3.
 
-1. Open the Okafor–Lindqvist case.
-2. Keep return snapshot `v3` selected.
-3. Point out the federal and California summary, highlighted affected amounts, Issues count, and role selector.
-4. Explain that the supplied JSON is immutable and that review work is stored separately.
+## 0:40–1:35 — Trace a normal return number
 
-Suggested narration: “The Return page is the central workpaper. A reviewer can follow any summary amount into its calculation and source evidence.”
+**On screen**
 
-## 2. Open the priority discrepancy
+1. On **Return**, point out the federal and California columns and the role selector.
+2. Open federal **Total income**.
+3. Select **Total wages**.
+4. Open the Corvane W-2 source for the `$104,600` wage amount.
+5. Briefly resize the evidence panel, then close it.
 
-![Priority issue queue](images/demo-02-priority-issue-queue.png)
+**Say**
+
+> The Return page is the central workpaper. Instead of navigating to a separate number explorer, I can open a total, follow its immediate inputs, and retain a visible path back to the return.
+>
+> This wage amount traces to a specific extracted value and then to the exact field in the simulated source document. The panel stays beside the calculation so I do not lose context. The packet does not include PDFs, so this document is rendered from the supplied page text; the document, page, field, and extracted value are separate records so a real document viewer could replace it later.
+
+## 1:35–2:30 — Open and assign the priority issue
+
+**On screen**
 
 1. Open **Issues**.
-2. Select **Daniel Ortiz · reviewer** under **Viewing as**.
-3. Choose **Lot N1 cost basis was treated as zero**, open **Correction & assignment**, select Priya Raman, and click **Assign**.
-4. Switch to **Priya Raman · preparer** before proposing the correction.
+2. Select **Lot N1 cost basis was treated as zero**.
+3. Point to the calculation path and highlighted affected amounts.
+4. Expand **Correction & assignment**.
+5. Select **Priya Raman**, then click **Assign**.
+6. Switch **Viewing as** to **Priya Raman · preparer**.
 
-The queue is one entry point. It navigates to the same calculation state a reviewer can reach manually through Return.
+**Say**
 
-![RSU review point](images/demo-03-rsu-review-point.png)
+> The Issues queue prioritizes both supplied engine diagnostics and independent checks performed by this application. It is a work queue, not a second review interface.
+>
+> Selecting this issue returns me to the exact Form 8949 calculation where it can be understood and acted on. A reviewer who reaches this level manually sees the same issue, evidence, and controls. Higher-level totals are highlighted to show the affected chain without repeating the issue everywhere.
+>
+> Daniel, the reviewer, assigns the issue to Priya. Selecting a name alone does not change the record; the explicit Assign action creates the audit event.
 
-Point out the path:
+## 2:30–4:00 — Explain the independent validation and evidence
 
-`Total income → Capital gain or (loss) → Combine lines 7 and 15 → Net short-term gain or (loss) → Short-term from Form 8949 box B → Box B totals`
+**On screen**
 
-The full issue panel appears only at the **Box B totals** review point. Higher totals remain highlighted but do not repeat the issue interface.
+1. Point to the plain-language issue explanation.
+2. Open **D28 · Northlake Securities consolidated Form 1099 — Lot N1 cost basis**.
+3. Point out that the basis is not reported, while the extracted value is `$0` at 98% confidence.
+4. Open **D11 · Corvane stock plan supplemental tax statement — RSU-2502 adjusted cost basis**.
+5. Point out the `$19,100` basis and matching 2025-02-15 acquisition date.
+6. Close the evidence panel.
 
-## 3. Trace both source documents
+**Say**
 
-Click **Lot N1 cost basis**.
+> This is the most important engineering example in the prototype. The brokerage left the cost basis blank because it was not reported, but the pipeline normalized the blank to zero with 98% confidence. Confidence tells us that the extraction pipeline is confident in what it produced; it does not prove that the value is economically correct.
+>
+> The app applies a narrow deterministic check. It looks for a high-confidence numeric zero created from blank source text, confirms that the value feeds a return calculation, and then searches the supplied evidence for a matching lot. D11 contains a $19,100 adjusted basis with the same acquisition date.
+>
+> The check does not silently change the return. It exposes the observed value, contradictory evidence, match key, affected calculation, and downstream impact so the CPA can make the decision.
 
-![D28 missing basis](images/demo-04a-d28-missing-basis.png)
+## 4:00–5:15 — Propose the correction
 
-Explain that D28 reports the basis as not reported while the pipeline stored zero at high confidence. The source opens beside the calculation so the review state remains visible.
+**On screen**
 
-Then click **RSU-2502 adjusted cost basis**.
-
-![D11 adjusted basis](images/demo-04b-d11-adjusted-basis.png)
-
-Point out D11's `$19,100` adjusted basis and the matching acquisition date. Close the evidence panel when finished.
-
-## 4. Propose the correction
-
-1. Expand **Decision & assignment**.
+1. Expand **Correction & assignment** if needed.
 2. Click **Propose correction**.
+3. Point to the original basis, proposed basis, proposed gain, taxable change, estimated tax effect, and affected lines.
+4. Enter the proposal statement and click **Save proposal**.
+5. Show that approval controls are unavailable to Priya.
 
-![Correction preview](images/demo-05-correction-preview.png)
+**Say**
 
-Point out:
+> Priya can propose a correction, but the supplied source and engine snapshots remain immutable. Changing basis from zero to $19,100 changes the proposed lot gain from $19,240 to $140, a negative $19,100 taxable change.
+>
+> The tax impact is explicitly labeled as an estimate because the application uses the supplied per-dollar rates; it does not claim to rerun the tax engine. The graph also identifies the return lines downstream of this source value.
+>
+> After Priya saves the proposal, she cannot approve her own work. That separation of duties is enforced in the workflow, although the role switcher itself is only a prototype of server-side authorization.
 
-- basis changes from `$0` to `$19,100`;
-- proposed gain changes from `$19,240` to `$140`;
-- taxable change is `-$19,100`;
-- estimated tax effects use the supplied packet rates;
-- 73 downstream lines are identified;
-- engine totals remain unchanged.
+## 5:15–6:20 — Prove persistence and approve as reviewer
 
-Enter: `Matched D28 lot N1 to D11 using the supplied acquisition date.` Then click **Save proposal**.
+**On screen**
 
-## 5. Demonstrate role control
+1. Refresh the browser.
+2. Reopen the case and return to the same issue.
+3. Confirm that the proposal is still present.
+4. Use **Daniel Ortiz · reviewer**.
+5. Enter the approval statement under **Reviewer decision**.
+6. Click **Approve correction**.
+7. Point out that the Issues count drops from 12 to 11.
 
-![Preparer cannot approve](images/demo-06-preparer-cannot-approve.png)
+**Say**
 
-As Priya, show that assignment and approval are disabled. The interface explains that a reviewer or partner must assign work. The submitted proposal adds a filing blocker because it has not been incorporated into a recomputed return.
+> Refreshing proves that the review record persists independently from the supplied JSON. In this prototype it is stored in the browser; a production implementation would use a durable server event store with authenticated users and concurrent-edit controls.
+>
+> Daniel reviews the same evidence and approves the proposal. Approval is the terminal human decision for this issue, so there is no redundant Resolve action. The open-issue count falls to 11.
+>
+> Approval still does not rewrite v3. The correction must be incorporated into a future engine snapshot before the return can be filed.
 
-Refresh the browser, reopen the case, select **Daniel Ortiz · reviewer**, and return to the same issue. The proposal remains saved.
+## 6:20–7:20 — Reconstruct the audit trail
 
-Enter `Agreed the acquisition date and adjusted basis to D11.` under **Reviewer decision** and approve the correction. Approval completes the issue for review; there is no redundant resolution step.
+**On screen**
 
-![Reviewer approved correction](images/demo-07-reviewer-approved.png)
+1. Open **History**.
+2. Stay on the default **Review history** view.
+3. Point to the single issue thread containing assignment, proposal, and approval.
+4. Point to **Export history**, but do not download unless desired.
 
-Explain that approval documents human judgment. It does not claim that a tax engine was rerun.
+**Say**
 
-## 6. Prove persistence and auditability
+> History is grouped by issue rather than displaying unrelated log rows. This thread reconstructs the complete decision: Daniel assigned the work, Priya proposed the correction with its original and proposed values, and Daniel approved it with a rationale.
+>
+> Each event retains its actor, role, timestamp, return version, and evidence context. Events are append-only, and undo is recorded as another event rather than deleting history. The same record can be exported as JSON.
 
-Open **History**.
+## 7:20–8:10 — Show immutable versions and the current case timeline
 
-![Persisted audit history](images/demo-08-persisted-audit-history.png)
+**On screen**
 
-In the default **Review history** view, show the three events grouped under the issue:
+1. Select **Return versions**.
+2. Point to the `v1`, `v2`, and `v3` cards and the `v3` versus `v2` comparison.
+3. Select **Case timeline** and briefly show that it ends at the current `v3` snapshot.
 
-1. Daniel assigned the issue to Priya.
-2. Priya proposed the adjustment.
-3. Daniel approved it.
+**Say**
 
-The history preserves the actors, timestamps, return version, original and proposed values, taxable change, and rationale. **Export history** downloads the same review record as JSON.
+> The three engine versions are immutable snapshots. Review proposals are deliberately excluded from snapshot comparisons, which keeps computed results separate from human judgment.
+>
+> The Case timeline shows only supplied events through the current v3 computation. I left out the packet’s later scripted events because this prototype does not implement signatures, filing, rejections, amendments, or notice management. Showing those events without the underlying lifecycle would overstate what the product can do.
 
-## 7. Show filing readiness
+## 8:10–9:05 — Show filing readiness and close
 
-Return to **Return** and scroll to **Final review sign-off**.
+**On screen**
 
-![Filing readiness](images/demo-09-filing-readiness.png)
+1. Return to **Return**.
+2. Scroll to **Final review sign-off**.
+3. Point to the blocker message and disabled sign-off controls.
+4. End on the Return summary or the approved issue.
 
-Explain that unrelated findings remain open and the approved proposal has not been incorporated into a recomputed return snapshot. Final sign-off therefore remains blocked. This is the intended control behavior.
+**Say**
 
-In **History**, the Case timeline shows only the 17 packet events through the current v3 snapshot. Later scripted packet events are intentionally omitted because this prototype does not implement filing or post-filing lifecycle states.
+> Final review sign-off remains blocked. Eleven other issues are still open, and this approved proposal has not been incorporated into a recomputed engine snapshot. That distinction is intentional: approving a review decision is not the same as recalculating or filing a return.
+>
+> The data model preserves three layers: source evidence, immutable calculated results, and append-only human review records. The lineage graph connects them in both directions, so I can explain where a number came from and what would be affected if its source changes.
+>
+> I focused the prototype on making this review workflow complete and trustworthy. Production work would move persistence and authorization to a server, add real document storage and access logs, integrate engine recomputation, and then extend into signatures, filing, and post-filing work.
 
-## Corrected taxable-interest path
+## 9:05–9:25 — Tooling disclosure
 
-The bank-sweep issue previously displayed two adjacent levels both labeled `Taxable interest`. They are distinct supplied records—Form 1040 line 2b and Schedule B line 4—but the unchanged carry looked like accidental duplication. The visible path now collapses only consecutive records with the same label and amount:
+**Say**
 
-`Total income → Taxable interest → Total interest`
+> I used OpenAI Codex to help inspect the supplied packet, implement and refactor the application, maintain documentation, and run automated tests. I reviewed the product decisions and validation logic. The running application does not call an AI model, and it does not introduce taxpayer facts outside the supplied JSON.
 
-![Corrected interest chain](images/demo-chain-interest-fixed.png)
+## If time is running long
 
-Both underlying records and their lineage remain available in the graph. This is presentation compression, not a data-model change.
+Cut these moments in order:
+
+1. Do not resize the evidence panel.
+2. Skip the Case timeline and mention its scope in the closing sentence.
+3. Point to Return versions without scrolling through the changed calculations.
+4. Shorten the production roadmap to: “Production would require server-side persistence, authorization, and engine integration.”
+
+Do not cut the cross-document evidence, correction preview, role-controlled approval, refresh, or grouped audit history. Those moments prove the workflow works end to end.
