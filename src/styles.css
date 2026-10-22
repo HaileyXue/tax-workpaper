@@ -1015,6 +1015,11 @@ footer button {
   font-size: 12px;
   border: 0;
 }
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .evidence-panel {
   width: min(var(--evidence-width, 440px), max(300px, calc(100vw - 570px)));
   flex-shrink: 0;

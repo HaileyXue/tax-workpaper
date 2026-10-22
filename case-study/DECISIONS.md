@@ -328,9 +328,9 @@ Proposed implementation and acceptance criteria:
 - **Disclosure:** The Vite bundle contains the complete fictional packet because the prototype has no backend. Publishing the site therefore publishes that fictional data. Browser-local review actions and locally saved corrections are not part of the repository or deployment.
 - **Tradeoff:** The source history and case-study materials are now public. A production system would serve authorized data from a backend rather than embedding a client packet in the browser bundle.
 
-### D30 — Reset browser-local review state for the final demo
+### D30 — Make browser-local demo state reusable
 
 - **Recorded:** 2026-10-21. **Status:** Implemented.
-- **Decision:** Rotate browser persistence from `miraflores.review.v2` to `tax-workpaper.review.v3` and delete both prior keys during startup.
-- **Reason:** The submitted demo should open with the supplied return in a clean review state, without assignments, proposals, or approvals created during development. The new key also removes the former project name from active browser storage.
-- **Tradeoff:** Existing prototype review events are intentionally discarded. New actions persist normally under the new key after the one-time reset.
+- **Decision:** Rotate browser persistence once more to `tax-workpaper.review.v4`, delete prior keys during startup, and add a confirmed **Reset demo** action beside the history export.
+- **Reason:** The submitted demo should open in a clean review state, and repeated rehearsals should not require a code change or redeployment. Reset removes locally saved assignments, corrections, approvals, notes, and sign-offs while leaving the immutable packet untouched.
+- **Tradeoff:** Reset is intentionally destructive for this browser. A confirmation step guards against accidental use; production software would use controlled data-retention and administrative workflows instead.

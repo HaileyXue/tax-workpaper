@@ -24,7 +24,7 @@ test('starts clean after removing the previous browser review store', async ({
 }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
-      'miraflores.review.v2',
+      'tax-workpaper.review.v3',
       JSON.stringify([
         {
           id: 'obsolete-review',
@@ -44,10 +44,42 @@ test('starts clean after removing the previous browser review store', async ({
     '12',
   );
   expect(
-    await page.evaluate(() => localStorage.getItem('miraflores.review.v2')),
+    await page.evaluate(() => localStorage.getItem('tax-workpaper.review.v3')),
   ).toBeNull();
   await page.getByRole('button', { name: 'History', exact: true }).click();
   await expect(page.getByText('No review activity recorded.')).toBeVisible();
+});
+
+test('resets saved demo activity without a redeployment', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      'tax-workpaper.review.v4',
+      JSON.stringify([
+        {
+          id: 'saved-review',
+          at: '2026-10-21T00:00:00.000Z',
+          actor: 'st-02',
+          role: 'reviewer',
+          version: 'v3',
+          kind: 'assign',
+          target: 'missing-zero-ev-0498',
+          note: 'Priya Raman',
+        },
+      ]),
+    );
+  });
+  await openCase(page);
+  await page.getByRole('button', { name: 'History', exact: true }).click();
+  await expect(
+    page.getByText('Assigned to Priya Raman', { exact: true }),
+  ).toBeVisible();
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Reset demo' }).click();
+  await expect(page.getByText('No review activity recorded.')).toBeVisible();
+  await expect(page.getByText('Demo state reset.')).toBeVisible();
+  expect(
+    await page.evaluate(() => localStorage.getItem('tax-workpaper.review.v4')),
+  ).toBeNull();
 });
 
 test('one summary traces income to evidence without a separate explorer or schedule tabs', async ({

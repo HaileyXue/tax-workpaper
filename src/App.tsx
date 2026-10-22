@@ -17,6 +17,7 @@ import {
   LayoutDashboard,
   CircleAlert,
   FileCheck2,
+  RotateCcw,
 } from 'lucide-react';
 import { createGraph, packet, resolveReference } from './domain/packet';
 import { findIssues, type Finding } from './domain/findings';
@@ -182,6 +183,22 @@ export default function App() {
     a.download = 'tax-workpaper-review-history.json';
     a.click();
     URL.revokeObjectURL(url);
+  };
+  const resetDemo = () => {
+    if (
+      !window.confirm(
+        'Reset all assignments, corrections, approvals, notes, and sign-offs saved in this browser?',
+      )
+    )
+      return;
+    localStorage.removeItem(STORAGE_KEY);
+    setEvents([]);
+    setError('');
+    setAction(null);
+    setFocusedIssue(null);
+    setEvidence(null);
+    setSummaryJump(null);
+    setNotice('Demo state reset.');
   };
   const value = evidence ? graph.values.get(evidence.ref) : undefined;
   const sourceDoc = evidence
@@ -593,10 +610,16 @@ export default function App() {
           )}
           <footer>
             <span>Fictional data · Browser-local saves · Simulated roles</span>
-            <button onClick={exportRecords}>
-              <Download size={13} />
-              Export history
-            </button>
+            <div className="footer-actions">
+              <button onClick={resetDemo}>
+                <RotateCcw size={13} />
+                Reset demo
+              </button>
+              <button onClick={exportRecords}>
+                <Download size={13} />
+                Export history
+              </button>
+            </div>
           </footer>
         </main>
         {evidence && (
