@@ -32,8 +32,8 @@ export interface ReviewEvent {
   proposedTaxableAmount?: number;
   taxableDelta?: number;
 }
-export const STORAGE_KEY = 'miraflores.review.v2';
-const OBSOLETE_STORAGE_KEYS = ['miraflores.review.v1'];
+export const STORAGE_KEY = 'tax-workpaper.review.v3';
+const OBSOLETE_STORAGE_KEYS = ['miraflores.review.v1', 'miraflores.review.v2'];
 export function activeEvents(events: ReviewEvent[]) {
   const undone = new Set(
     events.filter((e) => e.kind === 'undo').map((e) => e.reverses),

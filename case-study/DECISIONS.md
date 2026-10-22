@@ -327,3 +327,10 @@ Proposed implementation and acceptance criteria:
 - **Reason:** A public submission URL lets reviewers inspect both the working prototype and its engineering decisions. Keeping source and deployment together also makes the submitted commit reproducible.
 - **Disclosure:** The Vite bundle contains the complete fictional packet because the prototype has no backend. Publishing the site therefore publishes that fictional data. Browser-local review actions and locally saved corrections are not part of the repository or deployment.
 - **Tradeoff:** The source history and case-study materials are now public. A production system would serve authorized data from a backend rather than embedding a client packet in the browser bundle.
+
+### D30 — Reset browser-local review state for the final demo
+
+- **Recorded:** 2026-10-21. **Status:** Implemented.
+- **Decision:** Rotate browser persistence from `miraflores.review.v2` to `tax-workpaper.review.v3` and delete both prior keys during startup.
+- **Reason:** The submitted demo should open with the supplied return in a clean review state, without assignments, proposals, or approvals created during development. The new key also removes the former project name from active browser storage.
+- **Tradeoff:** Existing prototype review events are intentionally discarded. New actions persist normally under the new key after the one-time reset.

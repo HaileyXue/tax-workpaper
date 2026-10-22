@@ -19,12 +19,12 @@ async function issue(page: Page, id: string) {
   await page.locator(`[data-finding-id="${id}"]`).click();
 }
 
-test('starts clean after removing the obsolete browser review store', async ({
+test('starts clean after removing the previous browser review store', async ({
   page,
 }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
-      'miraflores.review.v1',
+      'miraflores.review.v2',
       JSON.stringify([
         {
           id: 'obsolete-review',
@@ -44,7 +44,7 @@ test('starts clean after removing the obsolete browser review store', async ({
     '12',
   );
   expect(
-    await page.evaluate(() => localStorage.getItem('miraflores.review.v1')),
+    await page.evaluate(() => localStorage.getItem('miraflores.review.v2')),
   ).toBeNull();
   await page.getByRole('button', { name: 'History', exact: true }).click();
   await expect(page.getByText('No review activity recorded.')).toBeVisible();
